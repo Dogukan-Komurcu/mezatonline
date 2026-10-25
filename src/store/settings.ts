@@ -1,0 +1,60 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+import { persistStorage, storeKey } from './storage';
+
+export type Appearance = 'system' | 'light' | 'dark';
+
+export type NotificationPrefs = {
+  followedLive: boolean;
+  showReminders: boolean;
+  outbid: boolean;
+  orderUpdates: boolean;
+  messages: boolean;
+  promotions: boolean;
+  priceDrops: boolean;
+};
+
+type SettingsState = {
+  appearance: Appearance;
+  haptics: boolean;
+  autoplayPreviews: boolean;
+  /** Canlı yayına girince ses açık mı */
+  liveSoundOn: boolean;
+  dataSaver: boolean;
+  notifications: NotificationPrefs;
+  setAppearance: (a: Appearance) => void;
+  setHaptics: (v: boolean) => void;
+  setAutoplayPreviews: (v: boolean) => void;
+  setLiveSoundOn: (v: boolean) => void;
+  setDataSaver: (v: boolean) => void;
+  setNotificationPref: (key: keyof NotificationPrefs, value: boolean) => void;
+};
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      appearance: 'system',
+      haptics: true,
+      autoplayPreviews: true,
+      liveSoundOn: false,
+      dataSaver: false,
+      notifications: {
+        followedLive: true,
+        showReminders: true,
+        outbid: true,
+        orderUpdates: true,
+        messages: true,
+        promotions: false,
+        priceDrops: true,
+      },
+      setAppearance: (appearance) => set({ appearance }),
+      setHaptics: (haptics) => set({ haptics }),
+      setAutoplayPreviews: (autoplayPreviews) => set({ autoplayPreviews }),
+      setLiveSoundOn: (liveSoundOn) => set({ liveSoundOn }),
+      setDataSaver: (dataSaver) => set({ dataSaver }),
+      setNotificationPref: (key, value) => set((s) => ({ notifications: { ...s.notifications, [key]: value } })),
+    }),
+    { name: storeKey('settings'), storage: persistStorage },
+  ),
+);

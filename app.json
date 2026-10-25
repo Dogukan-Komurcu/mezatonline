@@ -1,26 +1,41 @@
 {
   "expo": {
-    "name": "mezat-scaffold",
-    "slug": "mezat-scaffold",
+    "name": "Mezatonline",
+    "slug": "mezatonline",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mezatscaffold",
+    "scheme": "mezatonline",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFFFF",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.mezatonline.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "appleTeamId": "4N6B7MPCY3",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleAllowMixedLocalizations": true,
+        "NSCameraUsageDescription": "Canlı yayın açmak ve ürün fotoğrafı çekmek için kameranı kullanıyoruz.",
+        "NSMicrophoneUsageDescription": "Canlı yayında sesinin izleyicilere ulaşması için mikrofonunu kullanıyoruz.",
+        "NSPhotoLibraryUsageDescription": "Ürün ve profil fotoğrafı seçebilmen için fotoğraf arşivine erişiyoruz.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
+      "package": "com.mezatonline.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFE414",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "server",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,9 +43,31 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFE414",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Canlı yayın açmak ve ürün fotoğrafı çekmek için kameranı kullanıyoruz.",
+          "microphonePermission": "Canlı yayında sesinin izleyicilere ulaşması için mikrofonunu kullanıyoruz.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ürün ve profil fotoğrafı seçebilmen için fotoğraf arşivine erişiyoruz.",
+          "cameraPermission": "Ürün fotoğrafı çekmek için kameranı kullanıyoruz."
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
         }
       ]
     ],
