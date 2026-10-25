@@ -1,13 +1,14 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastHost } from '@/components/ui';
 import { TransactSetupHost } from '@/features/wallet/TransactSetup';
+import { applyQaTheme, qaSignIn, readQaLaunch } from '@/lib/qa';
 import { useAuthStore } from '@/store/auth';
 import { useInboxStore } from '@/store/inbox';
 import { useOrdersStore } from '@/store/orders';
@@ -48,6 +49,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {});
+  }, [hydrated]);
+
+  // Geliştirme: başlatma argümanlarıyla QA (bkz. src/lib/qa.ts)
+  useEffect(() => {
+    if (!hydrated) return;
+    const qa = readQaLaunch();
+    if (!qa) return;
+    LogBox.ignoreAllLogs(true);
+    applyQaTheme(qa.theme);
+    if (qa.login || qa.seller) qaSignIn({ seller: qa.seller });
+    if (qa.route) {
+      const t = setTimeout(() => router.navigate(qa.route as never), 600);
+      return () => clearTimeout(t);
+    }
   }, [hydrated]);
 
   // Sipariş durumlarını zamanla ilerlet (kargo simülasyonu)
