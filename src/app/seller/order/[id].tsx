@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { OrderDetailScreen } from '@/features/seller/OrderDetailScreen';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="Sipariş" />
-      <EmptyState icon="construct-outline" title="Sipariş" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Satıcı sipariş detayı — kargo kodu, kazanç dökümü, iptal */
+export default function SellerOrderDetailScreen() {
+  return <OrderDetailScreen />;
 }

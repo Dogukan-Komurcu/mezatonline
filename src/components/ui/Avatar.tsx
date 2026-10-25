@@ -57,7 +57,7 @@ export function Avatar({ uri, name, size = 36, live, ring, verified, style }: Av
       </View>
       {live ? (
         <View style={[styles.liveTag, { backgroundColor: colors.live, bottom: -4 }]}>
-          <Text variant="caption" color="#FFFFFF" style={{ fontSize: Math.max(8, size * 0.16), lineHeight: Math.max(10, size * 0.2) }}>
+          <Text variant="caption" color="#FFFFFF" numberOfLines={1} style={{ fontSize: Math.max(7, Math.min(11, size * 0.16)), lineHeight: Math.max(9, Math.min(13, size * 0.2)), letterSpacing: 0.2 }}>
             CANLI
           </Text>
         </View>
@@ -77,7 +77,9 @@ const styles = StyleSheet.create({
   liveTag: {
     position: 'absolute',
     alignSelf: 'center',
-    paddingHorizontal: 5,
+    minWidth: 30,
+    alignItems: 'center',
+    paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4,
   },

@@ -2,6 +2,8 @@
  * Veri erişim katmanı (repository).
  * Ekranlar veriye SADECE buradan erişir. Supabase'e geçişte bu fonksiyonların gövdeleri değişecek.
  */
+import { ME_ID, useAuthStore } from '@/store/auth';
+import { useSellerStore } from '@/store/seller';
 import type { Category, Product, Review, Show, User } from '@/types';
 
 import { CATEGORIES, CATEGORIES_BY_POPULARITY, getCategory, getSubcategory } from './categories';
@@ -17,12 +19,23 @@ const productById = new Map(PRODUCTS.map((p) => [p.id, p]));
 
 // ─── Kullanıcı ───────────────────────────────────────────────────────────────
 
+/** Giriş yapmış kullanıcı (satıcıysa istatistikleri satıcı store'undan) */
+function currentUser(): User {
+  return useAuthStore.getState().me;
+}
+
 export function getUser(id: string | undefined): User | undefined {
-  return id ? userById.get(id) : undefined;
+  if (!id) return undefined;
+  if (id === ME_ID) return currentUser();
+  return userById.get(id);
 }
 
 export function getUserByUsername(username: string | undefined): User | undefined {
-  return username ? userByName.get(username.replace(/^@/, '').toLocaleLowerCase('tr-TR')) : undefined;
+  if (!username) return undefined;
+  const name = username.replace(/^@/, '').toLocaleLowerCase('tr-TR');
+  const me = currentUser();
+  if (name === 'me' || name === me.username.toLocaleLowerCase('tr-TR')) return me;
+  return userByName.get(name);
 }
 
 export function getSellers(categoryId?: string): User[] {
@@ -44,7 +57,8 @@ export function getFollowingOf(userId: string): User[] {
 // ─── Yayın ───────────────────────────────────────────────────────────────────
 
 export function getShow(id: string | undefined): Show | undefined {
-  return id ? showById.get(id) : undefined;
+  if (!id) return undefined;
+  return showById.get(id) ?? useSellerStore.getState().shows.find((s) => s.id === id);
 }
 
 export function getLiveShows(filter: { categoryId?: string; subcategoryId?: string } = {}): Show[] {
@@ -66,7 +80,7 @@ export function getUpcomingShows(filter: { categoryId?: string; sellerIds?: stri
 }
 
 export function getShowsBySeller(sellerId: string): { live: Show[]; upcoming: Show[]; past: Show[] } {
-  const all = SHOWS.filter((s) => s.sellerId === sellerId);
+  const all = sellerId === ME_ID ? useSellerStore.getState().shows : SHOWS.filter((s) => s.sellerId === sellerId);
   return {
     live: all.filter((s) => s.status === 'live'),
     upcoming: all.filter((s) => s.status === 'scheduled').sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt)),
@@ -76,6 +90,7 @@ export function getShowsBySeller(sellerId: string): { live: Show[]; upcoming: Sh
 
 /** Kullanıcının canlı yayını (varsa) */
 export function getLiveShowOf(sellerId: string): Show | undefined {
+  if (sellerId === ME_ID) return useSellerStore.getState().shows.find((s) => s.status === 'live');
   return SHOWS.find((s) => s.sellerId === sellerId && s.status === 'live');
 }
 
@@ -90,18 +105,24 @@ export function getForYouShows(interests: string[], followingIds: string[]): Sho
 // ─── Ürün ────────────────────────────────────────────────────────────────────
 
 export function getProduct(id: string | undefined): Product | undefined {
-  return id ? productById.get(id) : undefined;
+  if (!id) return undefined;
+  return productById.get(id) ?? useSellerStore.getState().listings.find((p) => p.id === id);
 }
 
 export function getProductsByShow(showId: string): Product[] {
   const show = getShow(showId);
   if (!show) return [];
+  if (show.sellerId === ME_ID) {
+    const listings = useSellerStore.getState().listings;
+    return listings.filter((p) => p.showId === showId || show.productIds.includes(p.id));
+  }
   return show.productIds.map((id) => productById.get(id)).filter(Boolean) as Product[];
 }
 
 /** Satıcının mağazası: satıştaki Hemen Al ürünleri */
 export function getShopProducts(sellerId: string): Product[] {
-  return PRODUCTS.filter((p) => p.sellerId === sellerId && p.format === 'buy_now' && p.sold < p.quantity);
+  const source = sellerId === ME_ID ? useSellerStore.getState().listings : PRODUCTS;
+  return source.filter((p) => p.sellerId === sellerId && p.format === 'buy_now' && p.sold < p.quantity);
 }
 
 export function getProductsByCategory(categoryId: string, opts: { format?: Product['format']; subcategoryId?: string } = {}): Product[] {

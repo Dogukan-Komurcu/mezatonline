@@ -2,8 +2,10 @@
  * Canlı yayın simülasyon motoru.
  *
  * Saf TypeScript; React'ten bağımsız. `useLiveShow` hook'u bunu useSyncExternalStore ile bağlar.
- * - İzleyici modu (viewer): ürün kuyruğu otomatik döner, botlar teklif verir/sohbet eder,
- *   aralarda çekiliş ve flaş indirim olur.
+ * - İzleyici modu (viewer): ürün planı otomatik döner (açık artırmalar → satılmayanların tekrarı →
+ *   birkaç Hemen Al ürünü mezatla), botlar teklif verir/sohbet eder, aralarda çekiliş ve flaş indirim olur.
+ *   Plan bittiğinde satıcı yayını kapatır (`ended`, `endReason: 'sold_out'`).
+ *   Sayfa görünmezken (stop) simülasyon zamanı durur; tekrar başlayınca kaldığı yerden devam eder.
  * - Satıcı modu (seller): açık artırmayı/çekilişi satıcı başlatır; botlar katılır.
  */
 import {
@@ -14,6 +16,7 @@ import {
   extendedEndsAt,
   nextMinBid,
 } from '@/lib/auction';
+import { formatTRY } from '@/lib/format';
 import { random, uid } from '@/lib/rng';
 import type { ChatMessage, Product, Show, User } from '@/types';
 
@@ -22,6 +25,7 @@ import {
   CATEGORY_CHAT,
   GENERIC_CHAT,
   makeBots,
+  MOD_LINES,
   MOD_NAMES,
   PINNED_LINES,
   SELLER_LINES,
@@ -116,6 +120,12 @@ export type LiveSnapshot = {
   /** Satıcı modunda toplam satış (₺) */
   gross: number;
   startedAt: number;
+  /** Botlardan gelen tepki (kalp) sayacı — izleyici ekranında uçan emojiler için */
+  crowdLikes?: number;
+  /** Kullanıcının bu yayındaki ön teklifleri: productId → maks. tutar */
+  myPreBids?: Record<string, number>;
+  /** Yayının bitiş sebebi */
+  endReason?: 'seller' | 'sold_out';
 };
 
 export type LiveEvents = {
@@ -124,6 +134,8 @@ export type LiveEvents = {
   onLost?: (lot: LiveLot) => void;
   onGiveawayWon?: (g: Giveaway) => void;
   onSold?: (item: SoldItem) => void;
+  /** Yayın bitti (satıcı kapattı ya da tüm ürünler satıldı) */
+  onEnded?: (reason: 'seller' | 'sold_out') => void;
 };
 
 export type EngineOptions = {
@@ -137,9 +149,21 @@ export type EngineOptions = {
   isFollowing?: () => boolean;
 };
 
+export type LiveViewer = { id: string; username: string; avatar?: string; isMod: boolean };
+
+type PlannedLot = { product: Product; startPrice?: number; /** Botların çıkabileceği en yüksek değer (Hemen Al fiyatının altında kalsın) */ valueCap?: number };
+
 const TICK_MS = 250;
 const MAX_MESSAGES = 120;
 const RESULT_PAUSE_MS = 3500;
+
+/** Mezata çıkan Hemen Al ürünleri için temiz açılış fiyatı */
+function cleanStart(v: number): number {
+  if (v < 20) return Math.max(1, Math.round(v));
+  if (v < 100) return Math.round(v / 5) * 5;
+  if (v < 1000) return Math.round(v / 10) * 10;
+  return Math.round(v / 50) * 50;
+}
 
 export class LiveEngine {
   private state: LiveSnapshot;
@@ -150,12 +174,19 @@ export class LiveEngine {
   private nextChatAt = 0;
   private nextJoinAt = 0;
   private nextSellerLineAt = 0;
+  private nextModLineAt = 0;
+  private nextExtraAt = 0;
   private nextLotAt = 0;
   private lotsSinceGiveaway = 0;
   private lotsSinceFlash = 0;
-  private queueIndex = 0;
   private me: Bidder;
   private sellerBidder: Bidder;
+  /** İzleyici modu ürün planı */
+  private plan: PlannedLot[] = [];
+  private rerun = new Set<string>();
+  private binPhaseAdded = false;
+  /** Duraklatıldığı an (izleyici modunda simülasyon zamanını dondurmak için) */
+  private pausedAt: number | undefined;
 
   constructor(opts: EngineOptions) {
     this.opts = opts;
@@ -166,6 +197,7 @@ export class LiveEngine {
     const auctionItems = opts.products.filter((p) => p.format === 'auction');
     const shopItems = opts.products.filter((p) => p.format === 'buy_now');
     const viewers = opts.mode === 'seller' ? 0 : Math.max(12, opts.show.viewers);
+    const queue = auctionItems.length ? auctionItems : opts.products;
     this.state = {
       showId: opts.show.id,
       mode: opts.mode,
@@ -182,22 +214,30 @@ export class LiveEngine {
         createdAt: now,
       },
       sold: [],
-      queue: auctionItems.length ? auctionItems : opts.products,
+      queue,
       shop: shopItems,
       ended: false,
       gross: 0,
       startedAt: now,
+      crowdLikes: 0,
+      myPreBids: {},
     };
     if (opts.mode === 'viewer') {
+      // Yayına ortadan katılmış gibi: kuyruğun rastgele bir noktasından başla
+      const offset = queue.length > 2 ? random.int(0, Math.floor(queue.length / 3)) : 0;
+      this.plan = [...queue.slice(offset), ...queue.slice(0, offset)].map((product) => ({ product }));
       this.seedHistory(now);
       // İlk lotu hemen başlat; süresinin bir kısmı geçmiş gibi göster
       this.startNextLot(now, true);
+      this.pausedAt = now;
     } else {
       this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayındasın! İzleyiciler katılıyor… 🎥' });
     }
     this.nextChatAt = now + 600;
     this.nextJoinAt = now + 1500;
     this.nextSellerLineAt = now + random.int(6000, 12000);
+    this.nextModLineAt = now + random.int(20000, 35000);
+    this.nextExtraAt = now + random.int(12000, 25000);
   }
 
   // ─── Abonelik ──────────────────────────────────────────────────────────────
@@ -221,17 +261,42 @@ export class LiveEngine {
   }
 
   start() {
-    if (this.timer) return;
+    if (this.timer || this.state.ended) return;
+    if (this.state.mode === 'viewer' && this.pausedAt !== undefined) {
+      const delta = Date.now() - this.pausedAt;
+      if (delta > 0) this.shiftTime(delta);
+    }
+    this.pausedAt = undefined;
     this.timer = setInterval(() => this.tick(), TICK_MS);
   }
 
   stop() {
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.pausedAt = Date.now();
+    }
     this.timer = null;
   }
 
   updateEvents(events: LiveEvents) {
     this.opts = { ...this.opts, events };
+  }
+
+  /** İzleyici modunda duraklatılan süre kadar tüm zamanlayıcıları ileri kaydır */
+  private shiftTime(delta: number) {
+    const s = this.state;
+    const lot = s.lot ? { ...s.lot, startedAt: s.lot.startedAt + delta, endsAt: s.lot.status === 'running' ? s.lot.endsAt + delta : s.lot.endsAt } : undefined;
+    const giveaway = s.giveaway ? { ...s.giveaway, startedAt: s.giveaway.startedAt + delta, endsAt: s.giveaway.endsAt + delta } : undefined;
+    const flash = s.flash ? { ...s.flash, startedAt: s.flash.startedAt + delta, endsAt: s.flash.endsAt + delta } : undefined;
+    const lastResult = s.lastResult ? { ...s.lastResult, at: s.lastResult.at + delta } : undefined;
+    this.nextChatAt += delta;
+    this.nextJoinAt += delta;
+    this.nextSellerLineAt += delta;
+    this.nextModLineAt += delta;
+    this.nextExtraAt += delta;
+    this.nextLotAt += delta;
+    this.state = { ...s, lot, giveaway, flash, lastResult };
+    this.emit();
   }
 
   // ─── Yardımcılar ───────────────────────────────────────────────────────────
@@ -261,14 +326,33 @@ export class LiveEngine {
     return pool && random.chance(0.4) ? random.pick(pool) : random.pick(GENERIC_CHAT);
   }
 
+  /** Yayındaki izleyicilerden bir örnek (izleyiciler listesi için) */
+  getViewerSample(n = 40): LiveViewer[] {
+    const mods = MOD_NAMES.slice(0, 2).map((name) => ({ id: 'mod_' + name, username: name, avatar: undefined, isMod: true }));
+    const bots = this.bots.slice(0, Math.max(0, n - mods.length)).map((b) => ({ id: b.id, username: b.username, avatar: b.avatar, isMod: false }));
+    return [...mods, ...bots];
+  }
+
   // ─── Lot yönetimi ──────────────────────────────────────────────────────────
 
-  private nextQueueProduct(): Product | undefined {
-    const q = this.state.queue;
-    if (!q.length) return undefined;
-    const p = q[this.queueIndex % q.length];
-    this.queueIndex += 1;
-    return p;
+  /** İzleyici modunda sıradaki planlı ürün */
+  private nextPlanned(): PlannedLot | undefined {
+    if (!this.plan.length && !this.binPhaseAdded) {
+      this.binPhaseAdded = true;
+      const bins = this.state.shop.filter((p) => p.quantity - p.sold > 0).slice(0, 6);
+      this.plan = bins.map((product) => ({ product, startPrice: cleanStart(product.price * random.float(0.25, 0.45)), valueCap: Math.round(product.price * random.float(0.6, 0.95)) }));
+      if (this.plan.length) {
+        this.pushMessage({
+          type: 'chat',
+          userId: this.opts.seller.id,
+          username: this.opts.seller.username,
+          avatar: this.opts.seller.avatar,
+          text: 'Mağazadaki birkaç ürünü de düşük fiyattan mezata çıkarıyorum, kaçırmayın 🔥',
+          isSeller: true,
+        });
+      }
+    }
+    return this.plan.shift();
   }
 
   private makeLot(product: Product, now: number, opts: { startPrice?: number; duration?: number; suddenDeath?: boolean; counterBidTime?: number } = {}): LiveLot {
@@ -296,10 +380,35 @@ export class LiveEngine {
     };
   }
 
+  /** Kullanıcının bu ürün için verdiği ön teklifi yeni lota uygula */
+  private applyPreBid(lot: LiveLot, now: number) {
+    const pre = this.state.myPreBids?.[lot.product.id];
+    if (!pre) return;
+    const rest = { ...(this.state.myPreBids ?? {}) };
+    delete rest[lot.product.id];
+    this.state = { ...this.state, myPreBids: rest };
+    const next = nextMinBid(lot.currentBid, lot.bidCount > 0);
+    if (pre < next) return;
+    lot.myMaxBid = pre;
+    lot.iBid = true;
+    this.pushMessage({ type: 'system', username: 'Mezatonline', text: `Ön teklifin devrede 🔒 Maks. ${formatTRY(pre)}`, isMe: true });
+    if (!lot.leader?.isMe) this.applyBid(lot, this.me, next, now);
+  }
+
   private startNextLot(now: number, warm = false) {
-    const product = this.nextQueueProduct();
-    if (!product) return;
-    const lot = this.makeLot(product, now);
+    const planned = this.nextPlanned();
+    if (!planned) {
+      // Plan bitti: çekiliş sürüyorsa bekle, değilse yayını kapat
+      if (this.state.giveaway?.status === 'running') {
+        this.nextLotAt = now + 1000;
+        return;
+      }
+      this.finishShow();
+      return;
+    }
+    const { product, startPrice, valueCap } = planned;
+    const lot = this.makeLot(product, now, { startPrice });
+    if (valueCap) lot.hiddenValue = Math.max(lot.startPrice + bidIncrement(lot.startPrice) * 2, Math.min(lot.hiddenValue, valueCap));
     if (warm) {
       // Yayına ortadan katılmış gibi: birkaç teklif önceden verilmiş olsun
       const n = random.int(1, 5);
@@ -307,6 +416,7 @@ export class LiveEngine {
       lot.endsAt = now + random.int(9, Math.max(10, lot.duration)) * 1000;
     }
     this.pushMessage({ type: 'system', username: this.opts.seller.username, text: `🔨 Açık artırma başladı: ${product.title}`, isSeller: true });
+    this.applyPreBid(lot, now);
     this.state = { ...this.state, lot, lastResult: undefined };
   }
 
@@ -337,16 +447,24 @@ export class LiveEngine {
     const wonByMe = !!finished.leader?.isMe;
     let sold = this.state.sold;
     let gross = this.state.gross;
+    let shop = this.state.shop;
     if (finished.leader) {
       const item: SoldItem = { id: uid('sold'), product: finished.product, price: finished.currentBid, winner: finished.leader, via: 'auction', at: now };
       sold = [item, ...sold];
       gross += finished.currentBid;
+      // Mezata çıkan bir Hemen Al ürünüyse stoktan düş
+      if (shop.some((p) => p.id === finished.product.id)) shop = shop.map((p) => (p.id === finished.product.id ? { ...p, sold: p.sold + 1 } : p));
       this.pushMessage({ type: 'won', userId: finished.leader.id, username: finished.leader.username, avatar: finished.leader.avatar, text: `kazandı: ${finished.product.title}`, amount: finished.currentBid, isMe: wonByMe });
       this.opts.events?.onSold?.(item);
     } else {
       this.pushMessage({ type: 'system', username: this.opts.seller.username, text: `Teklif gelmedi: ${finished.product.title}`, isSeller: true });
+      // İzleyici modunda satılmayan ürün bir kez daha, daha düşük fiyattan denenir
+      if (this.state.mode === 'viewer' && !this.rerun.has(finished.product.id)) {
+        this.rerun.add(finished.product.id);
+        this.plan.push({ product: finished.product, startPrice: cleanStart(Math.max(1, finished.startPrice * 0.7)) });
+      }
     }
-    this.state = { ...this.state, lot: finished, lastResult: { lot: finished, wonByMe, at: now }, sold, gross };
+    this.state = { ...this.state, lot: finished, lastResult: { lot: finished, wonByMe, at: now }, sold, gross, shop };
     if (wonByMe) this.opts.events?.onWon?.(finished);
     else if (finished.iBid) this.opts.events?.onLost?.(finished);
     this.nextLotAt = now + RESULT_PAUSE_MS;
@@ -363,6 +481,23 @@ export class LiveEngine {
     }, 700);
   }
 
+  /** İzleyici modunda plan bittiğinde satıcı yayını kapatır */
+  private finishShow() {
+    this.pushMessage({
+      type: 'chat',
+      userId: this.opts.seller.id,
+      username: this.opts.seller.username,
+      avatar: this.opts.seller.avatar,
+      text: 'Bugünlük bu kadar! Katıldığınız için çok teşekkürler, bir sonraki yayında görüşmek üzere 💛',
+      isSeller: true,
+    });
+    this.stop();
+    this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! 💛' });
+    this.state = { ...this.state, ended: true, endReason: 'sold_out', lot: this.state.lot?.status === 'running' ? undefined : this.state.lot };
+    this.emit();
+    this.opts.events?.onEnded?.('sold_out');
+  }
+
   // ─── Döngü ────────────────────────────────────────────────────────────────
 
   private tick() {
@@ -370,6 +505,7 @@ export class LiveEngine {
     const now = Date.now();
     let changed = false;
     const s = this.state;
+    const viewerMode = s.mode === 'viewer';
 
     // İzleyici sayısı dalgalanması
     if (random.chance(0.12)) {
@@ -377,6 +513,14 @@ export class LiveEngine {
       const drift = Math.round((target - s.viewers) * 0.08 + random.int(-3, 4));
       const viewers = Math.max(1, s.viewers + drift);
       this.state = { ...this.state, viewers, peakViewers: Math.max(s.peakViewers, viewers) };
+      changed = true;
+    }
+
+    // Kalabalık tepkileri (kızışan açık artırmada daha sık)
+    const hotLot = s.lot && s.lot.status === 'running' && (s.lot.endsAt - now) / 1000 < 6;
+    if (random.chance(hotLot ? 0.3 : 0.12)) {
+      const n = random.int(1, hotLot ? 3 : 2);
+      this.state = { ...this.state, likes: this.state.likes + n, crowdLikes: (this.state.crowdLikes ?? 0) + n };
       changed = true;
     }
 
@@ -401,9 +545,29 @@ export class LiveEngine {
     }
 
     // Satıcı konuşmaları
-    if (now >= this.nextSellerLineAt && s.mode === 'viewer') {
+    if (now >= this.nextSellerLineAt && viewerMode) {
       this.pushMessage({ type: 'chat', userId: this.opts.seller.id, username: this.opts.seller.username, avatar: this.opts.seller.avatar, text: random.pick(SELLER_LINES), isSeller: true });
       this.nextSellerLineAt = now + random.int(15000, 30000);
+      changed = true;
+    }
+
+    // Moderatör satırları
+    if (now >= this.nextModLineAt && viewerMode) {
+      const name = random.pick(MOD_NAMES);
+      this.pushMessage({ type: 'chat', userId: 'mod_' + name, username: name, text: random.pick(MOD_LINES), isMod: true });
+      this.nextModLineAt = now + random.int(30000, 55000);
+      changed = true;
+    }
+
+    // Ara sıra bahşiş / takip olayları
+    if (now >= this.nextExtraAt && viewerMode) {
+      const b = random.pick(this.bots);
+      if (random.chance(0.45)) {
+        this.pushMessage({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi 💛', amount: random.pick([20, 50, 50, 100, 250]) });
+      } else {
+        this.pushMessage({ type: 'follow', userId: b.id, username: b.username, avatar: b.avatar, text: 'satıcıyı takip etti' });
+      }
+      this.nextExtraAt = now + random.int(18000, 40000);
       changed = true;
     }
 
@@ -416,16 +580,17 @@ export class LiveEngine {
       } else {
         changed = this.botBidding(lot, now) || changed;
       }
-    } else if (s.mode === 'viewer' && now >= this.nextLotAt) {
+    } else if (viewerMode && now >= this.nextLotAt) {
       // Ara etkinlikler: çekiliş / flaş indirim
       if (!this.state.giveaway && this.lotsSinceGiveaway >= random.int(3, 5)) {
-        this.startGiveaway(undefined, 45);
+        this.startGiveaway(undefined, 45, random.chance(0.6));
         this.lotsSinceGiveaway = 0;
-      } else if (!this.state.flash && this.state.shop.length && this.lotsSinceFlash >= random.int(4, 7)) {
-        this.startFlashSale(random.pick(this.state.shop), 0.3, 60);
+      } else if (!this.state.flash && this.state.shop.some((p) => p.quantity - p.sold > 0) && this.lotsSinceFlash >= random.int(4, 7)) {
+        this.startFlashSale(random.pick(this.state.shop.filter((p) => p.quantity - p.sold > 0)), random.pick([0.2, 0.3, 0.4]), 60);
         this.lotsSinceFlash = 0;
       }
       this.startNextLot(now);
+      if (this.state.ended) return;
       changed = true;
     }
 
@@ -451,7 +616,7 @@ export class LiveEngine {
     const f = this.state.flash;
     if (f && f.status === 'running') {
       if (now >= f.endsAt || f.remaining <= 0) {
-        this.state = { ...this.state, flash: { ...f, status: 'done' } };
+        this.state = { ...this.state, flash: { ...f, status: 'done', endsAt: Math.min(f.endsAt, now) } };
         this.pushMessage({ type: 'system', username: this.opts.seller.username, text: '⚡ Flaş indirim sona erdi', isSeller: true });
       } else if (random.chance(0.03) && f.remaining > 1) {
         const b = random.pick(this.bots);
@@ -518,6 +683,7 @@ export class LiveEngine {
     const lot = this.state.lot;
     if (!lot || lot.status !== 'running') return null;
     const now = Date.now();
+    if (now >= lot.endsAt) return null;
     const min = nextMinBid(lot.currentBid, lot.bidCount > 0);
     if (max < min) return null;
     const updated: LiveLot = { ...lot, myMaxBid: max, iBid: true, recentBids: lot.recentBids.slice() };
@@ -525,6 +691,15 @@ export class LiveEngine {
     this.state = { ...this.state, lot: updated };
     this.emit();
     return updated.currentBid;
+  }
+
+  /** Henüz mezata çıkmamış ürün için ön teklif (maks. teklif gibi çalışır) */
+  addPreBid(productId: string, max: number): boolean {
+    if (this.state.lot?.status === 'running' && this.state.lot.product.id === productId) return false;
+    const current = this.state.myPreBids?.[productId] ?? 0;
+    this.state = { ...this.state, myPreBids: { ...(this.state.myPreBids ?? {}), [productId]: Math.max(current, Math.round(max)) } };
+    this.emit();
+    return true;
   }
 
   sendMessage(text: string) {
@@ -558,18 +733,31 @@ export class LiveEngine {
     this.emit();
   }
 
+  /** Yayını öne çıkarma katkısı (Community Boost) */
+  boost(amount: number) {
+    this.pushMessage({ type: 'tip', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: 'yayını öne çıkardı 🚀', amount, isMe: true });
+    this.emit();
+  }
+
+  /** Kullanıcı satıcıyı takip etti → sohbette görünür */
+  announceFollow() {
+    this.pushMessage({ type: 'follow', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: 'satıcıyı takip etti 💛', isMe: true });
+    this.emit();
+  }
+
   like(count = 1) {
     this.state = { ...this.state, likes: this.state.likes + count };
     this.emit();
   }
 
   /** Mağazadan / flaş indirimden satın alma kaydı (ödeme dışarıda yapılır) */
-  recordPurchase(product: Product, price: number, via: 'buy_now' | 'flash_sale') {
-    const item: SoldItem = { id: uid('sold'), product, price, winner: this.me, via, at: Date.now() };
-    const shop = this.state.shop.map((p) => (p.id === product.id ? { ...p, sold: p.sold + 1 } : p));
-    const flash = this.state.flash && this.state.flash.product.id === product.id ? { ...this.state.flash, remaining: this.state.flash.remaining - 1 } : this.state.flash;
-    this.pushMessage({ type: 'purchase', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: `satın aldı: ${product.title}`, amount: price, isMe: true });
-    this.state = { ...this.state, sold: [item, ...this.state.sold], shop, flash };
+  recordPurchase(product: Product, price: number, via: 'buy_now' | 'flash_sale', quantity = 1) {
+    const items: SoldItem[] = Array.from({ length: Math.max(1, quantity) }, () => ({ id: uid('sold'), product, price, winner: this.me, via, at: Date.now() }));
+    const shop = this.state.shop.map((p) => (p.id === product.id ? { ...p, sold: Math.min(p.quantity, p.sold + quantity) } : p));
+    const flash =
+      this.state.flash && this.state.flash.product.id === product.id ? { ...this.state.flash, remaining: Math.max(0, this.state.flash.remaining - quantity) } : this.state.flash;
+    this.pushMessage({ type: 'purchase', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: `satın aldı: ${product.title}`, amount: price * quantity, isMe: true });
+    this.state = { ...this.state, sold: [...items, ...this.state.sold], shop, flash };
     this.emit();
   }
 
@@ -663,7 +851,8 @@ export class LiveEngine {
   endShow() {
     this.stop();
     this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! 💛' });
-    this.state = { ...this.state, ended: true };
+    this.state = { ...this.state, ended: true, endReason: this.state.endReason ?? 'seller' };
     this.emit();
+    this.opts.events?.onEnded?.('seller');
   }
 }

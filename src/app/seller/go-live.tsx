@@ -1,11 +1,11 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { GoLiveScreen } from '@/features/seller-live/GoLive';
+import { ForceScheme } from '@/theme';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
+/** S85 — Canlıya Geç (yayın öncesi kamera önizlemesi ve hazırlık) */
+export default function GoLiveRoute() {
   return (
-    <Screen>
-      <Header title="Canlıya geç" />
-      <EmptyState icon="construct-outline" title="Canlıya geç" message="Bu ekran hazırlanıyor." />
-    </Screen>
+    <ForceScheme scheme="dark">
+      <GoLiveScreen />
+    </ForceScheme>
   );
 }

@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { AnalyticsScreen } from '@/features/seller/AnalyticsScreen';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="İstatistikler" />
-      <EmptyState icon="construct-outline" title="İstatistikler" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Satıcı analizleri — KPI, satış grafiği, en çok satanlar, yayın performansı */
+export default function SellerAnalyticsScreen() {
+  return <AnalyticsScreen />;
 }

@@ -76,7 +76,7 @@ export default function RootLayout() {
         <ThemeProvider value={navTheme}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-            <Stack.Protected guard={signedIn}>
+            <Stack.Protected guard={signedIn} redirectTo="/welcome">
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000' } }} />
               <Stack.Screen name="seller/live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureEnabled: false, contentStyle: { backgroundColor: '#000' } }} />
@@ -90,7 +90,7 @@ export default function RootLayout() {
               <Stack.Screen name="seller/schedule" options={{ presentation: 'modal' }} />
               <Stack.Screen name="seller/apply" options={{ presentation: 'modal' }} />
             </Stack.Protected>
-            <Stack.Protected guard={!signedIn}>
+            <Stack.Protected guard={!signedIn} redirectTo="/">
               <Stack.Screen name="(auth)" />
             </Stack.Protected>
           </Stack>

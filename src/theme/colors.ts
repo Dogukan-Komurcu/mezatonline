@@ -79,9 +79,9 @@ export const lightColors: ColorTokens = {
 export const darkColors: ColorTokens = {
   bg: '#121212',
   card: '#1C1C1C',
-  surface: '#1E1E1E',
-  surfaceAlt: '#2D2D2D',
-  border: '#2D2D2D',
+  surface: '#262628',
+  surfaceAlt: '#343437',
+  border: '#2F2F32',
   text: '#FFFFFF',
   textSecondary: '#A6A6AF',
   textTertiary: '#6E6E78',

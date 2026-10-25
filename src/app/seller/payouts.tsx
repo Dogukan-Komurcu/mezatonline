@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { PayoutsScreen } from '@/features/seller/PayoutsScreen';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="Ödemeler" />
-      <EmptyState icon="construct-outline" title="Ödemeler" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Ödemeler — bakiye, IBAN, para çekme, hesap hareketleri. params: withdraw? ('1' = para çek sayfasını aç) */
+export default function SellerPayoutsScreen() {
+  return <PayoutsScreen />;
 }

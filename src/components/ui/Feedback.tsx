@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FullWindowOverlay } from 'react-native-screens';
 import { create } from 'zustand';
 
 import { radius, useTheme } from '@/theme';
@@ -113,10 +114,16 @@ export function ToastHost() {
     return () => clearTimeout(timer);
   }, [t, hide]);
   if (!t) return null;
+  const content = renderToast(t, insets.top);
+  // iOS: tam ekran modal ve sheet'lerin (RN Modal) üstünde görünsün diye ayrı pencerede çiz
+  return Platform.OS === 'ios' ? <FullWindowOverlay>{content}</FullWindowOverlay> : content;
+}
+
+function renderToast(t: ToastItem, top: number) {
   const icon: IconName = t.icon ?? (t.kind === 'success' ? 'checkmark-circle' : t.kind === 'error' ? 'alert-circle' : t.kind === 'warning' ? 'warning' : 'information-circle');
   const tint = t.kind === 'success' ? '#2BC062' : t.kind === 'error' ? '#FF5A5F' : t.kind === 'warning' ? '#F5B031' : '#FFE414';
   return (
-    <View pointerEvents="none" style={[styles.toastWrap, { top: insets.top + 8 }]}>
+    <View pointerEvents="none" style={[styles.toastWrap, { top: top + 8 }]}>
       <Animated.View key={t.id} entering={FadeInUp.springify().damping(18)} exiting={FadeOutUp} style={styles.toast}>
         <Icon name={icon} size={20} color={tint} />
         <Text variant="callout" weight="600" color="#FFFFFF" style={{ flexShrink: 1 }}>

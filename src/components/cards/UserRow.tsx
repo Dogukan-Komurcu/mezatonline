@@ -17,7 +17,7 @@ export function FollowButton({ user, size = 'sm', style, variant }: { user: User
   if (user.id === ME_ID) return null;
   return (
     <Button
-      title={following ? 'Takiptesin' : 'Takip Et'}
+      title={following ? 'Takip ediliyor' : 'Takip Et'}
       size={size}
       variant={following ? (variant === 'glass' ? 'glass' : 'secondary') : 'primary'}
       icon={following ? 'checkmark' : undefined}

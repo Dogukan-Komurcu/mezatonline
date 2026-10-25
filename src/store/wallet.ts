@@ -31,6 +31,8 @@ type WalletState = {
   setDefaultPaymentMethod: (id: ID) => void;
   addCredits: (amount: number, description: string) => void;
   /** Kredi düşer, gerçekten düşülen tutarı döner */
+  spendCredits: (max: number, description: string) => number;
+  /** @deprecated spendCredits kullan (React Compiler "use" önekini hook sanar) */
   useCredits: (max: number, description: string) => number;
 };
 
@@ -107,6 +109,7 @@ export const useWalletStore = create<WalletState>()(
           credits: s.credits + amount,
           creditHistory: [{ id: uid('ct'), amount, description, createdAt: new Date().toISOString() }, ...s.creditHistory],
         })),
+      spendCredits: (max, description) => get().useCredits(max, description),
       useCredits: (max, description) => {
         const amount = Math.min(get().credits, Math.max(0, max));
         if (amount <= 0) return 0;

@@ -7,7 +7,7 @@ import { persistStorage, storeKey } from './storage';
 
 export const ME_ID = 'me';
 
-export type AuthMethod = 'phone' | 'email' | 'apple' | 'google';
+export type AuthMethod = 'phone' | 'email' | 'apple' | 'google' | 'facebook';
 
 type AuthState = {
   status: 'signedOut' | 'signedIn';

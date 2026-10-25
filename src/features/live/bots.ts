@@ -117,3 +117,16 @@ export const PINNED_LINES = [
 ];
 
 export const MOD_NAMES = ['mod_selin', 'mod.kaan', 'yardimci_ece', 'mod_burak34'];
+
+/** Moderatörlerin ara ara yazdığı satırlar */
+export const MOD_LINES = [
+  'Lütfen birbirimize saygılı olalım 🙏',
+  'Sorularınızı yazın, satıcımıza iletiyorum 💬',
+  'Aynı yayındaki alımlar tek kargoda gelir 📦',
+  'Çekilişe katılmak için takip etmeyi unutmayın 🎁',
+  'Teklifler bağlayıcıdır, lütfen dikkatli teklif verin ⚖️',
+  'Yeni gelenler hoş geldiniz! Kaydırarak teklif verebilirsiniz 👉',
+];
+
+/** Kalabalık tepkileri (uçan emojiler) */
+export const CROWD_REACTIONS = ['💛', '❤️', '🔥', '😍', '👏', '💛', '💛'];

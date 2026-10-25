@@ -366,7 +366,7 @@ export const SHOW_DESCRIPTIONS = [
   'Yeni gelen ürünleri ilk sizinle paylaşıyorum. Sudden death açık artırmaları da var ⚡',
 ];
 
-export const HIGHLIGHT_POOL = ['₺1 Başlangıç', 'Çekiliş', 'Ücretsiz Kargo', 'Orijinal Garantili', 'Hızlı Kargo', 'Sudden Death', 'Flaş İndirim', 'Yeni Satıcı'];
+export const HIGHLIGHT_POOL = ['₺1 Başlangıç', 'Çekiliş', 'Ücretsiz Kargo', 'Orijinal Garantili', 'Hızlı Kargo', 'Ani Bitiş 💀', 'Flaş İndirim', 'Yeni Satıcı'];
 
 export const PRODUCT_DESCRIPTIONS = [
   'Ürün fotoğraflardaki gibidir, detaylı görmek isterseniz yayında yakından gösterebilirim. Özenle paketlenip gönderilir.',

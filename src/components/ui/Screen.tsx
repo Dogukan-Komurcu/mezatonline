@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SCREEN_PADDING, useTheme } from '@/theme';
@@ -35,6 +35,15 @@ export function Screen({ children, safeTop = false, safeBottom = false, style, b
   );
 }
 
+/** iOS'ta sayfa (pageSheet) olarak açılan modal rotalar: üst güvenli alan boşluğu gerekmez */
+const IOS_MODAL_PREFIXES = ['/checkout/', '/review/', '/settings/add-card', '/settings/address', '/seller/listing', '/seller/schedule', '/seller/apply'];
+
+/** Mevcut ekran iOS'ta sayfa-modal olarak mı gösteriliyor */
+export function useIsSheetModal(): boolean {
+  const pathname = usePathname();
+  return Platform.OS === 'ios' && IOS_MODAL_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 export type HeaderProps = {
   title?: string;
   subtitle?: string;
@@ -45,7 +54,7 @@ export type HeaderProps = {
   left?: ReactNode;
   /** Büyük sola yaslı başlık (tab ekranları) */
   large?: boolean;
-  /** Üst güvenli alan boşluğu ekle (varsayılan true) */
+  /** Üst güvenli alan boşluğu ekle (varsayılan: modal değilse true) */
   safeTop?: boolean;
   border?: boolean;
   transparent?: boolean;
@@ -53,9 +62,11 @@ export type HeaderProps = {
 };
 
 /** Özel ekran başlığı. Stack header kapalıyken kullanılır. */
-export function Header({ title, subtitle, back = true, onBack, right, left, large, safeTop = true, border, transparent, children }: HeaderProps) {
+export function Header({ title, subtitle, back = true, onBack, right, left, large, safeTop: safeTopProp, border, transparent, children }: HeaderProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const isSheetModal = useIsSheetModal();
+  const safeTop = safeTopProp ?? !isSheetModal;
   const goBack = () => {
     if (onBack) onBack();
     else if (router.canGoBack()) router.back();

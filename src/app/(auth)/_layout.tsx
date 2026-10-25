@@ -1,10 +1,9 @@
 import { Stack } from 'expo-router';
 
-import { useTheme } from '@/theme';
+import { darkColors } from '@/theme';
 
 export const unstable_settings = { anchor: 'welcome' };
 
 export default function AuthLayout() {
-  const { colors } = useTheme();
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />;
+  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: darkColors.bg } }} />;
 }

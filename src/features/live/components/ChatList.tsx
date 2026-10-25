@@ -1,0 +1,127 @@
+import { useRef, useState } from 'react';
+import { FlatList, StyleSheet, View, type ListViewToken, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+
+import { Icon, PressableScale, Text } from '@/components/ui';
+import { liveColors } from '@/theme';
+import type { ChatMessage } from '@/types';
+
+import { ChatRow } from './ChatRow';
+
+export type ChatListProps = {
+  messages: ChatMessage[];
+  height: number;
+  pinned?: ChatMessage;
+  blockedIds: string[];
+  onUserPress: (msg: ChatMessage) => void;
+};
+
+/** S20-C: sol alttaki ters sıralı sohbet; üstteki satırlar solar, sabitlenmiş mesaj kartı üstte */
+export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: ChatListProps) {
+  const [topIndex, setTopIndex] = useState(-1);
+  const [overflow, setOverflow] = useState(false);
+  const [scrolledUp, setScrolledUp] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const listRef = useRef<FlatList<ChatMessage>>(null);
+  const [viewabilityPairs] = useState(() => [
+    {
+      viewabilityConfig: { itemVisiblePercentThreshold: 5, minimumViewTime: 0 },
+      onViewableItemsChanged: ({ viewableItems }: { viewableItems: ListViewToken[] }) => {
+        let max = -1;
+        for (const v of viewableItems) if (v.index != null && v.index > max) max = v.index;
+        setTopIndex(max);
+      },
+    },
+  ]);
+  const [listH, setListH] = useState(0);
+
+  const data = messages.filter((m) => !m.userId || !blockedIds.includes(m.userId)).reverse();
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const up = e.nativeEvent.contentOffset.y > 80;
+    if (up !== scrolledUp) setScrolledUp(up);
+  };
+
+  return (
+    <View style={{ height }}>
+      {pinned ? (
+        <PressableScale scaleTo={0.98} onPress={() => setPinOpen((o) => !o)} style={styles.pinned} accessibilityLabel="Sabitlenmiş mesaj">
+          <Icon name="pin" size={14} color={liveColors.primary} />
+          <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={pinOpen ? 4 : 1} style={styles.flex}>
+            <Text variant="footnote" weight="800" color={liveColors.primary}>
+              {pinned.username}{' '}
+            </Text>
+            {pinned.text.replace(/^📌\s*/, '')}
+          </Text>
+          <Icon name={pinOpen ? 'chevron-up' : 'chevron-down'} size={14} color={liveColors.textSecondary} />
+        </PressableScale>
+      ) : null}
+      <View style={styles.flex}>
+        <FlatList
+          ref={listRef}
+          data={data}
+          inverted
+          keyExtractor={(m) => m.id}
+          renderItem={({ item, index }) => (
+            <ChatRow msg={item} fade={overflow && topIndex >= 0 ? Math.max(0, topIndex - index) : 9} onUserPress={onUserPress} />
+          )}
+          extraData={overflow ? topIndex : -1}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          viewabilityConfigCallbackPairs={viewabilityPairs}
+          onLayout={(e) => setListH(e.nativeEvent.layout.height)}
+          onContentSizeChange={(_, h) => {
+            const o = h > listH + 4;
+            if (o !== overflow) setOverflow(o);
+          }}
+          onScroll={onScroll}
+          scrollEventThrottle={64}
+          contentContainerStyle={styles.content}
+          initialNumToRender={14}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={false}
+          nestedScrollEnabled
+        />
+        {scrolledUp ? (
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.newWrap}>
+            <PressableScale
+              scaleTo={0.94}
+              onPress={() => {
+                listRef.current?.scrollToOffset({ offset: 0, animated: true });
+                setScrolledUp(false);
+              }}
+              style={styles.newPill}
+              accessibilityLabel="En yeni mesajlara git">
+              <Icon name="arrow-down" size={13} color={liveColors.onPrimary} />
+              <Text variant="caption" weight="800" color={liveColors.onPrimary}>
+                Yeni mesajlar
+              </Text>
+            </PressableScale>
+          </Animated.View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: { paddingTop: 4, gap: 2 },
+  pinned: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    marginBottom: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: liveColors.glassStrong,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
+  },
+  newWrap: { position: 'absolute', bottom: 6, left: 0, right: 0, alignItems: 'center' },
+  newPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: liveColors.primary, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+});

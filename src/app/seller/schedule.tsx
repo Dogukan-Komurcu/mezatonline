@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { ScheduleForm } from '@/features/seller/ScheduleForm';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="Yayın planla" />
-      <EmptyState icon="construct-outline" title="Yayın planla" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Yayın planla / düzenle (modal) — params: id? (düzenle) */
+export default function SellerScheduleScreen() {
+  return <ScheduleForm />;
 }

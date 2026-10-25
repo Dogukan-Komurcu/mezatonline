@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { ShowsScreen } from '@/features/seller/ShowsScreen';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="Yayınlarım" />
-      <EmptyState icon="construct-outline" title="Yayınlarım" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Yayınlarım — Yaklaşan / Geçmiş */
+export default function SellerShowsScreen() {
+  return <ShowsScreen />;
 }

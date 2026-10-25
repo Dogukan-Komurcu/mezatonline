@@ -45,6 +45,7 @@ export function useLiveShow(opts: UseLiveShowOptions): { state: LiveSnapshot; en
       onLost: (l) => eventsRef.current?.onLost?.(l),
       onGiveawayWon: (g) => eventsRef.current?.onGiveawayWon?.(g),
       onSold: (i) => eventsRef.current?.onSold?.(i),
+      onEnded: (r) => eventsRef.current?.onEnded?.(r),
     });
   }, [engine, events]);
 

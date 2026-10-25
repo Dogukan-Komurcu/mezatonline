@@ -1,11 +1,6 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { ApplyFlow } from '@/features/seller/ApplyFlow';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
-  return (
-    <Screen>
-      <Header title="Satıcı ol" />
-      <EmptyState icon="construct-outline" title="Satıcı ol" message="Bu ekran hazırlanıyor." />
-    </Screen>
-  );
+/** Satıcı başvurusu (modal) — bkz. src/features/seller/ApplyFlow.tsx */
+export default function SellerApplyScreen() {
+  return <ApplyFlow />;
 }

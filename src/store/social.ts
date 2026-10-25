@@ -25,6 +25,7 @@ type SocialState = {
   block: (id: ID) => void;
   unblock: (id: ID) => void;
   addRecentSearch: (q: string) => void;
+  removeRecentSearch: (q: string) => void;
   clearRecentSearches: () => void;
 };
 
@@ -35,8 +36,7 @@ function toggleIn(list: ID[], id: ID): [ID[], boolean] {
 export const useSocialStore = create<SocialState>()(
   persist(
     (set, get) => ({
-      // Başlangıçta birkaç popüler satıcı takip ediliyor (mock seed)
-      followingIds: ['u1', 'u3', 'u7', 'u12'],
+      followingIds: [],
       remindedShowIds: [],
       savedProductIds: [],
       followedCategoryIds: [],
@@ -70,6 +70,7 @@ export const useSocialStore = create<SocialState>()(
         if (!query) return;
         set((s) => ({ recentSearches: [query, ...s.recentSearches.filter((x) => x.toLocaleLowerCase('tr-TR') !== query.toLocaleLowerCase('tr-TR'))].slice(0, 10) }));
       },
+      removeRecentSearch: (q) => set((s) => ({ recentSearches: s.recentSearches.filter((x) => x !== q) })),
       clearRecentSearches: () => set({ recentSearches: [] }),
     }),
     { name: storeKey('social'), storage: persistStorage },

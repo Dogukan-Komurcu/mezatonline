@@ -1,11 +1,11 @@
-import { EmptyState, Header, Screen } from '@/components/ui';
+import { HostConsoleScreen } from '@/features/seller-live/HostConsole';
+import { ForceScheme } from '@/theme';
 
-// TODO: Bu ekran uygulama ajanı tarafından yazılacak.
-export default function Placeholder() {
+/** S86 — Satıcı canlı yayın konsolu */
+export default function SellerLiveRoute() {
   return (
-    <Screen>
-      <Header title="Canlı yayın" />
-      <EmptyState icon="construct-outline" title="Canlı yayın" message="Bu ekran hazırlanıyor." />
-    </Screen>
+    <ForceScheme scheme="dark">
+      <HostConsoleScreen />
+    </ForceScheme>
   );
 }

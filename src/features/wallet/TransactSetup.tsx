@@ -6,7 +6,7 @@
  * Eksik bilgi yoksa callback hemen çalışır; varsa alttan kurulum sayfası açılır,
  * tamamlanınca callback çalışır. <TransactSetupHost /> kök layout'ta bir kez render edilir.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { create } from 'zustand';
 
@@ -17,9 +17,9 @@ import { useWalletStore } from '@/store/wallet';
 
 import { AddressForm, CardForm, emptyAddress, emptyCard, TestCardHint, validateAddress, validateCard, type AddressDraft, type CardDraft } from './forms';
 
-type SetupState = { open: boolean; dark: boolean; onReady?: () => void; reason?: string };
+type SetupState = { open: boolean; dark: boolean; onReady?: () => void; reason?: string; scopedHosts: number };
 
-const useSetupStore = create<SetupState>(() => ({ open: false, dark: false }));
+const useSetupStore = create<SetupState>(() => ({ open: false, dark: false, scopedHosts: 0 }));
 
 export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean; reason?: string } = {}) {
   const { addresses, paymentMethods } = useWalletStore.getState();
@@ -30,7 +30,23 @@ export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean
   useSetupStore.setState({ open: true, onReady, dark: !!opts.dark, reason: opts.reason });
 }
 
-export function TransactSetupHost() {
+/**
+ * Kurulum sayfasını çizen host. Kök layout'ta bir kez (scoped olmadan) bulunur.
+ * iOS'ta tam ekran modal ekranlar (ör. canlı yayın) kendi içinde `scoped` bir kopya çizer;
+ * kopya varken kökteki host susar (iki sayfa üst üste açılmasın diye).
+ */
+export function TransactSetupHost({ scoped = false }: { scoped?: boolean }) {
+  const scopedHosts = useSetupStore((s) => s.scopedHosts);
+  useEffect(() => {
+    if (!scoped) return;
+    useSetupStore.setState((s) => ({ scopedHosts: s.scopedHosts + 1 }));
+    return () => useSetupStore.setState((s) => ({ scopedHosts: Math.max(0, s.scopedHosts - 1) }));
+  }, [scoped]);
+  if (!scoped && scopedHosts > 0) return null;
+  return <SetupSheet />;
+}
+
+function SetupSheet() {
   const { open, onReady, dark, reason } = useSetupStore();
   const me = useMe();
   const hasCard = useWalletStore((s) => s.paymentMethods.length > 0);

@@ -29,7 +29,7 @@ export function completePurchase(input: PurchaseInput): Order {
   const payment = input.paymentMethodId ? wallet.paymentMethods.find((p) => p.id === input.paymentMethodId) : selectDefaultPayment(wallet);
   const quantity = input.quantity ?? 1;
   const itemTotal = input.price * quantity;
-  const creditUsed = input.applyCredits && itemTotal > 0 ? wallet.useCredits(itemTotal, `Sipariş: ${input.product.title}`) : 0;
+  const creditUsed = input.applyCredits && itemTotal > 0 ? wallet.spendCredits(itemTotal, `Sipariş: ${input.product.title}`) : 0;
   const order = useOrdersStore.getState().createOrder({
     product: input.product,
     price: input.price,
