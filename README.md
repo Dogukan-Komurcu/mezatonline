@@ -37,36 +37,55 @@ npx tsc --noEmit
 
 ## Telefona kurulum
 
-### iPhone (Mac + Xcode, kablo veya aynı Wi‑Fi)
+### iPhone (tek komut)
 
-1. iPhone'u Mac'e bağla, kilidini aç, "Bu bilgisayara güven" de. iPhone'da **Ayarlar → Gizlilik ve Güvenlik → Geliştirici Modu** açık olmalı.
-2. Release (Metro gerektirmeyen) sürümü derleyip yükle:
+iPhone'u Mac'e kabloyla bağla (ya da aynı Wi‑Fi'da olsun), kilidini aç. İlk seferde iPhone'da **Ayarlar → Gizlilik ve Güvenlik → Geliştirici Modu** açık olmalı.
 
 ```bash
-npx expo run:ios --device --configuration Release
+./scripts/ios-device.sh
 ```
 
-İlk derlemede Xcode imzalama sorarsa `ios/Mezatonline.xcworkspace` dosyasını Xcode'da aç → **Signing & Capabilities** → Team: *dogukan komurcu (4N6B7MPCY3)* seç, sonra komutu tekrar çalıştır.
+Betik Release sürümünü (Metro gerektirmez, bilgisayardan bağımsız çalışır) ekibin `4N6B7MPCY3` imzasıyla derleyip bağlı iPhone'a yükler.
+Uygulama açılmazsa iPhone'da **Ayarlar → Genel → VPN ve Cihaz Yönetimi** altından geliştirici sertifikasına güven.
 
 ### Android (APK)
 
 ```bash
-npx expo run:android --variant release
+./scripts/android-apk.sh
 ```
 
-ya da yalnızca APK üretmek için:
+Proje klasöründe `Mezatonline.apk` oluşur; telefona kopyalayıp yükleyebilirsin ("Bilinmeyen kaynaklar"a izin vermen gerekebilir).
+APK yalnızca 64‑bit (arm64) telefonlar içindir — 2017 sonrası neredeyse tüm Android telefonlar.
+
+### Geliştirme modunda telefonda canlı değişiklik görmek
 
 ```bash
-cd android && ./gradlew assembleRelease
+npx expo start
 ```
 
-APK: `android/app/build/outputs/apk/release/app-release.apk` — telefona kopyalayıp yükleyebilirsin.
+Ardından telefondaki uygulama yerine `npx expo run:ios --device` ile Debug derlemesi yüklenirse kod değişiklikleri anında yansır.
 
-### EAS (bulutta derleme, isteğe bağlı)
+### Bu makinede karşılaşılan durumlar
+
+- **Disk:** iOS + Android derlemeleri ~10 GB yer ister. Disk dolarsa derleme ve Metro çöker.
+- **Masaüstü / iCloud:** Proje Masaüstünde olduğu için Xcode çıktıları `~/Library/Developer/Xcode/DerivedData/Mezatonline-*` altına yazılır (aksi halde kod imzalama "resource fork / detritus" hatası verir).
+- **Yavaş ağ ve CocoaPods:** `pod install` React Native çekirdek dosyasını indirirken takılırsa, indirilmiş arşivlerle kurulum:
 
 ```bash
-npx eas-cli@latest build --profile preview --platform all
+cd ios && LANG=en_US.UTF-8 RCT_TESTONLY_RNCORE_TARBALL_PATH=$PWD/Pods/ReactNativeCore-artifacts/reactnative-core-0.88.0-debug.tar.gz RCT_USE_LOCAL_RN_DEP=$PWD/Pods/ReactNativeDependencies-artifacts/reactnative-dependencies-0.88.0-debug.tar.gz pod install
 ```
+
+- **Simülatörde emojiler "?" görünüyor:** Bu Mac'teki iOS simülatörünün emoji fontu bozuk (Safari'de de aynı). Gerçek telefonda düzgün görünür.
+
+### Geliştirici QA kancaları (yalnızca Debug)
+
+Simülatörde bir ekranı doğrudan açmak için:
+
+```bash
+xcrun simctl launch booted com.mezatonline.app -qaLogin 1 -qaRoute /live/s1
+```
+
+`-qaSeller 1` satıcı hesabıyla, `-qaTheme dark` koyu temayla açar. Release sürümünde bu kancalar devre dışıdır.
 
 ## Proje yapısı
 
