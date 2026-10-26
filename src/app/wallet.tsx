@@ -158,7 +158,7 @@ export default function WalletScreen() {
                 </PressableScale>
                 <View style={styles.refButtons}>
                   <Button title="Paylaş" icon="share-outline" style={{ flex: 1 }} onPress={share} />
-                  <Button title="Kopyala" icon="copy-outline" variant="secondary" style={{ flex: 1 }} onPress={copy} />
+                  <Button title="Kopyala" icon="copy-outline" variant="inverse" style={{ flex: 1 }} onPress={copy} />
                 </View>
                 <View style={[styles.refStats, { borderTopColor: colors.border }]}>
                   <View style={styles.refStat}>

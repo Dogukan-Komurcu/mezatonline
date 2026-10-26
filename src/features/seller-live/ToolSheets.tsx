@@ -312,7 +312,7 @@ export function MoreSheet({
         switchValue={verifiedOnly}
         onSwitch={onVerifiedOnly}
       />
-      <ListRow icon="hourglass-outline" title="Yavaş mod" subtitle="İzleyiciler 5 saniyede bir mesaj yazabilir (/yavas 5)" switchValue={slowMode} onSwitch={onSlowMode} />
+      <ListRow icon="hourglass-outline" title="Yavaş mod" subtitle="İzleyiciler 5 saniyede bir mesaj yazabilir" switchValue={slowMode} onSwitch={onSlowMode} />
       <ListRow icon="share-social-outline" title="Yayını paylaş" onPress={onShare} />
       {onEdit ? <ListRow icon="create-outline" title="Yayın bilgilerini düzenle" onPress={onEdit} /> : null}
       <ListRow
@@ -453,7 +453,7 @@ export function ModeratorsSheet({
               <Text variant="callout" weight="600" style={{ flex: 1 }} numberOfLines={1}>
                 {s.username}
               </Text>
-              <Button title="Moderatör yap" size="sm" onPress={() => onAdd(s.username)} />
+              <Button title="Moderatör yap" size="sm" variant="glass" icon="shield-outline" onPress={() => onAdd(s.username)} />
             </View>
           ))}
         </>
@@ -869,7 +869,7 @@ export function EndShowSheet({
         <Text variant="callout" color="textSecondary" align="center">
           {rehearsal
             ? 'Prova özetini göreceksin. Satışlar kaydedilmedi.'
-            : `Şu ana kadar ${itemsSold} ürün sattın (${formatTRY(gross)}). Yayını bitirince izleyiciler çıkarılır; 2 saat içinde yeniden başlatabilirsin.`}
+            : `${itemsSold > 0 ? `Şu ana kadar ${itemsSold} ürün sattın (${formatTRY(gross)}).` : 'Bu yayında henüz satış olmadı.'} Yayını bitirince izleyiciler çıkarılır; 2 saat içinde yeniden başlatabilirsin.`}
         </Text>
         {lotRunning || giveawayRunning ? (
           <InfoBox icon="alert-circle-outline" tone="warning" style={{ alignSelf: 'stretch', marginTop: 4 }}>

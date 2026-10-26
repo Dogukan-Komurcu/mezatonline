@@ -53,7 +53,7 @@ export function Button({
   haptics = true,
   testID,
 }: ButtonProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const palette: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
     primary: { bg: colors.primary, fg: colors.onPrimary },
     secondary: { bg: colors.surface, fg: colors.text },
@@ -63,8 +63,10 @@ export function Button({
     danger: { bg: colors.danger, fg: '#FFFFFF' },
     glass: { bg: liveColors.glassLight, fg: '#FFFFFF', border: liveColors.border },
   };
-  const p = palette[variant];
   const isDisabled = disabled || loading;
+  // Devre dışı birincil buton: Whatnot'taki açık sarı (koyu temada nötr gri) — saydamlık yerine
+  const disabledPrimary: { bg: string; fg: string; border?: string } = isDark ? { bg: colors.surfaceAlt, fg: colors.textTertiary } : { bg: '#FFF7B9', fg: '#9A9AA0' };
+  const p = disabled && !loading && variant === 'primary' ? disabledPrimary : palette[variant];
   return (
     <PressableScale
       testID={testID}
@@ -83,7 +85,7 @@ export function Button({
           backgroundColor: p.bg,
           borderColor: p.border ?? 'transparent',
           borderWidth: p.border ? StyleSheet.hairlineWidth * 2 : 0,
-          opacity: isDisabled && !loading ? 0.45 : 1,
+          opacity: isDisabled && !loading && variant !== 'primary' ? 0.45 : 1,
           alignSelf: fullWidth ? 'stretch' : 'auto',
         },
         style,

@@ -18,7 +18,10 @@ type Tab = 'tasks' | 'shop' | 'history';
 
 export default function RewardsScreen() {
   const qa = useQaParams();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  // Özet kartı: açık temada siyah, koyu temada beyaz blok yerine koyu kart (kapsüller görünür kalsın)
+  const summaryBg = isDark ? colors.card : colors.inverse;
+  const summaryFg = isDark ? colors.text : colors.onInverse;
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const cardW = Math.floor((width - SCREEN_PADDING * 2 - 12) / 2);
@@ -33,7 +36,8 @@ export default function RewardsScreen() {
   const credits = useWalletStore((s) => s.credits);
   const me = useMe();
 
-  const [tab, setTab] = useState<Tab>('tasks');
+  // Yalnızca geliştirme: ?qa=shop|history ile o sekme açık başlar
+  const [tab, setTab] = useState<Tab>(() => (__DEV__ && (qa.qa === 'shop' || qa.qa === 'history') ? qa.qa : 'tasks'));
   const [confirm, setConfirm] = useState<ShopItem | null>(null);
   const jumbotrons = POINTS_SHOP.filter((i) => i.kind === 'jumbotron');
   const reactions = POINTS_SHOP.filter((i) => i.kind === 'reaction');
@@ -137,23 +141,23 @@ export default function RewardsScreen() {
               İlerlemenin güncellenmesi birkaç dakika sürebilir.
             </Text>
 
-            <View style={[styles.summary, { backgroundColor: colors.inverse }]}>
+            <View style={[styles.summary, { backgroundColor: summaryBg, borderColor: colors.border, borderWidth: isDark ? StyleSheet.hairlineWidth : 0 }]}>
               <View style={styles.rowBetween}>
                 <View>
-                  <Text variant="footnote" weight="600" color={colors.onInverse} style={{ opacity: 0.7 }}>
+                  <Text variant="footnote" weight="600" color={summaryFg} style={{ opacity: 0.7 }}>
                     Bugün kazandığın
                   </Text>
                   <View style={styles.summaryPoints}>
                     <Coin size={22} />
-                    <Text variant="title2" color={colors.onInverse} tabular>
+                    <Text variant="title2" color={summaryFg} tabular>
                       {formatNumber(earnedToday)}
                     </Text>
-                    <Text variant="subhead" color={colors.onInverse} style={{ opacity: 0.6 }}>
+                    <Text variant="subhead" color={summaryFg} style={{ opacity: 0.6 }}>
                       / {formatNumber(maxToday)}
                     </Text>
                   </View>
                 </View>
-                <Text variant="headline" color={colors.onInverse}>
+                <Text variant="headline" color={summaryFg}>
                   {doneToday.length}/{DAILY_CHALLENGES.length} görev
                 </Text>
               </View>

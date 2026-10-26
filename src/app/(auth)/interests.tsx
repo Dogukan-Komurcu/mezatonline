@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
 import { Button, Header, Icon, PressableScale, Text } from '@/components/ui';
 import { CATEGORIES_BY_POPULARITY } from '@/data';
@@ -40,12 +40,11 @@ function InterestTile({ category, width, selected, onPress }: { category: Catego
       </Text>
       <View style={[styles.tileImage, { backgroundColor: category.tint }]}>
         <Image source={{ uri: category.image }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" transition={200} recyclingKey={category.id} />
-        <View style={[styles.emoji, { backgroundColor: colors.bg }]}>
-          <Text style={styles.emojiText}>{category.emoji}</Text>
-        </View>
         {selected ? (
-          <Animated.View entering={ZoomIn.springify().damping(14)} exiting={ZoomOut.duration(120)} style={[styles.check, { backgroundColor: colors.onPrimary, borderColor: colors.primary }]}>
-            <Icon name="checkmark" size={14} color={colors.primary} />
+          <Animated.View entering={FadeIn.duration(140)} exiting={FadeOut.duration(120)} style={[StyleSheet.absoluteFill, styles.selectedOverlay]}>
+            <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.check, { backgroundColor: colors.primary, borderColor: colors.onPrimary }]}>
+              <Icon name="checkmark" size={18} color={colors.onPrimary} />
+            </Animated.View>
           </Animated.View>
         ) : null}
       </View>
@@ -66,9 +65,11 @@ function InterestsScreen() {
   const gender = useAuthFlow((s) => s.gender);
   const stored = useAuthFlow((s) => s.interests);
   const setInterests = useAuthFlow((s) => s.setInterests);
-  const [selected, setSelected] = useState<string[]>(stored);
-
   const suggested = suggestedInterests(gender);
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (?qa=picked → önerilenler seçili)
+  const { qa } = useLocalSearchParams<{ qa?: string }>();
+  const [selected, setSelected] = useState<string[]>(() => (__DEV__ && qa === 'picked' ? suggested : stored));
+
   // Cinsiyete göre önerilenler önde, kalanı popülerliğe göre
   const ordered = [...CATEGORIES_BY_POPULARITY.filter((c) => suggested.includes(c.id)), ...CATEGORIES_BY_POPULARITY.filter((c) => !suggested.includes(c.id))];
   const tileWidth = Math.floor((width - SCREEN_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
@@ -122,7 +123,7 @@ function InterestsScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
-            <StepTitle title="Başlamak için birkaç tane seç" subtitle="Neleri seversin? En az 2 kategori seç, Senin İçin akışını buna göre hazırlayalım." style={styles.title} />
+            <StepTitle title="Başlamak için birkaç tane seç" subtitle="Neleri seversin? En az 2 kategori seç, Sana Özel akışını buna göre hazırlayalım." style={styles.title} />
             <PressableScale onPress={pickForMe} style={styles.pickForMe} accessibilityRole="button">
               <Icon name="sparkles" size={16} color="primary" />
               <Text variant="subhead" weight="800" color="primary" style={styles.underline}>
@@ -154,9 +155,8 @@ const styles = StyleSheet.create({
   tile: { borderRadius: radius.md, padding: 8, gap: 6, borderWidth: 2 },
   tileName: { minHeight: 32 },
   tileImage: { height: 72, borderRadius: radius.sm, overflow: 'hidden' },
-  emoji: { position: 'absolute', right: 4, bottom: 4, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  emojiText: { fontSize: 12, lineHeight: 15 },
+  selectedOverlay: { backgroundColor: 'rgba(0,0,0,0.38)', alignItems: 'center', justifyContent: 'center' },
   viewers: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   liveDot: { width: 13, height: 13, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  check: { position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  check: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });

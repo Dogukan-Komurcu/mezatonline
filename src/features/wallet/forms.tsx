@@ -193,7 +193,7 @@ export function CardForm({ value, onChange, errors = {} }: { value: CardDraft; o
           containerStyle={styles.flex}
         />
       </View>
-      <ListRow icon="shield-checkmark" title="3D Secure ile güvenli kayıt" subtitle="Kart bilgilerin iyzico altyapısında şifrelenerek saklanır. Kartını doğrulamak için ₺1 provizyon alınıp hemen iade edilir." style={{ paddingHorizontal: 0 }} />
+      <ListRow icon="shield-checkmark" title="3D Secure ile güvenli kayıt" subtitle="Kartın şifrelenerek saklanır; doğrulama için alınan ₺1 provizyon hemen iade edilir." subtitleLines={3} style={{ paddingHorizontal: 0 }} />
     </View>
   );
 }

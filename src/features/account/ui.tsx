@@ -490,7 +490,8 @@ const styles = StyleSheet.create({
   group: { paddingTop: 20 },
   groupHead: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SCREEN_PADDING, marginBottom: 4, gap: 12 },
   groupFooter: { paddingHorizontal: SCREEN_PADDING, marginTop: 4 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'flex-start' },
+  // Etiketler hep satır içinde (menü satırı sağı, başlık yanı) kullanılıyor: dikeyde ortala
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'center' },
   segments: { flexDirection: 'row', gap: 4 },
   segment: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
   note: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },

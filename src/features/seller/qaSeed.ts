@@ -13,12 +13,16 @@ import { useSellerExtras } from './store';
 export function seedSellerQa() {
   if (!__DEV__) return;
   const seller = useSellerStore.getState();
-  if (seller.listings.length >= 3) return;
   const source = getProductsByCategory('tcg').slice(0, 6);
-  const ids = source.map((p, i) => {
-    const { id: _id, sellerId: _s, sold: _sold, createdAt: _c, saves: _saves, showId: _show, ...rest } = p;
-    return createListingWithStatus({ ...rest, format: i % 3 === 2 ? 'buy_now' : 'auction', quantity: Math.max(1, rest.quantity) }, i === 5 ? 'draft' : 'active').id;
-  });
+  const ids =
+    seller.listings.length >= 3
+      ? seller.listings.filter((p) => p.sold < p.quantity).map((p) => p.id)
+      : source.map((p, i) => {
+          const { id: _id, sellerId: _s, sold: _sold, createdAt: _c, saves: _saves, showId: _show, ...rest } = p;
+          return createListingWithStatus({ ...rest, format: i % 3 === 2 ? 'buy_now' : 'auction', quantity: Math.max(1, rest.quantity) }, i === 5 ? 'draft' : 'active').id;
+        });
+  // Bitmemiş bir yayın zaten varsa yenisini planlama
+  if (useSellerStore.getState().shows.some((s) => s.status !== 'ended')) return;
   const at = new Date(Date.now() + 26 * 3_600_000);
   at.setMinutes(0, 0, 0);
   const show = useSellerStore.getState().scheduleShow({

@@ -55,7 +55,7 @@ export function Avatar({ uri, name, size = 36, live, ring, verified, style }: Av
           </View>
         )}
       </View>
-      {live ? (
+      {live && size >= 40 ? (
         <View style={[styles.liveTag, { backgroundColor: colors.live, bottom: -4 }]}>
           <Text variant="caption" color="#FFFFFF" numberOfLines={1} style={{ fontSize: Math.max(7, Math.min(11, size * 0.16)), lineHeight: Math.max(9, Math.min(13, size * 0.2)), letterSpacing: 0.2 }}>
             CANLI

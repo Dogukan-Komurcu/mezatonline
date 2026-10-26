@@ -57,14 +57,16 @@ function GoLiveContent() {
   const [zoomIndex, setZoomIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string>(() => {
     if (params.showId && allShows.some((s) => s.id === params.showId)) return params.showId;
-    const first = allShows.find((s) => s.status === 'scheduled');
-    return first?.id ?? QUICK;
+    // Devam eden yayın varsa önce o ("Yayına Dön"), yoksa en yakın planlı yayın (liste bu sırayla sıralı)
+    return shows[0]?.id ?? QUICK;
   });
   const [quickTitle, setQuickTitle] = useState('');
   const [quickCategory, setQuickCategory] = useState(() => me.categoryIds[0] ?? CATEGORIES_BY_POPULARITY[0]?.id ?? 'tcg');
   const [rehearsal, setRehearsal] = useState(false);
   const [checkStep, setCheckStep] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [panelH, setPanelH] = useState(0);
+  const [toolsBottom, setToolsBottom] = useState(0);
 
   const selected: Show | undefined = shows.find((s) => s.id === selectedId);
   const activeListings = listings.filter((p) => p.sold < p.quantity);
@@ -163,7 +165,16 @@ function GoLiveContent() {
 
   return (
     <View style={[styles.flex, { backgroundColor: liveColors.panel }]}>
-      <CameraStage access={access} facing={facing} torch={torch} zoom={zoom.value} active={focused} placeholderHint={needsPermission ? '' : undefined} />
+      <CameraStage
+        access={access}
+        facing={facing}
+        torch={torch}
+        zoom={zoom.value}
+        active={focused}
+        placeholderHint={needsPermission ? '' : undefined}
+        // Yer tutucu yazısı alttaki panelin arkasında kalmasın: üst çubuk ile panel arasındaki alana ortala
+        placeholderInset={{ top: insets.top + 56, bottom: panelH || screenH * 0.62 }}
+      />
       <LinearGradient colors={[liveColors.glassStrong, 'transparent']} style={[styles.topShade, { height: insets.top + 120 }]} pointerEvents="none" />
 
       {/* Üst çubuk */}
@@ -179,7 +190,7 @@ function GoLiveContent() {
       </View>
 
       {/* Kamera araçları */}
-      <View style={[styles.tools, { top: insets.top + 64 }]}>
+      <View style={[styles.tools, { top: insets.top + 64 }]} onLayout={(e) => setToolsBottom(Math.round(e.nativeEvent.layout.y + e.nativeEvent.layout.height))}>
         <IconButton
           name="camera-reverse-outline"
           variant="glass"
@@ -217,7 +228,8 @@ function GoLiveContent() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.bottomWrap} pointerEvents="box-none">
         <Animated.View
           entering={FadeInDown.duration(320)}
-          style={[styles.panel, { backgroundColor: liveColors.panel, maxHeight: Math.min(screenH * 0.62, screenH - keyboard - insets.top - 72) }]}>
+          onLayout={(e) => setPanelH(Math.round(e.nativeEvent.layout.height))}
+          style={[styles.panel, { backgroundColor: liveColors.panel, maxHeight: Math.min(screenH * 0.62, keyboard > 0 ? screenH - keyboard - insets.top - 72 : screenH - (toolsBottom || insets.top + 280) - 12) }]}>
           <View style={styles.handle}>
             <View style={[styles.handleBar, { backgroundColor: colors.surfaceAlt }]} />
           </View>

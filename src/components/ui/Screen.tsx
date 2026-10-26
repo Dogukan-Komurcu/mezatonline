@@ -36,12 +36,12 @@ export function Screen({ children, safeTop = false, safeBottom = false, style, b
 }
 
 /** iOS'ta sayfa (pageSheet) olarak açılan modal rotalar: üst güvenli alan boşluğu gerekmez */
-const IOS_MODAL_PREFIXES = ['/checkout/', '/review/', '/settings/add-card', '/settings/address', '/seller/listing', '/seller/schedule', '/seller/apply'];
+const IOS_MODAL_ROUTES = ['/checkout', '/review', '/settings/add-card', '/settings/address', '/seller/listing', '/seller/schedule', '/seller/apply'];
 
 /** Mevcut ekran iOS'ta sayfa-modal olarak mı gösteriliyor */
 export function useIsSheetModal(): boolean {
   const pathname = usePathname();
-  return Platform.OS === 'ios' && IOS_MODAL_PREFIXES.some((p) => pathname.startsWith(p));
+  return Platform.OS === 'ios' && IOS_MODAL_ROUTES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 export type HeaderProps = {

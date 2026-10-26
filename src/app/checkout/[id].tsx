@@ -88,10 +88,15 @@ export default function CheckoutScreen() {
   const [paying, setPaying] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
-  // Yalnızca geliştirme: QA ekran görüntüleri için 3D Secure adımını doğrudan aç (?qa=3ds; otomatik SMS kodu ile başarı ekranına geçer)
+  // Yalnızca geliştirme: QA ekran görüntüleri için 3D Secure adımını doğrudan aç (?qa=3ds; otomatik SMS kodu ile başarı ekranına geçer) ya da sona kaydır (?qa=end)
   useEffect(() => {
-    if (!__DEV__ || params.qa !== '3ds') return;
+    if (!__DEV__ || !params.qa) return;
     const t = setTimeout(() => {
+      if (params.qa === 'end') {
+        scrollRef.current?.scrollToEnd({ animated: false });
+        return;
+      }
+      if (params.qa !== '3ds') return;
       setAgreed(true);
       setThreeDS(true);
     }, 900);

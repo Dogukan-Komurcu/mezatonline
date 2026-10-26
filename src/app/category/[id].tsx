@@ -196,7 +196,7 @@ export default function CategoryScreen() {
                 onPress={onFollow}
               />
               <ViewersMetric viewers={category.viewers} />
-              <Text variant="footnote" color="textSecondary" numberOfLines={1} style={styles.flexShrink}>
+              <Text variant="footnote" weight="600" color="textSecondary" numberOfLines={1} style={styles.liveCount}>
                 · {liveCount} canlı yayın
               </Text>
             </View>
@@ -352,7 +352,7 @@ export default function CategoryScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  flexShrink: { flexShrink: 1 },
+  liveCount: { flexShrink: 1, marginLeft: -5 },
   hero: { paddingHorizontal: SCREEN_PADDING, paddingTop: 2, paddingBottom: 16, gap: 12 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   subs: { paddingHorizontal: SCREEN_PADDING, gap: 8, paddingBottom: 14 },

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Keyboard, Platform, StyleSheet, Switch, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Sheet, Text } from '@/components/ui';
 import { nextMinBid, quickBidOptions } from '@/lib/auction';
@@ -13,6 +14,22 @@ import type { LiveLot } from '../engine';
 import { alpha } from '../components/styles';
 
 export type CustomBidSubmit = { amount: number; max: boolean };
+
+/** Açık klavyenin yüksekliği (kapalıyken 0) */
+function useKeyboardHeight(): number {
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const a = Keyboard.addListener(showEvt, (e) => setH(e.endCoordinates.height));
+    const b = Keyboard.addListener(hideEvt, () => setH(0));
+    return () => {
+      a.remove();
+      b.remove();
+    };
+  }, []);
+  return h;
+}
 
 export type CustomBidSheetProps = {
   visible: boolean;
@@ -31,6 +48,11 @@ export type CustomBidSheetProps = {
 /** S22: Özel teklif / Maks. teklif sayfası */
 export function CustomBidSheet({ visible, onClose, mode, product, lot, startPrice = 1, existingPreBid, shippingLine, onSubmit }: CustomBidSheetProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { height: screenH } = useWindowDimensions();
+  const keyboardH = useKeyboardHeight();
+  // Sayısal klavye açıkken sayfa (klavyenin üstüne itildiğinde) çentiğin altına taşmasın
+  const maxHeight = keyboardH > 0 ? Math.min(0.92, Math.max(0.4, (screenH - keyboardH - insets.top - 8) / screenH)) : 0.92;
   const live = mode === 'live';
   const running = !live || lot?.status === 'running';
   const leading = live && !!lot?.leader?.isMe;
@@ -98,7 +120,7 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
       visible={visible}
       onClose={onClose}
       dark
-      maxHeight={0.92}
+      maxHeight={maxHeight}
       footer={
         <View style={styles.footer}>
           <Button title={cta} size="lg" fullWidth disabled={!running} onPress={submit} />

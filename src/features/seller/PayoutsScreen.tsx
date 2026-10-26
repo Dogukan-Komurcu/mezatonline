@@ -196,7 +196,7 @@ export function PayoutsScreen() {
                 {formatTRY(pending, { cents: true })}
               </Text>
               <Text variant="caption" color={colors.onInverse} style={{ opacity: 0.55 }}>
-                Kargolama / teslimat bekleyen
+                Kargolanmayı bekleyen
               </Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -233,7 +233,7 @@ export function PayoutsScreen() {
         <View style={[styles.note, { backgroundColor: colors.surface }]}>
           <Icon name="time-outline" size={18} color="textSecondary" />
           <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-            Kazancın, sipariş kargoya verilip teslimat onaylandığında çekilebilir hale gelir. Para çekme talepleri 1-2 iş günü içinde IBAN’ına geçer.
+            Kazancın, sipariş kargoya verildiğinde (kargo firması paketi teslim alınca) çekilebilir bakiyene geçer. Para çekme talepleri 1-2 iş günü içinde IBAN’ına geçer.
           </Text>
         </View>
 

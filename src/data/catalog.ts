@@ -363,7 +363,7 @@ export const SHOW_DESCRIPTIONS = [
   'Bütün ürünler orijinal ve faturalıdır. Aynı yayında aldıklarınız tek kargoda gönderilir 📦',
   'Her 15 dakikada bir takipçilere özel çekiliş 🎁 Kargolar 24 saat içinde çıkar.',
   'Sorularınızı sohbetten yazın, her ürünü yakından gösteriyorum. Keyifli yayınlar!',
-  'Yeni gelen ürünleri ilk sizinle paylaşıyorum. Sudden death açık artırmaları da var ⚡',
+  'Yeni gelen ürünleri ilk sizinle paylaşıyorum. Ani Bitiş 💀 açık artırmaları da var ⚡',
 ];
 
 export const HIGHLIGHT_POOL = ['₺1 Başlangıç', 'Çekiliş', 'Ücretsiz Kargo', 'Orijinal Garantili', 'Hızlı Kargo', 'Ani Bitiş 💀', 'Flaş İndirim', 'Yeni Satıcı'];

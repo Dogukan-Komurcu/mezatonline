@@ -8,7 +8,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, type IconName } from '@/components/ui';
@@ -25,7 +25,7 @@ import { Card, KeyValue, StickyFooter, tint } from './ui';
 const BENEFITS: { icon: IconName; title: string; body: string }[] = [
   { icon: 'pricetags', title: "Komisyon %8, ilk ay %0", body: 'Sektörün en düşük oranlarından. Yeni satıcılara ilk 30 gün komisyon iadesi.' },
   { icon: 'cube', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
-  { icon: 'card', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Kazancın teslimattan sonra çekilebilir olur, tek dokunuşla hesabına geçer.' },
+  { icon: 'card', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
   { icon: 'people', title: 'Milyonlarca alıcı', body: 'Koleksiyonerler ve fırsat avcıları her gün canlı yayınlarda alışveriş yapıyor.' },
 ];
 
@@ -45,7 +45,7 @@ const STORIES = [
 const FAQ: { q: string; a: string }[] = [
   { q: 'Kimler satıcı olabilir?', a: '18 yaşını doldurmuş, Türkiye’de yaşayan herkes başvurabilir. Bireysel, şahıs şirketi ya da kurumsal olarak satış yapabilirsin.' },
   { q: 'Hangi ürünleri satabilirim?', a: 'Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Orijinal olmayan ürünler, silah ve şans oyunları yasaktır.' },
-  { q: 'Ödemelerimi nasıl alırım?', a: 'Sipariş teslim edildiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
+  { q: 'Ödemelerimi nasıl alırım?', a: 'Siparişi kargoya verdiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
   { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini anlaşmalı firmanın şubesine bırakıp kodu göstermen yeterli. Kargo ücretini alıcı öder.' },
   { q: 'Yayın için ekipman gerekir mi?', a: 'Hayır. Telefonun yeterli. İyi ışık ve sabit bir tripod yayın kaliteni artırır.' },
   { q: 'Fatura kesmem gerekiyor mu?', a: 'Bireysel satıcılar ara sıra yaptıkları satışlar için fatura kesmek zorunda değildir. Şirketler her satış için e-Arşiv fatura düzenler.' },
@@ -85,16 +85,19 @@ export function SellLanding() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  // Sarı hero kaydırılıp geçilince durum çubuğunun arkasına zemin rengi gelir (metin saatle çakışmasın)
+  const [heroH, setHeroH] = useState(0);
+  const [pastHero, setPastHero] = useState(false);
   const shows = getLiveShows().slice(0, 3);
   const sellers = getSellers().slice(0, 3);
   const example = sellerFees(1000, SHIPPING_PRICES.small);
 
-  // Sarı hero üstünde durum çubuğu her zaman koyu
+  // Sarı hero üstünde durum çubuğu koyu; hero geçilince temaya göre
   useFocusEffect(
     useCallback(() => {
-      setStatusBarStyle('dark', true);
+      setStatusBarStyle(pastHero && isDark ? 'light' : 'dark', true);
       return () => setStatusBarStyle(isDark ? 'light' : 'dark', true);
-    }, [isDark]),
+    }, [isDark, pastHero]),
   );
 
   const center = width / 2;
@@ -103,8 +106,23 @@ export function SellLanding() {
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.bg }]}>
-      <ScrollView contentOffset={qaOffset} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, { backgroundColor: colors.primary, paddingTop: insets.top + 16 }]}>
+      <ScrollView
+        contentOffset={qaOffset}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={32}
+        onScroll={(e) => {
+          const past = heroH > 0 && e.nativeEvent.contentOffset.y > heroH - insets.top;
+          if (past !== pastHero) setPastHero(past);
+        }}>
+        <View
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            setHeroH(h);
+            // Başlangıç ofsetiyle açıldıysa (QA) kaydırma olayı gelmez
+            if (qaOffset && qaOffset.y > h - insets.top) setPastHero(true);
+          }}
+          style={[styles.hero, { backgroundColor: colors.primary, paddingTop: insets.top + 16 }]}>
           <View style={[styles.heroTag, { backgroundColor: colors.onPrimary }]}>
             <Icon name="storefront" size={14} color={colors.primary} />
             <Text variant="caption" color={colors.primary}>
@@ -302,6 +320,7 @@ export function SellLanding() {
           </Text>
         </View>
       </ScrollView>
+      {pastHero ? <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)} style={[styles.statusBackdrop, { height: insets.top, backgroundColor: colors.bg }]} /> : null}
       <StickyFooter safeBottom={false}>
         <Button title="Hemen Başla" size="lg" fullWidth iconRight="arrow-forward" onPress={() => router.push('/seller/apply')} />
         <Text variant="footnote" color="textSecondary" align="center">
@@ -314,6 +333,7 @@ export function SellLanding() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  statusBackdrop: { position: 'absolute', top: 0, left: 0, right: 0 },
   hero: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 24, borderBottomLeftRadius: radius.xxl, borderBottomRightRadius: radius.xxl, overflow: 'hidden' },
   heroTag: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, marginBottom: 14 },
   heroTitle: { letterSpacing: -0.5 },

@@ -11,6 +11,8 @@ import { Text } from './Text';
 export type ListRowProps = {
   title: string;
   subtitle?: string;
+  /** Alt başlık satır sınırı (varsayılan 2) */
+  subtitleLines?: number;
   icon?: IconName;
   /** İkon arka plan rengi (renkli kare ikon) */
   iconTint?: string;
@@ -30,7 +32,7 @@ export type ListRowProps = {
 };
 
 /** Ayarlar / hesap menüsü satırı */
-export function ListRow({ title, subtitle, icon, iconTint, left, value, right, onPress, chevron, destructive, switchValue, onSwitch, badge, style, disabled }: ListRowProps) {
+export function ListRow({ title, subtitle, subtitleLines = 2, icon, iconTint, left, value, right, onPress, chevron, destructive, switchValue, onSwitch, badge, style, disabled }: ListRowProps) {
   const { colors } = useTheme();
   const showChevron = chevron ?? (!!onPress && onSwitch === undefined);
   const content = (
@@ -50,7 +52,7 @@ export function ListRow({ title, subtitle, icon, iconTint, left, value, right, o
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="footnote" color="textSecondary" numberOfLines={2}>
+          <Text variant="footnote" color="textSecondary" numberOfLines={subtitleLines}>
             {subtitle}
           </Text>
         ) : null}

@@ -45,7 +45,10 @@ export function OrderDetailScreen() {
   const qaOffset = useQaOffset();
   const me = useMe();
   const now = useNow(30_000);
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string }>();
+  // Yalnızca geliştirme: /seller/order/qa → ilk sipariş (ekran görüntüsü QA'sı)
+  const qaId = useSellerStore((s) => (__DEV__ && params.id === 'qa' ? s.orders[0]?.id : undefined));
+  const id = qaId ?? params.id;
   const order = useSellerStore((s) => s.orders.find((o) => o.id === id));
   const listings = useSellerStore((s) => s.listings);
   const shows = useSellerStore((s) => s.shows);

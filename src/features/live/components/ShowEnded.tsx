@@ -87,7 +87,7 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
             <PressableScale scaleTo={0.98} onPress={onRaid} style={styles.next}>
               <View style={styles.nextCover}>
                 <Image source={{ uri: nextShow.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
-                <LiveBadge viewers={nextShow.viewers} style={styles.nextBadge} />
+                <LiveBadge style={styles.nextBadge} />
               </View>
               <View style={styles.flex}>
                 <View style={styles.nextSeller}>
@@ -98,6 +98,9 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
                 </View>
                 <Text variant="subhead" weight="700" color={liveColors.text} numberOfLines={3}>
                   {nextShow.title}
+                </Text>
+                <Text variant="caption" weight="600" color={liveColors.textSecondary} style={styles.nextViewers}>
+                  {formatCompact(nextShow.viewers)} kişi izliyor
                 </Text>
               </View>
             </PressableScale>
@@ -172,6 +175,7 @@ const styles = StyleSheet.create({
   nextCover: { width: 72, height: 96, borderRadius: 10, overflow: 'hidden', backgroundColor: liveColors.panelAlt },
   nextBadge: { position: 'absolute', top: 5, left: 5 },
   nextSeller: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  nextViewers: { marginTop: 4 },
   cancel: { paddingVertical: 6 },
   upRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   upThumb: { width: 44, height: 58, borderRadius: 8, backgroundColor: liveColors.panelAlt },

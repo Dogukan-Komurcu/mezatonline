@@ -81,7 +81,7 @@ export function OrderCard({ order }: { order: Order }) {
         <Text variant="footnote" color="textSecondary" numberOfLines={1}>
           {inTransit ? `Tahmini teslimat: ${etaLabel(estimatedDelivery(order))}` : `Satın alma: ${shortDate(order.createdAt)}`}
         </Text>
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, canReview && styles.cardFooterAction]}>
           <Text variant="footnote" color="textSecondary" numberOfLines={1} style={styles.flexShrink}>
             Satıcı:{' '}
             <Text
@@ -329,7 +329,8 @@ const styles = StyleSheet.create({
   thumb: { width: 84, height: 84, borderRadius: radius.sm, overflow: 'hidden' },
   qty: { position: 'absolute', right: 4, bottom: 4, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
   cardBody: { flex: 1, gap: 3 },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2, minHeight: 34 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardFooterAction: { marginTop: 2, minHeight: 34 },
   reviewBtn: { marginLeft: 'auto' },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: SCREEN_PADDING, paddingVertical: 12, minHeight: 64 },
   iconCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },

@@ -61,7 +61,7 @@ export function ActionRail({ items, compact }: { items: RailItem[]; compact?: bo
 
 const styles = StyleSheet.create({
   rail: { alignItems: 'center', gap: 12, width: 62 },
-  railCompact: { gap: 4 },
+  railCompact: { gap: 8 },
   item: { alignItems: 'center', width: 62 },
   iconWrap: { width: 36, height: 34, alignItems: 'center', justifyContent: 'center' },
   crown: { width: 34, height: 34, borderRadius: 10, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },

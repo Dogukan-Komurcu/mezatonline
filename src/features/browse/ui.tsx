@@ -2,8 +2,8 @@
  * Keşif ekranlarının (Ana Sayfa, Kategoriler, Kategori, Arama, En İyi Satıcılar) ortak küçük bileşenleri.
  */
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInstance, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Icon, PressableScale, Text, type IconName } from '@/components/ui';
 import { formatCompact } from '@/lib/format';
@@ -65,6 +65,56 @@ export function FilterChip({ label, selected, onPress, icon, chevron, count, sty
 export function ChipScroller({ children, style, contentStyle }: { children: ReactNode; style?: StyleProp<ViewStyle>; contentStyle?: StyleProp<ViewStyle> }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={style} contentContainerStyle={[styles.scroller, contentStyle]} keyboardShouldPersistTaps="handled">
+      {children}
+    </ScrollView>
+  );
+}
+
+export type RevealTarget = { x: number; w: number };
+
+/**
+ * Yatay ScrollView: `target` (seçili öğenin içerik içindeki konumu) görünür alanın dışındaysa ona kaydırır.
+ * Kategori şeritleri ve arama sonuç sekmeleri, programatik seçimde seçili öğe ekran dışında kalmasın diye.
+ */
+export function RevealScrollView({
+  target,
+  animated = true,
+  children,
+  style,
+  contentStyle,
+}: {
+  target?: RevealTarget;
+  animated?: boolean;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
+}) {
+  const { width } = useWindowDimensions();
+  const ref = useRef<ScrollViewInstance>(null);
+  const offset = useRef(0);
+  const tx = target?.x ?? -1;
+  const tw = target?.w ?? 0;
+
+  useEffect(() => {
+    if (tx < 0) return;
+    const left = offset.current;
+    const x = tx < left ? Math.max(0, tx - SCREEN_PADDING) : tx + tw > left + width ? tx + tw - width + SCREEN_PADDING : null;
+    if (x === null) return;
+    offset.current = x;
+    ref.current?.scrollTo({ x, animated });
+  }, [tx, tw, width, animated]);
+
+  return (
+    <ScrollView
+      ref={ref}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={style}
+      contentContainerStyle={contentStyle}
+      onScroll={(e) => {
+        offset.current = e.nativeEvent.contentOffset.x;
+      }}
+      scrollEventThrottle={64}>
       {children}
     </ScrollView>
   );

@@ -99,7 +99,7 @@ export function ApplicationPending() {
           })}
         </Card>
 
-        <Button title="Onayı hızlandır (demo)" icon="flash" variant="inverse" size="lg" fullWidth loading={loading} onPress={speedUp} />
+        <Button title="Durumu kontrol et" icon="refresh" variant="inverse" size="lg" fullWidth loading={loading} onPress={speedUp} />
 
         <Card>
           <Text variant="headline" weight="700" style={{ marginBottom: 6 }}>

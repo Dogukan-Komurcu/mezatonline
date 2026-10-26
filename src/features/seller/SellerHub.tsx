@@ -22,7 +22,7 @@ import { useNow } from './actions';
 import { HealthSheet, HubMenuSheet, OffersSheet, RehearsalSheet, ShippingSettingsSheet, TierSheet, TipsSheet, VerifySheet, type HubSheetKey } from './HubSheets';
 import { deadlineInfo, deriveOffers, formatRate, isValidIban, isValidTckn, orderBucket, resolveBuyer, SELLER_ORDER_STATUS, tierProgress } from './logic';
 import { showActions, startShow } from './showActions';
-import { useQaOffset } from './qaSeed';
+import { useQaOffset, useQaParam } from './qaSeed';
 import { useSellerExtras } from './store';
 import { ActionSheet, Card, Confetti, ProgressBar, StatusPill, Thumb, tint } from './ui';
 
@@ -101,7 +101,9 @@ export function SellerHub() {
   const approvedAt = useSellerExtras((s) => s.approvedAt);
   const listingStatus = useSellerExtras((s) => s.listingStatus);
   const resolutions = useSellerExtras((s) => s.offerResolutions);
-  const [sheet, setSheet] = useState<HubSheetKey | null>(null);
+  // Yalnızca geliştirme: /sell?qa=sheet:tips → ilgili sheet açık başlar (ekran görüntüsü QA'sı)
+  const qa = useQaParam();
+  const [sheet, setSheet] = useState<HubSheetKey | null>(qa?.startsWith('sheet:') ? (qa.slice(6) as HubSheetKey) : null);
   const [moreShow, setMoreShow] = useState<Show | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const qaOffset = useQaOffset();

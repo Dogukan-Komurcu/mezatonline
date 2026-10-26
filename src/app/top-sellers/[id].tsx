@@ -14,6 +14,7 @@ import { Avatar, Button, EmptyState, Icon, PressableScale, Sheet, Text } from '@
 import { CATEGORIES_BY_POPULARITY, getCategory, getLiveShows } from '@/data';
 import { ALL_SCOPE, getLeaderboard, PERIOD_LABELS, scopeLabel, type LeaderEntry, type LeaderboardPeriod } from '@/features/browse/leaderboard';
 import { ChipScroller, FilterChip, Medal, ViewersMetric } from '@/features/browse/ui';
+import { Glyph3D } from '@/features/home/Glyph3D';
 import { formatCompact } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
@@ -44,6 +45,7 @@ function CircleButton({ icon, label, onPress, bg }: { icon: 'chevron-back' | 'in
 }
 
 function LeaderRow({ entry, cardBg }: { entry: LeaderEntry; cardBg: string }) {
+  const { colors, isDark } = useTheme();
   const { seller, liveShow } = entry;
   return (
     <PressableScale scaleTo={0.985} onPress={() => router.push(`/user/${seller.username}`)} style={[styles.card, { backgroundColor: cardBg }]} accessibilityRole="button" accessibilityLabel={`${entry.rank}. ${seller.username}`}>
@@ -64,7 +66,7 @@ function LeaderRow({ entry, cardBg }: { entry: LeaderEntry; cardBg: string }) {
           ) : null}
         </View>
       </View>
-      {liveShow ? <Button title="Katıl" size="sm" variant="secondary" onPress={() => router.push(`/live/${liveShow.id}`)} /> : <FollowButton user={seller} />}
+      {liveShow ? <Button title="Katıl" size="sm" variant="secondary" style={isDark ? { backgroundColor: colors.surfaceAlt } : undefined} onPress={() => router.push(`/live/${liveShow.id}`)} /> : <FollowButton user={seller} />}
     </PressableScale>
   );
 }
@@ -98,8 +100,8 @@ export default function TopSellersScreen() {
 
   const scopes = useMemo(
     () => [
-      { id: ALL_SCOPE, label: 'Tüm Kategoriler', emoji: '🏆', live: getLiveShows().length },
-      ...CATEGORIES_BY_POPULARITY.map((c) => ({ id: c.id, label: c.name, emoji: c.emoji, live: getLiveShows({ categoryId: c.id }).length })),
+      { id: ALL_SCOPE, label: 'Tüm Kategoriler', image: undefined as string | undefined, live: getLiveShows().length },
+      ...CATEGORIES_BY_POPULARITY.map((c) => ({ id: c.id, label: c.name, image: c.image as string | undefined, live: getLiveShows({ categoryId: c.id }).length })),
     ],
     [],
   );
@@ -121,9 +123,8 @@ export default function TopSellersScreen() {
         style={styles.scopeBtn}>
         <Text variant="display" numberOfLines={2} style={styles.scopeText}>
           {scopeLabel(scope)}
-          <Text variant="title2" color="textSecondary">
-            {'  ⌄'}
-          </Text>
+          {'  '}
+          <Icon name="chevron-down" size={24} color="textSecondary" />
         </Text>
       </PressableScale>
       <ChipScroller style={styles.chipsWrap} contentStyle={styles.chips}>
@@ -163,7 +164,7 @@ export default function TopSellersScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            emoji="📡"
+            icon="radio-outline"
             title={period === 'live' ? 'Şu an canlı satıcı yok' : 'Bu dönemde sıralama yok'}
             message={period === 'live' ? `${scopeLabel(scope)} kategorisinde şu an yayında olan satıcı bulunmuyor.` : 'Başka bir kategori seçmeyi dene.'}
             actionLabel={period === 'live' ? 'Bugünün sıralamasına bak' : 'Tüm kategorilere bak'}
@@ -228,9 +229,11 @@ export default function TopSellersScreen() {
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
               style={styles.pickRow}>
-              <View style={[styles.pickEmoji, { backgroundColor: colors.surface }]}>
-                <Text variant="body">{s.emoji}</Text>
-              </View>
+              {s.image ? (
+                <Image source={{ uri: s.image }} style={[styles.pickThumb, { backgroundColor: colors.surface }]} contentFit="cover" cachePolicy="memory-disk" recyclingKey={s.id} />
+              ) : (
+                <Glyph3D name="trophy" size={38} />
+              )}
               <View style={styles.flex}>
                 <Text variant="body" weight={selected ? '700' : '500'} numberOfLines={1}>
                   {s.label}
@@ -264,7 +267,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   hero: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 14, overflow: 'visible' },
-  heroImage: { position: 'absolute', right: -48, top: -18, width: 170, height: 170, borderRadius: 32, transform: [{ rotate: '12deg' }], opacity: 0.95 },
+  heroImage: { position: 'absolute', right: -56, top: -6, width: 150, height: 150, borderRadius: 30, transform: [{ rotate: '12deg' }], opacity: 0.95 },
   scopeBtn: { marginTop: 2, maxWidth: '78%' },
   scopeText: { flexShrink: 1 },
   chipsWrap: { marginHorizontal: -SCREEN_PADDING, marginTop: 18 },
@@ -287,5 +290,5 @@ const styles = StyleSheet.create({
   infoIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   infoText: { marginTop: 3 },
   pickRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-  pickEmoji: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  pickThumb: { width: 38, height: 38, borderRadius: 19 },
 });

@@ -17,13 +17,18 @@ import { useAuthStore, useMe } from '@/store/auth';
 import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
-import { useQaOffset } from './qaSeed';
+import { useQaOffset, useQaParam } from './qaSeed';
 import { scheduleAutoApproval, useNow } from './actions';
 import { EXPERIENCE_LABELS, SELLER_TYPE_LABELS } from './ApplicationPending';
 import { IbanField } from './IbanSheet';
 import { ageFromBirthDate, bankFromIban, isValidIban, isValidTaxNo, isValidTckn, maskBirthDate, maskIban, maskTckn } from './logic';
 import { useSellerExtras, type ExperienceLevel, type SellerType } from './store';
 import { Card, CheckRow, KeyValue, OptionCard, StatusPill, StepBar, StickyFooter, tint, MODAL_SAFE_TOP } from './ui';
+
+/** Yazarken gruplanan cep numarası: "5321234567" → "532 123 45 67" */
+function groupPhone(digits: string): string {
+  return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 8), digits.slice(8, 10)].filter(Boolean).join(' ');
+}
 
 const STEP_TITLES = ['Hoş geldin', 'Kategori', 'Deneyim', 'Satıcı bilgileri', 'İade adresi', 'IBAN', 'Telefon', 'Özet'];
 const PLATFORMS = ['Trendyol', 'Hepsiburada', 'Instagram', 'Dolap', 'Letgo', 'Sahibinden', 'Gardrops', 'n11', 'Etsy / eBay', 'Diğer'];
@@ -428,7 +433,7 @@ function PhoneStep({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => v
       <TextField
         label="Cep telefonu"
         prefix="+90"
-        value={draft.phone}
+        value={groupPhone(draft.phone)}
         onChangeText={(v) => {
           set({ phone: v.replace(/\D/g, '').replace(/^0/, '').slice(0, 10) });
           setCode(null);
@@ -591,10 +596,13 @@ export function ApplyFlow() {
   const setKyc = useSellerExtras((s) => s.setKyc);
   const now = useNow(60_000);
   const [draft, set] = useDraft();
-  const [step, setStep] = useState(0);
+  // Yalnızca geliştirme: ?qa=step3 → doğrudan 4. adım, ?qa=done → başarı ekranı (ekran görüntüsü QA'sı)
+  const qa = useQaParam();
+  const qaStep = qa?.startsWith('step') ? Math.min(STEP_TITLES.length - 1, Number(qa.slice(4)) || 0) : undefined;
+  const [step, setStep] = useState(qaStep ?? 0);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(qa === 'done');
   const [legal, setLegal] = useState<'rules' | 'terms' | null>(null);
   const [fromSummary, setFromSummary] = useState(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -613,7 +621,7 @@ export function ApplyFlow() {
     );
   }
 
-  if (me.isSeller || status !== 'none') {
+  if ((me.isSeller || status !== 'none') && qaStep === undefined) {
     const pending = status === 'pending' && !me.isSeller;
     return (
       <Screen>

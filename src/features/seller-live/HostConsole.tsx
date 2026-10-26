@@ -10,7 +10,8 @@ import type { CameraType } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, useWindowDimensions, View, type TextInputInstance } from 'react-native';
+import { StyleSheet, TextInput, useWindowDimensions, View, type TextInputInstance } from 'react-native';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, Header, Icon, IconButton, PressableScale, Text, toast } from '@/components/ui';
@@ -18,6 +19,7 @@ import { getShow } from '@/data';
 import { makeBots } from '@/features/live/bots';
 import type { SoldItem } from '@/features/live/engine';
 import { useLiveShow } from '@/features/live/useLiveShow';
+import { useQaParam } from '@/features/seller/qaSeed';
 import { shareLink } from '@/features/shared/sheets';
 import { DEFAULT_AUCTION_DURATION, DEFAULT_COUNTER_BID_TIME } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
@@ -78,10 +80,13 @@ const DEFAULT_NOTES = 'Hoş geldin! 👋 Takip etmeyi unutma.\nKargo 2 iş gün�
 export function HostConsoleScreen() {
   const params = useLocalSearchParams<{ id: string; prova?: string; temp?: string }>();
   const isSeller = useIsSeller();
-  const myShow = useSellerStore((s) => s.shows.find((x) => x.id === params.id));
+  // Yalnızca geliştirme: /seller/live/qa → ilk planlı/canlı yayınım (ekran görüntüsü QA'sı)
+  const qaShowId = useSellerStore((s) => (__DEV__ && params.id === 'qa' ? s.shows.find((x) => x.status !== 'ended')?.id : undefined));
+  const id = qaShowId ?? params.id;
+  const myShow = useSellerStore((s) => s.shows.find((x) => x.id === id));
   // Prova için açılan geçici yayın kapanışta silinir; özet ekranı açıkken kaybolmasın
-  const [frozen] = useState<Show | undefined>(() => myShow ?? getShow(params.id));
-  const show = myShow ?? getShow(params.id) ?? frozen;
+  const [frozen] = useState<Show | undefined>(() => myShow ?? getShow(id));
+  const show = myShow ?? getShow(id) ?? frozen;
   if (!isSeller) return <Redirect href="/seller/apply" />;
   if (!show) return <ShowNotFound />;
   return <HostConsole key={show.id} show={show} rehearsal={params.prova === '1'} temporary={params.temp === '1'} />;
@@ -199,6 +204,10 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const [hearts, setHearts] = useState<number[]>([]);
   const [confetti, setConfetti] = useState(0);
   const [peak, setPeak] = useState(0);
+  /** Başlık + istatistik şeridinin alt kenarı (klavye açıkken sohbet buradan başlar) */
+  const [headBottom, setHeadBottom] = useState(0);
+  const animatedKeyboard = useAnimatedKeyboard();
+  const keyboardPad = useAnimatedStyle(() => ({ paddingBottom: animatedKeyboard.height.get() }));
   const [bots] = useState(() => makeBots(40));
   const inputRef = useRef<TextInputInstance>(null);
   const seenRef = useRef<Set<string> | null>(null);
@@ -235,6 +244,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const flashRunning = state.flash?.status === 'running';
   const giveawayRunning = state.giveaway?.status === 'running';
   const availableCount = products.filter((p) => remainingOf(p) > 0).length;
+  const nextProduct = products.find((p) => p.format === 'auction' && remainingOf(p) > 0) ?? products.find((p) => p.format === 'buy_now' && remainingOf(p) > 0);
 
   const merged = [...state.messages, ...localEvents].sort((a, b) => a.createdAt - b.createdAt);
   const chat = merged.filter((m) => {
@@ -672,6 +682,33 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
 
   usePreventRemove(!ended, () => openSheet('end'));
 
+  // Yalnızca geliştirme: ?qa=<anahtar> → sheet ya da sahne durumunu aç (ekran görüntüsü QA'sı)
+  const qa = useQaParam();
+  const qaRun = useRef<(k: string) => void>(() => {});
+  useEffect(() => {
+    qaRun.current = (k) => {
+      const auctionP = products.find((p) => p.format === 'auction') ?? products[0];
+      const binP = products.find((p) => p.format === 'buy_now') ?? products[0];
+      if (k === 'shop') openShop();
+      else if (k === 'auction' && auctionP) requestAuction(auctionP);
+      else if (k === 'flash' && binP) requestFlash(binP);
+      else if (k === 'giveaway') requestGiveaway();
+      else if (k === 'lot' && auctionP) engine.startAuction(auctionP, { startPrice: auctionP.price, duration: 60, suddenDeath: true, counterBidTime: DEFAULT_COUNTER_BID_TIME });
+      else if (k === 'pinned' && binP) setPinnedId(binP.id);
+      else if (k === 'flashrun' && binP) engine.startFlashSale(binP, 0.2, 120);
+      else if (k === 'gwrun') engine.startGiveaway(makeSurprisePrize(show), 120, true);
+      else if (k === 'summary') finish();
+      else if (k === 'type') inputRef.current?.focus();
+      else if (k === 'user') openUser({ username: 'koleksiyoncu_ali', text: 'Bu kartın PSA notu kaç?' });
+      else if (['viewers', 'more', 'end', 'raid', 'promote', 'notes', 'mods', 'pin'].includes(k)) openSheet(k as SheetKind);
+    };
+  });
+  useEffect(() => {
+    if (!qa) return;
+    const t = setTimeout(() => qa.split(',').forEach((k, i) => setTimeout(() => qaRun.current(k), i * 600)), 1500);
+    return () => clearTimeout(t);
+  }, [qa]);
+
   const leave = (to: 'orders' | 'hub' | 'raid') => {
     if (temporary) cancelShow(show.id);
     if (to === 'orders') router.replace('/seller/orders');
@@ -691,14 +728,18 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
 
   const compact = screenH < 740;
   const typing = keyboard > 0;
-  const baseChat = Math.max(140, Math.min(250, screenH * (compact ? 0.22 : 0.27)));
-  // Klavye açıkken sohbet, üst bölümün altına sığacak kadar kısalır; ürün kartı ve ray gizlenir
-  const chatHeight = Math.round(typing ? Math.max(90, Math.min(baseChat, screenH - keyboard - insets.top - 250)) : baseChat);
+  const chatHeight = Math.round(Math.max(140, Math.min(250, screenH * (compact ? 0.22 : 0.27))));
+  // Klavye açıkken alt bölüm istatistik şeridinin hemen altından başlar ve sohbet kalan alanı doldurur;
+  // yayın notu, ürün kartı ve sağ ray gizlenir (üst üste binme olmaz)
+  const typingTop = typing && headBottom > 0 ? headBottom + 8 : undefined;
   const promoLeft = promo && promoActive ? (promo.endsAt - now) / 1000 : 0;
+  // Kamera görüntüsü yoksa (simülatör / izin yok) sahnenin sağ üstünde küçük bir durum rozeti
+  const cameraNote =
+    access.available === true && access.camGranted ? undefined : access.available === false ? 'Kamera bulunamadı' : access.ready ? 'Kamera izni ver' : undefined;
 
   return (
     <View style={[styles.flex, { backgroundColor: liveColors.panel }]}>
-      <CameraStage access={access} facing={facing} zoom={ZOOM_LEVELS[zoomIndex].value} muted={muted} active={focused} />
+      <CameraStage access={access} facing={facing} zoom={ZOOM_LEVELS[zoomIndex].value} muted={muted} active={focused} bare />
       <LinearGradient colors={[liveColors.glassStrong, 'transparent']} style={[styles.topShade, { height: insets.top + 180 }]} pointerEvents="none" />
       <LinearGradient
         colors={['transparent', liveColors.glassStrong, liveColors.glassStrong]}
@@ -709,21 +750,31 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
 
       {/* Üst bölüm */}
       <View style={[styles.top, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
-        <HostHeader
-          me={me}
-          rehearsal={rehearsal}
-          elapsedSec={elapsedSec}
-          viewers={viewers}
-          verifiedOnly={verifiedOnly}
-          muted={muted}
-          onViewers={() => openSheet('viewers')}
-          onMore={() => openSheet('more')}
-          onClose={() => openSheet('end')}
-        />
-        <StatsStrip gross={gross} itemsSold={itemsSold} peakViewers={peakViewers} likes={state.likes} onPress={() => openSheet('viewers')} />
-        <View style={styles.topRow} pointerEvents="box-none">
+        <View onLayout={(e) => setHeadBottom(Math.round(e.nativeEvent.layout.y + e.nativeEvent.layout.height))}>
+          <HostHeader
+            me={me}
+            rehearsal={rehearsal}
+            elapsedSec={elapsedSec}
+            viewers={viewers}
+            verifiedOnly={verifiedOnly}
+            muted={muted}
+            onViewers={() => openSheet('viewers')}
+            onMore={() => openSheet('more')}
+            onClose={() => openSheet('end')}
+          />
+          <StatsStrip gross={gross} itemsSold={itemsSold} peakViewers={peakViewers} likes={state.likes} onPress={() => openSheet('viewers')} />
+        </View>
+        <View style={[styles.topRow, typing && styles.hidden]} pointerEvents={typing ? 'none' : 'box-none'}>
           <NotesSticky text={notes} collapsed={notesCollapsed} onPress={() => openSheet('notes')} onToggle={() => setNotesCollapsed((c) => !c)} />
           <View style={styles.topRight} pointerEvents="box-none">
+            {cameraNote ? (
+              <PressableScale disabled={access.available === false} onPress={access.request} accessibilityRole="button" accessibilityLabel={cameraNote} style={styles.slowPill}>
+                <Icon name="videocam-off-outline" size={12} color={liveColors.text} />
+                <Text variant="caption" color={liveColors.text}>
+                  {cameraNote}
+                </Text>
+              </PressableScale>
+            ) : null}
             {state.giveaway ? <GiveawayBanner giveaway={state.giveaway} now={now} /> : null}
             {slowMode ? (
               <View style={styles.slowPill}>
@@ -738,8 +789,9 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
       </View>
 
       {/* Alt bölüm */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.bottom} pointerEvents="box-none">
-        <View style={styles.middleRow} pointerEvents="box-none">
+      {/* Klavye: KeyboardAvoidingView / klavye olayları iOS 26'da öneri şeridini saymıyor; gerçek klavye çerçevesini izleyen useAnimatedKeyboard kullanılır */}
+      <Animated.View style={[styles.bottom, typingTop !== undefined && { top: typingTop }, keyboardPad]} pointerEvents="box-none">
+        <View style={[styles.middleRow, typingTop !== undefined && styles.typingRow]} pointerEvents="box-none">
           <View style={styles.chatCol} pointerEvents="box-none">
             {pinnedMsg ? <PinnedMessage message={pinnedMsg} onHide={() => setHiddenPinId(pinnedMsg.id)} /> : null}
             <HostChat
@@ -748,7 +800,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
               onFilter={setChatFilter}
               mods={mods}
               buyers={buyers}
-              height={chatHeight}
+              height={typingTop !== undefined ? undefined : chatHeight}
               onPressMessage={(m) => openUser({ username: m.username, avatar: m.avatar, text: m.text })}
             />
           </View>
@@ -800,6 +852,8 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
             }}
             onOpenShop={openShop}
             onDismissResult={() => setDismissedLotId(state.lot?.id)}
+            next={nextProduct}
+            onPin={pin}
           />
         </View>
 
@@ -817,7 +871,9 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
               submitBehavior="submit"
               onSubmitEditing={send}
               maxLength={200}
-              autoCorrect
+              autoCorrect={false}
+              spellCheck={false}
+              keyboardAppearance="dark"
             />
             {draft.trim() ? <IconButton name="arrow-up" variant="primary" size={30} onPress={send} accessibilityLabel="Gönder" /> : null}
           </View>
@@ -835,7 +891,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
             ) : null}
           </PressableScale>
         </View>
-      </KeyboardAvoidingView>
+      </Animated.View>
 
       {confetti ? <Confetti key={confetti} /> : null}
 
@@ -993,6 +1049,8 @@ const styles = StyleSheet.create({
   chatCol: { flex: 1 },
   railCol: { alignItems: 'center' },
   collapsed: { height: 0, marginTop: 0, overflow: 'hidden', opacity: 0 },
+  hidden: { opacity: 0 },
+  typingRow: { flex: 1, alignItems: 'stretch' },
   cardWrap: { paddingHorizontal: SCREEN_PADDING - 4, marginTop: 8 },
   inputBar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: SCREEN_PADDING - 4, paddingTop: 8 },
   inputPill: {

@@ -4,8 +4,8 @@
  */
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type TextInputInstance, type ViewInstance } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -64,13 +64,27 @@ function Required({ done }: { done: boolean }) {
 export default function ReviewScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { orderId } = useLocalSearchParams<{ orderId: string }>();
+  const { orderId, qa } = useLocalSearchParams<{ orderId: string; qa?: string }>();
   const order = useOrdersStore((s) => s.orders.find((o) => o.id === orderId));
   const [rating, setRating] = useState(0);
+  const bodyRef = useRef<ViewInstance>(null);
+  const commentRef = useRef<TextInputInstance>(null);
+  // iOS page-sheet modal ekranın tepesinden aşağıda başlar; KeyboardAvoidingView klavyeyi pencere koordinatında ölçtüğü için o farkı ofset olarak ver
+  const [kbOffset, setKbOffset] = useState(0);
   const [sub, setSub] = useState<Record<SubKey, number>>({ shipping: 0, packaging: 0, accuracy: 0 });
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const seller = getUser(order?.sellerId);
+
+  // Yalnızca geliştirme: QA ekran görüntüleri için başlangıç puanı (?qa=r3) ve klavye (?qa=r5kb)
+  useEffect(() => {
+    if (!__DEV__ || !qa?.startsWith('r')) return;
+    const v = Number(qa.slice(1, 2));
+    if (v >= 1 && v <= 5) setRating(v);
+    if (!qa.endsWith('kb')) return;
+    const t = setTimeout(() => commentRef.current?.focus(), 1200);
+    return () => clearTimeout(t);
+  }, [qa]);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/activity'));
 
@@ -121,103 +135,106 @@ export default function ReviewScreen() {
   return (
     <Screen>
       <Header title="Siparişini değerlendir" back="close" onBack={close} border safeTop={MODAL_SAFE_TOP} />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {/* Satıcı */}
-          <View style={styles.sellerBlock}>
-            <Avatar uri={seller?.avatar} name={seller?.username ?? 'satıcı'} size={64} verified={seller?.badges.includes('verified')} />
-            <Text variant="title3" align="center">
-              {seller?.username ?? 'Satıcı'}
-            </Text>
-            <Text variant="subhead" color="textSecondary" align="center">
-              <Text variant="subhead" weight="700">
-                {formatTRY(order.total)}
-              </Text>{' '}
-              toplam · Satın alma{' '}
-              <Text variant="subhead" weight="700">
-                {shortDate(order.createdAt)}
+      <View ref={bodyRef} style={styles.flex} onLayout={() => bodyRef.current?.measureInWindow((_x, y) => setKbOffset(Math.max(0, Math.round(y))))}>
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={kbOffset}>
+          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            {/* Satıcı */}
+            <View style={styles.sellerBlock}>
+              <Avatar uri={seller?.avatar} name={seller?.username ?? 'satıcı'} size={64} verified={seller?.badges.includes('verified')} />
+              <Text variant="title3" align="center">
+                {seller?.username ?? 'Satıcı'}
               </Text>
-            </Text>
-          </View>
+              <Text variant="subhead" color="textSecondary" align="center">
+                <Text variant="subhead" weight="700">
+                  {formatTRY(order.total)}
+                </Text>{' '}
+                toplam · Satın alma{' '}
+                <Text variant="subhead" weight="700">
+                  {shortDate(order.createdAt)}
+                </Text>
+              </Text>
+            </View>
 
-          {/* Siparişteki ürünler */}
-          <Text variant="subhead" weight="700" color="textSecondary" style={styles.label}>
-            Siparişteki ürünler ({order.quantity})
-          </Text>
-          <View style={[styles.itemCard, { backgroundColor: colors.surface }]}>
-            <View style={[styles.itemImg, { backgroundColor: colors.skeleton }]}>
-              <Image source={{ uri: order.productImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
-            </View>
-            <View style={styles.flex}>
-              <Text variant="subhead" weight="600" numberOfLines={2}>
-                {order.productTitle}
-              </Text>
-              <Text variant="footnote" color="textSecondary">
-                {order.itemPrice > 0 ? formatTRY(order.itemPrice) : 'Çekiliş'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Genel puan */}
-          <View style={styles.block}>
-            <View style={styles.rowBetween}>
-              <Text variant="title3">Genel</Text>
-              <Required done={rating > 0} />
-            </View>
-            <Text variant="callout" color="textSecondary">
-              Genel olarak ne kadar memnun kaldın?
+            {/* Siparişteki ürünler */}
+            <Text variant="subhead" weight="700" color="textSecondary" style={styles.label}>
+              Siparişteki ürünler ({order.quantity})
             </Text>
-            <View style={styles.mainStars}>
-              <StarPicker value={rating} onChange={setRating} size={42} />
-              <Text variant="headline" color={rating ? 'accent' : 'textTertiary'} style={styles.ratingLabel}>
-                {rating ? LABELS[rating - 1] : 'Puan vermek için yıldızlara dokun'}
-              </Text>
+            <View style={[styles.itemCard, { backgroundColor: colors.surface }]}>
+              <View style={[styles.itemImg, { backgroundColor: colors.skeleton }]}>
+                <Image source={{ uri: order.productImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="subhead" weight="600" numberOfLines={2}>
+                  {order.productTitle}
+                </Text>
+                <Text variant="footnote" color="textSecondary">
+                  {order.itemPrice > 0 ? formatTRY(order.itemPrice) : 'Çekiliş'}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Alt puanlar (≤4 yıldız) */}
-          {needsSub ? (
-            <Animated.View entering={FadeInDown.duration(220)} style={[styles.subCard, { borderColor: colors.border }]}>
-              <Text variant="footnote" color="textSecondary">
-                Neyin daha iyi olabileceğini anlamamıza yardım et.
+            {/* Genel puan */}
+            <View style={styles.block}>
+              <View style={styles.rowBetween}>
+                <Text variant="title3">Genel</Text>
+                <Required done={rating > 0} />
+              </View>
+              <Text variant="callout" color="textSecondary">
+                Genel olarak ne kadar memnun kaldın?
               </Text>
-              {SUB_RATINGS.map((r) => (
-                <View key={r.key} style={styles.subRow}>
-                  <View style={styles.rowBetween}>
-                    <View style={styles.subTitle}>
-                      <Icon name={r.icon} size={18} color="textSecondary" />
-                      <Text variant="headline">{r.title}</Text>
+              <View style={styles.mainStars}>
+                <StarPicker value={rating} onChange={setRating} size={42} />
+                <Text variant="headline" color={rating ? 'accent' : 'textTertiary'} style={styles.ratingLabel}>
+                  {rating ? LABELS[rating - 1] : 'Puan vermek için yıldızlara dokun'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Alt puanlar (≤4 yıldız) */}
+            {needsSub ? (
+              <Animated.View entering={FadeInDown.duration(220)} style={[styles.subCard, { borderColor: colors.border }]}>
+                <Text variant="footnote" color="textSecondary">
+                  Neyin daha iyi olabileceğini anlamamıza yardım et.
+                </Text>
+                {SUB_RATINGS.map((r) => (
+                  <View key={r.key} style={styles.subRow}>
+                    <View style={styles.rowBetween}>
+                      <View style={styles.subTitle}>
+                        <Icon name={r.icon} size={18} color="textSecondary" />
+                        <Text variant="headline">{r.title}</Text>
+                      </View>
+                      <Required done={sub[r.key] > 0} />
                     </View>
-                    <Required done={sub[r.key] > 0} />
+                    <Text variant="footnote" color="textSecondary">
+                      {r.question}
+                    </Text>
+                    <StarPicker value={sub[r.key]} onChange={(v) => setSub((s) => ({ ...s, [r.key]: v }))} size={30} />
                   </View>
-                  <Text variant="footnote" color="textSecondary">
-                    {r.question}
-                  </Text>
-                  <StarPicker value={sub[r.key]} onChange={(v) => setSub((s) => ({ ...s, [r.key]: v }))} size={30} />
-                </View>
-              ))}
-            </Animated.View>
-          ) : null}
+                ))}
+              </Animated.View>
+            ) : null}
 
-          {/* Yorum */}
-          <TextField
-            label="Biraz daha anlat (isteğe bağlı)"
-            placeholder="Ürün, paketleme ve satıcıyla ilgili deneyimini paylaş"
-            value={comment}
-            onChangeText={(t) => setComment(t.slice(0, MAX_COMMENT))}
-            multiline
-            maxLength={MAX_COMMENT}
-            helper={`Kalan karakter: ${MAX_COMMENT - comment.length}`}
-            containerStyle={styles.block}
-          />
-          <Text variant="caption" color="textTertiary" style={styles.note}>
-            Yorumun satıcının profilinde herkese açık görünür. Değerlendirmeler düzenlenemez, yalnızca silinebilir.
-          </Text>
-        </ScrollView>
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), borderTopColor: colors.border, backgroundColor: colors.bg }]}>
-          <Button title="Gönder" size="lg" fullWidth loading={sending} disabled={!valid} onPress={submit} />
-        </View>
-      </KeyboardAvoidingView>
+            {/* Yorum */}
+            <TextField
+              ref={commentRef}
+              label="Biraz daha anlat (isteğe bağlı)"
+              placeholder="Ürün, paketleme ve satıcıyla ilgili deneyimini paylaş"
+              value={comment}
+              onChangeText={(t) => setComment(t.slice(0, MAX_COMMENT))}
+              multiline
+              maxLength={MAX_COMMENT}
+              helper={`Kalan karakter: ${MAX_COMMENT - comment.length}`}
+              containerStyle={styles.block}
+            />
+            <Text variant="caption" color="textTertiary" style={styles.note}>
+              Yorumun satıcının profilinde herkese açık görünür. Değerlendirmeler düzenlenemez, yalnızca silinebilir.
+            </Text>
+          </ScrollView>
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), borderTopColor: colors.border, backgroundColor: colors.bg }]}>
+            <Button title="Gönder" size="lg" fullWidth loading={sending} disabled={!valid} onPress={submit} />
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }

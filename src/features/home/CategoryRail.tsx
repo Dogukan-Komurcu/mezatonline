@@ -4,12 +4,13 @@
  */
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { Avatar, PressableScale, Text } from '@/components/ui';
 import { CATEGORIES, CATEGORIES_BY_POPULARITY } from '@/data';
+import { RevealScrollView, type RevealTarget } from '@/features/browse/ui';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore, useMe } from '@/store/auth';
 import { useSocialStore } from '@/store/social';
@@ -62,6 +63,7 @@ function select(item: RailItem, onSelect: (key: string) => void) {
 
 const TILE_W = 104;
 const TILE_H = 112;
+const RAIL_GAP = 8;
 
 function TileArt({ item }: { item: RailItem }) {
   const { colors } = useTheme();
@@ -144,12 +146,15 @@ function RailTile({ item, selected, onSelect }: { item: RailItem; selected: bool
 }
 
 export function CategoryRail({ items, selected, onSelect }: { items: RailItem[]; selected: string; onSelect: (key: string) => void }) {
+  // Kutucuklar sabit genişlikte: seçili kutucuğun konumu hesapla bilinir
+  const index = items.findIndex((it) => it.key === selected);
+  const target = index < 0 ? undefined : { x: SCREEN_PADDING + index * (TILE_W + RAIL_GAP), w: TILE_W };
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
+    <RevealScrollView target={target} contentStyle={styles.rail}>
       {items.map((item) => (
         <RailTile key={item.key} item={item} selected={item.key === selected} onSelect={onSelect} />
       ))}
-    </ScrollView>
+    </RevealScrollView>
   );
 }
 
@@ -157,9 +162,11 @@ export function CategoryRail({ items, selected, onSelect }: { items: RailItem[];
 
 export function CompactRail({ items, selected, onSelect }: { items: RailItem[]; selected: string; onSelect: (key: string) => void }) {
   const { colors, isDark } = useTheme();
+  // Çip genişlikleri değişken: seçili çipin konumu ölçülünce şerit ona kaydırılır (kompakt şerit her açılışta yeniden kurulur)
+  const [layouts, setLayouts] = useState<Record<string, RevealTarget>>({});
   return (
     <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={[styles.compactWrap, { backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.compactRail}>
+      <RevealScrollView target={layouts[selected]} animated={false} contentStyle={styles.compactRail}>
         {items.map((item) => {
           const isSel = item.key === selected;
           const bg = isSel ? colors.primary : item.kind === 'category' && !isDark ? item.category.tint : colors.surface;
@@ -168,6 +175,10 @@ export function CompactRail({ items, selected, onSelect }: { items: RailItem[]; 
               key={item.key}
               scaleTo={0.94}
               onPress={() => select(item, onSelect)}
+              onLayout={(e) => {
+                const { x, width } = e.nativeEvent.layout;
+                setLayouts((prev) => (prev[item.key]?.x === x && prev[item.key]?.w === width ? prev : { ...prev, [item.key]: { x, w: width } }));
+              }}
               accessibilityRole="tab"
               accessibilityState={{ selected: isSel }}
               style={[styles.compactChip, { backgroundColor: bg, borderColor: isSel ? colors.text : 'transparent' }]}>
@@ -177,13 +188,13 @@ export function CompactRail({ items, selected, onSelect }: { items: RailItem[]; 
             </PressableScale>
           );
         })}
-      </ScrollView>
+      </RevealScrollView>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  rail: { paddingHorizontal: SCREEN_PADDING, gap: 8, paddingTop: 4, paddingBottom: 16 },
+  rail: { paddingHorizontal: SCREEN_PADDING, gap: RAIL_GAP, paddingTop: 4, paddingBottom: 16 },
   tile: {
     width: TILE_W,
     height: TILE_H,
@@ -203,6 +214,6 @@ const styles = StyleSheet.create({
   collage: { width: 64, height: 56, flexDirection: 'row', flexWrap: 'wrap', gap: 3, justifyContent: 'center', alignContent: 'center' },
   collageImg: { width: 27, height: 25, borderRadius: 6, borderWidth: 1.5 },
   compactWrap: { borderBottomWidth: StyleSheet.hairlineWidth },
-  compactRail: { paddingHorizontal: SCREEN_PADDING, gap: 8, paddingVertical: 8 },
+  compactRail: { paddingHorizontal: SCREEN_PADDING, gap: RAIL_GAP, paddingVertical: 8 },
   compactChip: { height: 40, paddingHorizontal: 14, borderRadius: 10, borderWidth: 2, justifyContent: 'center' },
 });

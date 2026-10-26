@@ -3,8 +3,8 @@
  */
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, EmptyState, Header, IconButton, PressableScale, Screen, SectionGap, Text } from '@/components/ui';
@@ -27,7 +27,7 @@ type SheetKind = 'none' | 'address' | 'invoice' | 'video' | 'protection' | 'addr
 export default function OrderDetailScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, qa } = useLocalSearchParams<{ id: string; qa?: string }>();
   const order = useOrdersStore((s) => s.orders.find((o) => o.id === id));
   const addresses = useWalletStore((s) => s.addresses);
   const payments = useWalletStore((s) => s.paymentMethods);
@@ -46,6 +46,14 @@ export default function OrderDetailScreen() {
   const categoryId = product?.categoryId ?? show?.categoryId ?? seller?.categoryIds[0];
   const category = getCategory(categoryId);
   const help = useHelpFlow(order, categoryId);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+
+  // Yalnızca geliştirme: QA ekran görüntüleri için kaydırma kancası (?qa=scroll<y>)
+  useEffect(() => {
+    if (!__DEV__ || !qa?.startsWith('scroll')) return;
+    const t = setTimeout(() => scrollRef.current?.scrollTo({ y: Number(qa.slice(6)) || 800, animated: false }), 900);
+    return () => clearTimeout(t);
+  }, [qa]);
 
   if (!order) {
     return (
@@ -99,7 +107,7 @@ export default function OrderDetailScreen() {
         border
         right={<IconButton name="help-circle-outline" onPress={help.open} accessibilityLabel="Yardım" />}
       />
-      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingTop: 16, paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
         <StatusCard
           order={order}
           copy={copy}

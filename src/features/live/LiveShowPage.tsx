@@ -657,13 +657,18 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const [qaDone, setQaDone] = useState(false);
   useEffect(() => {
     if (!__DEV__ || !qa || qaDone || !visible) return;
-    const snap = engine.getSnapshot();
-    if (!snap.lot && !['ended', 'giveaway', 'giveawayWon', 'flash', 'shop', 'wallet', 'seller', 'viewers', 'more', 'boost', 'club', 'reactions', 'composer'].includes(qa)) return;
     setQaDone(true);
     const sheetNames: SheetName[] = ['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'intro', 'reactions', 'tip', 'giveawayInfo'];
+    // Lot isteyen durumlar: en az 8 sn'si kalan, süren bir açık artırma bekle (en fazla ~30 sn)
+    const needsLot = ['custom', 'product', 'won', 'sold', 'leading'].includes(qa);
+    let tries = 0;
     // Temizlenmez: setQaDone sonrası yeniden render bu zamanlayıcıyı iptal etmemeli (yalnızca __DEV__)
-    setTimeout(() => {
+    const attempt = () => {
       const s = engine.getSnapshot();
+      if (needsLot && (s.lot?.status !== 'running' || s.lot.endsAt - Date.now() < 8000) && tries++ < 40) {
+        setTimeout(attempt, 700);
+        return;
+      }
       const shopItem = s.shop.find((p) => p.quantity - p.sold > 0) ?? products[0];
       if (qa === 'viewers') openViewers();
       else if (qa === 'buy') openBuy(shopItem);
@@ -677,6 +682,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         const m = s.messages.find((x) => x.type === 'chat' && !x.isSeller && !x.isMe);
         if (m) onChatUser(m);
       } else if (qa === 'composer') setComposer({ open: true, text: '' });
+      else if (qa === 'mutehint') setMuteHint(true);
+      else if (qa === 'leading' && s.lot) engine.setMaxBid(s.lot.currentBid * 5 + 500);
       else if (qa === 'giveaway') engine.startGiveaway(undefined, 120, true);
       else if (qa === 'giveawayWon') engine.startGiveaway(undefined, 2, false);
       else if (qa === 'flash' && shopItem) engine.startFlashSale(shopItem, 0.3, 120);
@@ -685,7 +692,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       else if (qa === 'won' && s.lot) {
         setCelebration({ id: Date.now(), kind: 'won', product: s.lot.product, price: s.lot.currentBid, quantity: 1, discount: 0, bundled: false });
       } else if ((sheetNames as string[]).includes(qa)) setSheet(qa as SheetName);
-    }, 2500);
+    };
+    setTimeout(attempt, 2500);
   });
 
   // ─── Türetilmiş değerler ───────────────────────────────────────────────────
@@ -696,7 +704,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const couponOff = lot && running ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
   const giveaway = state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
   const flash = state.flash;
-  const shopCount = state.queue.length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
+  const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
+  const shopCount = state.queue.filter((p) => !soldAuctionIds.has(p.id)).length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
   const sellerOrders = orders.filter((o) => o.sellerId === seller.id && o.status !== 'cancelled');
   const sellerSpend = sellerOrders.reduce((sum, o) => sum + o.itemPrice, 0);
   const hasClub = seller.followers > 15000 || seller.badges.includes('top_seller');
@@ -706,7 +715,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const friends = BUYER_USERS.slice(hashOf(show.id) % 20, (hashOf(show.id) % 20) + (hashOf(show.id) % 3));
   const bottomPad = Math.max(insets.bottom, 10) + 2;
   // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; orta bölgeye sığmazsa küçülür
-  const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 6));
+  const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 8));
   const ended = state.ended || endedShow;
   const mentionables = [
     { username: seller.username, avatar: seller.avatar },
@@ -735,7 +744,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       : []),
   ];
   const railCompact = middleH > 0 && middleH < 330;
-  const railFit = middleH > 0 ? Math.max(2, Math.floor((middleH + 8) / (railCompact ? 49 : 61))) : railAll.length;
+  // middleH, orta bölgenin alt boşluğunu (8) da içerir; öğe: ikon + etiket (kompakt 45 / normal 49) + aralık (8 / 12)
+  const railFit = middleH > 0 ? Math.max(2, Math.floor((middleH - 8 + (railCompact ? 8 : 12)) / (railCompact ? 53 : 61))) : railAll.length;
   const railKeep = new Set(
     railAll
       .slice()

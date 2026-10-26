@@ -8,12 +8,12 @@ import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CategoryTile } from '@/components/cards/CategoryTile';
 import { UserRow } from '@/components/cards/UserRow';
-import { Divider, EmptyState, Icon, PressableScale, Text, toast, UnderlineTabs, type TabItem } from '@/components/ui';
+import { Divider, EmptyState, Icon, PressableScale, Text, toast, type TabItem } from '@/components/ui';
 import { search, TRENDING_SEARCHES } from '@/data';
 import { ShowRail } from '@/features/home/ShowRail';
 import { formatNumber } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { SCREEN_PADDING } from '@/theme';
+import { SCREEN_PADDING, useTheme } from '@/theme';
 import type { ListingFormat } from '@/types';
 
 import {
@@ -37,7 +37,7 @@ import { ProductRow } from './ProductRow';
 import { ChoiceSheet, ProductFilterSheet, ShowFilterSheet } from './sheets';
 import { useBrowseStore, useIsSearchSaved } from './store';
 import { chunk } from './text';
-import { ChipScroller, FilterChip, SectionTitle, useGridWidth } from './ui';
+import { ChipScroller, FilterChip, RevealScrollView, SectionTitle, useGridWidth, type RevealTarget } from './ui';
 
 export type ResultTab = 'top' | 'products' | 'shows' | 'users' | 'categories';
 
@@ -296,6 +296,47 @@ function TopTab({ results, onTab, bottomInset }: { results: Results; onTab: (t: 
   );
 }
 
+// ─── Sekme satırı ────────────────────────────────────────────────────────────
+
+/**
+ * Alt çizgili sekmeler (ortak UnderlineTabs görünümü) + etkin sekmeyi görünür alana kaydırma:
+ * "Tümünü gör" ile ekran dışındaki Kullanıcılar / Kategoriler sekmesine geçilince çizgi görünür kalır.
+ */
+function ResultTabs({ tabs, value, onChange }: { tabs: TabItem<ResultTab>[]; value: ResultTab; onChange: (t: ResultTab) => void }) {
+  const { colors } = useTheme();
+  const [layouts, setLayouts] = useState<Record<string, RevealTarget>>({});
+  return (
+    <View style={[styles.tabsWrap, { borderBottomColor: colors.border }]}>
+      <RevealScrollView target={layouts[value]} contentStyle={styles.tabsScroll}>
+        {tabs.map((t) => {
+          const selected = t.key === value;
+          return (
+            <PressableScale
+              key={t.key}
+              scaleTo={0.96}
+              onPress={() => {
+                haptic.tap();
+                onChange(t.key);
+              }}
+              onLayout={(e) => {
+                const { x, width } = e.nativeEvent.layout;
+                setLayouts((prev) => (prev[t.key]?.x === x && prev[t.key]?.w === width ? prev : { ...prev, [t.key]: { x, w: width } }));
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              style={styles.tab}>
+              <Text variant="callout" weight={selected ? '700' : '600'} color={selected ? colors.text : colors.textSecondary} numberOfLines={1}>
+                {t.label}
+              </Text>
+              <View style={[styles.indicator, { backgroundColor: selected ? colors.text : 'transparent' }]} />
+            </PressableScale>
+          );
+        })}
+      </RevealScrollView>
+    </View>
+  );
+}
+
 // ─── Ana bileşen ─────────────────────────────────────────────────────────────
 
 export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top' }: { query: string; bottomInset: number; onSearch: (q: string) => void; initialTab?: ResultTab }) {
@@ -331,7 +372,7 @@ export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top'
 
   return (
     <View style={styles.flex}>
-      <UnderlineTabs tabs={tabs} value={tab} onChange={setTab} />
+      <ResultTabs tabs={tabs} value={tab} onChange={setTab} />
       {tab === 'top' ? <TopTab results={results} onTab={setTab} bottomInset={bottomInset} /> : null}
       {tab === 'products' ? <ProductsTab query={query} results={results} bottomInset={bottomInset} /> : null}
       {tab === 'shows' ? <ShowsTab results={results} bottomInset={bottomInset} /> : null}
@@ -343,6 +384,10 @@ export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top'
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  tabsWrap: { borderBottomWidth: StyleSheet.hairlineWidth },
+  tabsScroll: { paddingHorizontal: SCREEN_PADDING - 8 },
+  tab: { paddingHorizontal: 10, paddingTop: 12, alignItems: 'center' },
+  indicator: { height: 3, borderRadius: 2, alignSelf: 'stretch', marginTop: 10 },
   chips: { paddingTop: 12, paddingBottom: 4 },
   resultsRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SCREEN_PADDING, paddingTop: 12, paddingBottom: 4, gap: 10 },
   saveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },

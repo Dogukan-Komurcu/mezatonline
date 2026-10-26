@@ -38,13 +38,15 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
   const match = (p: Product) => !q || p.title.toLocaleLowerCase('tr-TR').includes(q);
   const lot = state.lot;
   const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
-  const auctions = state.queue.filter(match);
+  // Satılan açık artırma ürünleri yalnızca "Satıldı" sekmesinde görünür (Whatnot ile aynı)
+  const openAuctions = state.queue.filter((p) => !soldAuctionIds.has(p.id));
+  const auctions = openAuctions.filter(match);
   const bins = state.shop.filter(match);
   const sold = state.sold.filter((s) => match(s.product));
   const g = state.giveaway;
 
   const tabs = [
-    { key: 'auction' as const, label: 'Açık Artırma', count: state.queue.length },
+    { key: 'auction' as const, label: 'Açık Artırma', count: openAuctions.length },
     { key: 'buy_now' as const, label: 'Hemen Al', count: state.shop.length },
     ...(g ? [{ key: 'giveaway' as const, label: 'Çekiliş', count: 1 }] : []),
     { key: 'sold' as const, label: 'Satıldı', count: state.sold.length },
@@ -56,7 +58,15 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
     const soldItem = state.sold.find((s) => s.via === 'auction' && s.product.id === p.id);
     const pre = state.myPreBids?.[p.id];
     return (
-      <Row key={p.id} product={p} onPress={() => onProductPress(p)}>
+      <Row
+        key={p.id}
+        product={p}
+        onPress={() => onProductPress(p)}
+        right={
+          !onStage && !soldItem && !soldAuctionIds.has(p.id) ? (
+            <Button title={pre ? 'Artır' : 'Ön teklif'} size="sm" variant={pre ? 'secondary' : 'outline'} onPress={() => onPreBid(p)} />
+          ) : undefined
+        }>
         {onStage ? (
           <>
             <View style={styles.tagRow}>
@@ -99,9 +109,6 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
             </Text>
           </>
         )}
-        {!onStage && !soldItem && !soldAuctionIds.has(p.id) ? (
-          <Button title={pre ? 'Artır' : 'Ön teklif'} size="sm" variant={pre ? 'secondary' : 'outline'} onPress={() => onPreBid(p)} style={styles.rowButton} />
-        ) : null}
       </Row>
     );
   };
@@ -111,7 +118,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
     const flash = state.flash && state.flash.status === 'running' && state.flash.product.id === p.id ? state.flash : undefined;
     const onStage = lot?.product.id === p.id && lot.status === 'running';
     return (
-      <Row key={p.id} product={p} onPress={() => onProductPress(p)}>
+      <Row key={p.id} product={p} onPress={() => onProductPress(p)} right={stock > 0 && !onStage ? <Button title="Hemen Al" size="sm" onPress={() => onBuyNow(p)} /> : undefined}>
         <View style={styles.priceRow}>
           {flash ? (
             <>
@@ -136,7 +143,6 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
         <Text variant="caption" weight="600" color={stock > 0 ? (stock <= 2 ? liveColors.primary : 'textSecondary') : liveColors.live}>
           {onStage ? 'Şu an mezatta' : stock > 0 ? `Stokta ${stock} adet` : 'Tükendi'}
         </Text>
-        {stock > 0 && !onStage ? <Button title="Hemen Al" size="sm" onPress={() => onBuyNow(p)} style={styles.rowButton} /> : null}
       </Row>
     );
   };
@@ -166,16 +172,16 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
       {activeTab === 'auction' ? (auctions.length ? auctions.map(renderAuction) : empty('Açık artırma yok', 'Bu yayında henüz sırada ürün yok.')) : null}
       {activeTab === 'buy_now' ? (bins.length ? bins.map(renderBin) : empty('Hemen Al ürünü yok', 'Satıcı bu yayında Hemen Al ürünü eklemedi.')) : null}
       {activeTab === 'giveaway' && g ? (
-        <Row product={g.product} onPress={() => undefined}>
+        <Row
+          product={g.product}
+          onPress={() => undefined}
+          right={g.status === 'running' ? <Button title={g.entered ? 'Katıldın ✓' : 'Katıl'} size="sm" disabled={g.entered} onPress={onEnterGiveaway} /> : undefined}>
           <Text variant="subhead" weight="800" color={liveColors.primary}>
             🎁 Ücretsiz · {g.entrants} katılımcı
           </Text>
           <Text variant="caption" color="textSecondary">
             {g.status === 'done' ? (g.winner?.isMe ? 'Kazanan: Sen 🎉' : `Kazanan: @${g.winner?.username ?? ''}`) : g.requiresFollow ? 'Takipçilere özel' : 'Herkes katılabilir'}
           </Text>
-          {g.status === 'running' ? (
-            <Button title={g.entered ? 'Katıldın ✓' : 'Çekilişe katıl'} size="sm" disabled={g.entered} onPress={onEnterGiveaway} style={styles.rowButton} />
-          ) : null}
         </Row>
       ) : null}
       {activeTab === 'sold'
@@ -205,9 +211,9 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
   );
 }
 
-function Row({ product, onPress, children }: { product: Product; onPress: () => void; children: ReactNode }) {
+function Row({ product, onPress, right, children }: { product: Product; onPress: () => void; right?: ReactNode; children: ReactNode }) {
   return (
-    <PressableScale scaleTo={0.99} onPress={onPress} style={styles.row}>
+    <PressableScale scaleTo={0.99} onPress={onPress} style={[styles.row, styles.rowCentered]}>
       <Image source={{ uri: product.images[0] }} style={styles.thumb} contentFit="cover" cachePolicy="memory-disk" recyclingKey={product.id} />
       <View style={styles.flex}>
         <Text variant="subhead" weight="600" numberOfLines={2}>
@@ -218,6 +224,7 @@ function Row({ product, onPress, children }: { product: Product; onPress: () => 
         </Text>
         <View style={styles.rowBody}>{children}</View>
       </View>
+      {right ? <View style={styles.rowRight}>{right}</View> : null}
     </PressableScale>
   );
 }
@@ -230,7 +237,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12, paddingVertical: 10, alignItems: 'flex-start' },
   thumb: { width: 64, height: 64, borderRadius: 10, backgroundColor: liveColors.panelAlt },
   rowBody: { marginTop: 4, gap: 3, alignItems: 'flex-start' },
-  rowButton: { marginTop: 4 },
+  rowCentered: { alignItems: 'center' },
+  rowRight: { alignSelf: 'center' },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
   tagText: { fontSize: 10, lineHeight: 13 },

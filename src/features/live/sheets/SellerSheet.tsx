@@ -55,7 +55,7 @@ export function SellerSheet({ visible, onClose, seller, following, onToggleFollo
         ) : null}
       </View>
       <View style={[styles.stats, { backgroundColor: colors.surface }]}>
-        <Stat value={`★ ${formatRating(seller.rating)}`} label={`${formatCompact(seller.reviewCount)} değerlendirme`} />
+        <Stat value={`★ ${formatRating(seller.rating)}`} label={`${formatCompact(seller.reviewCount)} yorum`} />
         <Stat value={formatCompact(seller.followers)} label="takipçi" />
         <Stat value={formatCompact(seller.itemsSold)} label="satış" />
         <Stat value={shipDaysLabel(seller.avgShipDays)} label="kargoya verme" />

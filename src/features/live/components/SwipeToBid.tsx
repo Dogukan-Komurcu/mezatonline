@@ -21,7 +21,7 @@ export type SwipeToBidProps = {
   onTapHint: () => void;
 };
 
-const KNOB_RATIO = 0.76;
+const KNOB_RATIO = 0.8;
 const PAD = 3;
 
 /**
@@ -110,7 +110,7 @@ export function SwipeToBid({ amount, leading, label, onCommit, onTapHint }: Swip
               </>
             ) : (
               <>
-                <Text variant="headline" weight="800" color={liveColors.onPrimary} numberOfLines={1} style={styles.knobText} adjustsFontSizeToFit minimumFontScale={0.8}>
+                <Text variant="headline" weight="800" color={liveColors.onPrimary} numberOfLines={1} style={styles.knobText} adjustsFontSizeToFit minimumFontScale={0.7}>
                   {label ?? `${formatTRY(amount)} Teklif Ver`}
                 </Text>
                 <View style={styles.knobChevrons}>
@@ -140,8 +140,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
+    gap: 4,
+    paddingHorizontal: 12,
   },
   knobText: { flexShrink: 1 },
   knobChevrons: { flexDirection: 'row', alignItems: 'center' },

@@ -49,12 +49,22 @@ export default function InboxScreen() {
   const [tab, setTab] = useState<Tab>('messages');
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
+  const markSupportRead = useInboxExtras((s) => s.markSupportRead);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [menuFor, setMenuFor] = useState<{ conv: Conversation; user: User } | null>(null);
   const [toDelete, setToDelete] = useState<Conversation | null>(null);
   const [toBlock, setToBlock] = useState<{ conv: Conversation; user: User } | null>(null);
 
   useEffect(() => ensureRequestsSeeded(), []);
+
+  // Yalnızca geliştirme: ?qa=options|compose|requests ile sayfa/sekme açık başlar
+  useEffect(() => {
+    if (!__DEV__ || !qa.qa) return;
+    if (qa.qa === 'options') setOptionsOpen(true);
+    else if (qa.qa === 'compose') setComposeOpen(true);
+    else if (qa.qa === 'requests') setTab('requests');
+  }, [qa.qa]);
 
   const { messages, requests } = useMemo(() => {
     const dm: Item[] = [];
@@ -114,6 +124,31 @@ export default function InboxScreen() {
       ]
     : [];
 
+  // Başlıktaki ⋯ menüsü (Whatnot: ☰ → Arşiv / Mesaj istekleri)
+  const optionActions: SheetAction[] = [
+    {
+      label: 'Tümünü okundu işaretle',
+      icon: 'checkmark-done-outline',
+      onPress: () => {
+        if (!unreadCount) {
+          toast('Okunmamış mesajın yok', 'checkmark-done-outline');
+          return;
+        }
+        conversations.forEach((c) => c.unread > 0 && markConversationRead(c.id));
+        markSupportRead();
+        haptic.success();
+        toast.success('Tüm mesajlar okundu olarak işaretlendi', 'checkmark-done');
+      },
+    },
+    {
+      label: 'Mesaj istekleri',
+      icon: 'mail-unread-outline',
+      subtitle: requests.length ? `${requests.length} bekleyen istek` : 'Bekleyen istek yok',
+      onPress: () => setTab('requests'),
+    },
+    { label: 'Mesaj ayarları', icon: 'settings-outline', subtitle: 'Doğrudan mesajlar ve gizlilik', onPress: () => router.push('/settings/account-controls') },
+  ];
+
   const orderTag = (c: Conversation) => {
     if (!c.orderId) return undefined;
     const o = orders.find((x) => x.id === c.orderId);
@@ -122,7 +157,7 @@ export default function InboxScreen() {
 
   return (
     <Screen>
-      <Header title="Mesajlar" right={<IconButton name="create-outline" onPress={() => setComposeOpen(true)} accessibilityLabel="Yeni mesaj" />} />
+      <Header title="Gelen Kutusu" right={<IconButton name="ellipsis-horizontal" onPress={() => setOptionsOpen(true)} accessibilityLabel="Seçenekler" />} />
       <View style={styles.search}>
         <TextField icon="search" placeholder="Mesajlarda ara" value={q} onChangeText={setQ} autoCapitalize="none" autoCorrect={false} returnKeyType="search" />
       </View>
@@ -227,6 +262,7 @@ export default function InboxScreen() {
 
       <ComposeSheet visible={composeOpen} onClose={() => setComposeOpen(false)} onPick={startChat} />
       <ActionSheet visible={!!menuFor} onClose={() => setMenuFor(null)} title={menuFor?.user.username} actions={menuActions} />
+      <ActionSheet visible={optionsOpen} onClose={() => setOptionsOpen(false)} title="Gelen Kutusu" actions={optionActions} />
       <ConfirmSheet
         visible={!!toDelete}
         onClose={() => setToDelete(null)}

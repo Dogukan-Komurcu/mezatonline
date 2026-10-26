@@ -398,7 +398,9 @@ export default function ShowScreen() {
       {/* ─── Alt çubuk ─── */}
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: colors.bg, borderTopColor: colors.border }]}>
         {ended ? (
-          nextShow ? (
+          sellerLive && seller ? (
+            <Button title="Canlı yayına katıl" subtitle={`${seller.username} şu an yayında`} icon="radio" size="lg" fullWidth onPress={() => router.push(`/live/${sellerLive.id}`)} />
+          ) : nextShow ? (
             <ReminderButton show={nextShow} onPress={() => remind(nextShow)} label="Sıradaki yayını hatırlat" />
           ) : (
             <Button title="Satıcının mağazasına git" icon="storefront-outline" size="lg" fullWidth onPress={() => seller && router.push(`/user/${seller.username}`)} />

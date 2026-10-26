@@ -161,8 +161,7 @@ export default function NotificationsScreen() {
                 <Text variant="subhead" weight="400" color="textSecondary" numberOfLines={2}>
                   {n.body}
                 </Text>
-              ) : null}
-              <Text variant="footnote" color="textTertiary">
+              ) : null}              <Text variant="footnote" color="textTertiary">
                 {timeAgoLong(n.createdAt)}
               </Text>
             </View>

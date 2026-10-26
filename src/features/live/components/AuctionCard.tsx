@@ -55,7 +55,7 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
       <View style={[styles.card, leading && running && styles.cardLeading, outbid && styles.cardOutbid]}>
         <PressableScale scaleTo={0.985} onPress={onPress} accessibilityLabel={`${product.title} ürün ayrıntıları`}>
         {!running ? (
-          <Animated.View key={lot.id} entering={ZoomIn.springify().damping(14)} style={[styles.soldBanner, lot.status === 'unsold' && styles.unsoldBanner]}>
+          <Animated.View key={lot.id} entering={ZoomIn.duration(220)} style={[styles.soldBanner, lot.status === 'unsold' && styles.unsoldBanner]}>
             <Text variant="footnote" weight="900" color={liveColors.text}>
               {lot.status === 'sold' ? 'SATILDI' : 'SATILMADI'}
             </Text>

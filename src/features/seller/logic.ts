@@ -232,15 +232,15 @@ export function buyerAddress(buyer: BuyerInfo): MockAddress {
   const district = districts[h % districts.length];
   const hoods = neighborhoodsOf(district);
   const first = buyer.displayName.replace(/[._\d]/g, ' ').trim().split(/\s+/)[0] || 'Alıcı';
-  const fullName = /\s/.test(buyer.displayName.trim()) ? buyer.displayName : `${first.charAt(0).toLocaleUpperCase('tr-TR')}${first.slice(1)} ${LAST_NAMES[(h >> 4) % LAST_NAMES.length]}`;
+  const fullName = /\s/.test(buyer.displayName.trim()) ? buyer.displayName : `${first.charAt(0).toLocaleUpperCase('tr-TR')}${first.slice(1)} ${LAST_NAMES[(h >>> 4) % LAST_NAMES.length]}`;
   return {
     fullName,
     phone: `05${(h % 5) + 30} ••• •• ${String(10 + (h % 89)).slice(0, 2)}`,
-    line: `${STREETS[(h >> 6) % STREETS.length]} No: ${(h % 58) + 2} D: ${((h >> 9) % 18) + 1}`,
-    neighborhood: `${hoods[(h >> 3) % hoods.length]} Mah.`,
+    line: `${STREETS[(h >>> 6) % STREETS.length]} No: ${(h % 58) + 2} D: ${((h >>> 9) % 18) + 1}`,
+    neighborhood: `${hoods[(h >>> 3) % hoods.length]} Mah.`,
     district,
     city,
-    postalCode: `${PLATE[city] ?? '34'}${String(100 + ((h >> 2) % 800)).padStart(3, '0')}`,
+    postalCode: `${PLATE[city] ?? '34'}${String(100 + ((h >>> 2) % 800)).padStart(3, '0')}`,
   };
 }
 
@@ -471,11 +471,11 @@ export function deriveOffers(
     for (let i = 0; i < count; i++) {
       const id = `${p.id}_of${i}`;
       const resolution = resolutions[id];
-      const createdAt = new Date(p.createdAt).getTime() + (i + 1) * (2 + ((h >> (i + 2)) % 9)) * 60_000;
+      const createdAt = new Date(p.createdAt).getTime() + (i + 1) * (2 + ((h >>> (i + 2)) % 9)) * 60_000;
       if (createdAt > now) continue;
       const tab = listingTab(p, statusMap);
       if (!resolution && tab !== 'active') continue;
-      const pct = 0.7 + ((h >> (i * 3)) % 20) / 100;
+      const pct = 0.7 + ((h >>> (i * 3)) % 20) / 100;
       const step = p.price >= 1000 ? 50 : p.price >= 200 ? 10 : 5;
       const amount = Math.max(step, Math.round((p.price * pct) / step) * step);
       const buyerUser = BUYER_USERS[(h + i * 7) % BUYER_USERS.length];
@@ -506,12 +506,12 @@ export function deriveTips(sessions: LiveSessionSummary[], shows: Show[]): TipIt
     const count = (h % 4) + (s.peakViewers > 50 ? 1 : 0);
     const title = shows.find((x) => x.id === s.showId)?.title ?? 'Canlı yayın';
     for (let i = 0; i < count; i++) {
-      const buyerUser = BUYER_USERS[(h >> i) % BUYER_USERS.length];
+      const buyerUser = BUYER_USERS[(h >>> i) % BUYER_USERS.length];
       out.push({
         id: `${s.id}_tip${i}`,
         buyer: resolveBuyer(buyerUser.id),
-        amount: TIP_PRESETS[(h >> (i + 3)) % 4],
-        message: TIP_MESSAGES[(h >> (i + 1)) % TIP_MESSAGES.length],
+        amount: TIP_PRESETS[(h >>> (i + 3)) % 4],
+        message: TIP_MESSAGES[(h >>> (i + 1)) % TIP_MESSAGES.length],
         at: new Date(s.startedAt).getTime() + (i + 1) * 7 * 60_000,
         showTitle: title,
       });

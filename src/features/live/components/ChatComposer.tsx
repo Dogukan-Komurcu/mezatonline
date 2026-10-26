@@ -100,6 +100,8 @@ export function ChatComposer({ visible, initialText = '', mentionables, onClose,
             <View style={styles.row}>
               <View style={styles.inputWrap}>
                 <TextInput
+                  autoCorrect={false}
+                  spellCheck={false}
                   ref={inputRef}
                   value={text}
                   onChangeText={(t) => setText(t.slice(0, 200))}

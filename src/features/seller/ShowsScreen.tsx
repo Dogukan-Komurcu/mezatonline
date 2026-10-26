@@ -14,6 +14,7 @@ import type { Show } from '@/types';
 
 import { useNow } from './actions';
 import { HOUR } from './logic';
+import { useQaParam } from './qaSeed';
 import { shareShow, showActions, startShow } from './showActions';
 import { ActionSheet, Card, StatusPill, Thumb } from './ui';
 
@@ -31,7 +32,8 @@ export function ShowsScreen() {
   const shows = useSellerStore((s) => s.shows);
   const sessions = useSellerStore((s) => s.sessions);
   const updateShow = useSellerStore((s) => s.updateShow);
-  const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
+  const qa = useQaParam();
+  const [tab, setTab] = useState<'upcoming' | 'past'>(qa === 'past' ? 'past' : 'upcoming');
   const [more, setMore] = useState<Show | null>(null);
 
   const upcoming = shows
@@ -91,7 +93,7 @@ export function ShowsScreen() {
                   </Text>
                   <View style={styles.btns}>
                     <Button title={show.status === 'live' ? 'Yayına dön' : 'Başlat'} size="sm" variant={show.status === 'live' ? 'danger' : 'primary'} icon="videocam" onPress={() => startShow(show)} />
-                    <Button title="Paylaş" size="sm" variant="secondary" icon="share-outline" onPress={() => shareShow(show)} />
+                    <IconButton name="share-outline" variant="surface" size={34} onPress={() => shareShow(show)} accessibilityLabel="Paylaş" />
                   </View>
                 </View>
                 <IconButton name="ellipsis-horizontal" size={34} onPress={() => setMore(show)} accessibilityLabel="Diğer seçenekler" />
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
   list: { padding: SCREEN_PADDING, gap: 12, flexGrow: 1 },
   card: { overflow: 'hidden' },
   cardInner: { flexDirection: 'row', gap: 12, padding: 12 },
-  btns: { flexDirection: 'row', gap: 8, marginTop: 2, flexWrap: 'wrap' },
+  btns: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   summary: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.lg, marginBottom: 2 },
   kpis: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 10 },
   kpi: { flex: 1, paddingHorizontal: 4, gap: 2 },

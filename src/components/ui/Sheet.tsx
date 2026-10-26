@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -41,7 +41,21 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
+  const [keyboardH, setKeyboardH] = useState(0);
   const progress = useSharedValue(0);
+
+  // Klavye açıkken sayfa çentiğin altına itilmesin: yüksekliği klavyeye göre sınırla
+  useEffect(() => {
+    if (!mounted) return;
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const a = Keyboard.addListener(showEvt, (e) => setKeyboardH(e.endCoordinates.height));
+    const b = Keyboard.addListener(hideEvt, () => setKeyboardH(0));
+    return () => {
+      a.remove();
+      b.remove();
+    };
+  }, [mounted]);
 
   useEffect(() => {
     if (visible) {
@@ -61,6 +75,9 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
 
   const Body = scroll ? ScrollView : View;
   const scheme = dark ? 'dark' : theme.scheme;
+  const available = keyboardH > 0 ? screenH - keyboardH - insets.top - 8 : screenH;
+  const maxPanel = Math.min(screenH * maxHeight, available);
+  const fixedPanel = height ? Math.min(screenH * height, available) : undefined;
   return (
     <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <ForceScheme scheme={scheme}>
@@ -74,9 +91,9 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
             styles.panel,
             {
               backgroundColor: dark ? '#141416' : colors.card,
-              maxHeight: screenH * maxHeight,
-              height: height ? screenH * height : undefined,
-              paddingBottom: footer ? 0 : Math.max(insets.bottom, 16),
+              maxHeight: maxPanel,
+              height: fixedPanel,
+              paddingBottom: footer ? 0 : keyboardH > 0 ? 12 : Math.max(insets.bottom, 16),
             },
             panelStyle,
           ]}>
@@ -85,14 +102,15 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
           </View>
           {title || headerRight || showClose ? (
             <View style={styles.header}>
+              {showClose && !headerRight ? <View style={styles.closeSpacer} /> : null}
               <View style={{ flex: 1 }}>
                 {title ? (
-                  <Text variant="title3" color={colors.text} numberOfLines={1}>
+                  <Text variant="headline" weight="700" color={colors.text} numberOfLines={1} align={headerRight ? 'left' : 'center'} style={styles.title}>
                     {title}
                   </Text>
                 ) : null}
                 {subtitle ? (
-                  <Text variant="footnote" color={colors.textSecondary} numberOfLines={2}>
+                  <Text variant="footnote" color={colors.textSecondary} numberOfLines={3} align={headerRight ? 'left' : 'center'}>
                     {subtitle}
                   </Text>
                 ) : null}
@@ -109,7 +127,7 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
             {scroll ? children : <View style={[styles.content, styles.flex, contentStyle]}>{children}</View>}
           </Body>
           {footer ? (
-            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), borderTopColor: dark ? 'rgba(255,255,255,0.1)' : colors.border }]}>{footer}</View>
+            <View style={[styles.footer, { paddingBottom: keyboardH > 0 ? 12 : Math.max(insets.bottom, 12), borderTopColor: dark ? 'rgba(255,255,255,0.1)' : colors.border }]}>{footer}</View>
           ) : null}
         </Animated.View>
       </KeyboardAvoidingView>
@@ -129,6 +147,8 @@ const styles = StyleSheet.create({
   handleWrap: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },
   handle: { width: 40, height: 5, borderRadius: 3 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SCREEN_PADDING, paddingTop: 6, paddingBottom: 10, gap: 10 },
+  closeSpacer: { width: 34 },
+  title: { fontSize: 17, lineHeight: 22 },
   content: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 8 },
   footer: { paddingHorizontal: SCREEN_PADDING, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
 });

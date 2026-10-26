@@ -33,7 +33,7 @@ function CategoryEmpty({ categoryId }: { categoryId: string }) {
   if (!category) return null;
   return (
     <EmptyState
-      emoji={category.emoji}
+      icon="videocam-off-outline"
       title={`${category.shortName} kategorisinde şu an canlı yayın yok`}
       message="Yaklaşan yayınlara hatırlatıcı kurabilir ya da kategoriyi takip edip yeni yayınlardan haberdar olabilirsin."
       actionLabel={followed ? 'Takip ediliyor ✓' : 'Kategoriyi takip et'}
@@ -90,15 +90,18 @@ export default function HomeScreen() {
 
   const coachVisible = wantCoach && coach !== null;
 
-  // Yalnızca geliştirme: ekran görüntüsü QA'sı (/?qa=scroll | y<offset> | bottom | following | cat_<id>)
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (/?qa=scroll | y<offset> | bottom | following | cat_<id>, virgülle birleştirilebilir)
   const { qa } = useLocalSearchParams<{ qa?: string }>();
   useEffect(() => {
     if (!__DEV__ || !qa) return;
     dismissCoach();
-    if (qa === 'following') setSelection(FOLLOWING);
-    else if (qa.startsWith('cat_')) setSelection(qa.slice(4));
-    const offset = qa === 'scroll' ? 1500 : qa.startsWith('y') ? Number(qa.slice(1)) || 0 : 0;
-    if (!offset && qa !== 'bottom') return;
+    const parts = qa.split(',');
+    const sel = parts.find((p) => p === 'following' || p.startsWith('cat_'));
+    if (sel === 'following') setSelection(FOLLOWING);
+    else if (sel) setSelection(sel.slice(4));
+    const pos = parts.find((p) => p === 'scroll' || p === 'bottom' || /^y\d+$/.test(p));
+    const offset = pos === 'scroll' ? 1500 : pos?.startsWith('y') ? Number(pos.slice(1)) || 0 : 0;
+    if (!offset && pos !== 'bottom') return;
     const timers = [1200, 1700, 2200, 2700].map((ms) => setTimeout(() => (offset ? listRef.current?.scrollToOffset({ offset, animated: false }) : listRef.current?.scrollToEnd({ animated: false })), ms));
     return () => timers.forEach(clearTimeout);
   }, [qa, dismissCoach]);
@@ -167,7 +170,7 @@ export default function HomeScreen() {
         if (item.variant === 'no_follow') {
           return (
             <EmptyState
-              emoji="💛"
+              icon="heart-outline"
               title="Henüz kimseyi takip etmiyorsun"
               message="Sevdiğin satıcıları takip et; canlıya geçtiklerinde yayınları burada seni bekliyor olacak."
               style={styles.empty}
@@ -188,7 +191,7 @@ export default function HomeScreen() {
         return (
           <View style={styles.end}>
             <Text variant="callout" weight="700" align="center">
-              Şimdilik hepsi bu kadar 🎉
+              Şimdilik hepsi bu kadar
             </Text>
             <Text variant="footnote" color="textSecondary" align="center">
               Yeni yayınlar için aşağı çekip yenileyebilir ya da kategorilere göz atabilirsin.

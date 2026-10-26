@@ -30,8 +30,10 @@ export function ChatAvatar({ user, size = 48 }: { user: User; size?: number }) {
       </View>
     );
   }
-  const live = user.isSeller && !!getLiveShowOf(user.id);
-  return <Avatar uri={user.avatar} name={user.username} size={size} live={live} verified={user.badges.includes('verified')} />;
+  // Küçük boyutlarda (başlık 36, baloncuk 28) "CANLI" etiketi sığmıyor ve kesiliyor; rozetler yalnızca büyük avatarlarda
+  const small = size < 44;
+  const live = !small && user.isSeller && !!getLiveShowOf(user.id);
+  return <Avatar uri={user.avatar} name={user.username} size={size} live={live} verified={!small && user.badges.includes('verified')} />;
 }
 
 // ─── Konuşma satırı ──────────────────────────────────────────────────────────

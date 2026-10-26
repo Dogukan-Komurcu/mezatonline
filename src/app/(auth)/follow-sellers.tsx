@@ -11,7 +11,7 @@ import { useAuthFlow } from '@/features/auth/store';
 import { formatCompact, formatRating } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
-import { ForceScheme, liveColors, SCREEN_PADDING, useTheme } from '@/theme';
+import { ForceScheme, SCREEN_PADDING } from '@/theme';
 import type { User } from '@/types';
 
 const MIN_LIST = 12;
@@ -32,7 +32,6 @@ function suggestedSellers(interests: string[]): User[] {
 }
 
 function SellerRow({ user }: { user: User }) {
-  const { colors } = useTheme();
   const live = !!getLiveShowOf(user.id);
   const category = getCategory(user.categoryIds[0]);
   return (
@@ -44,13 +43,6 @@ function SellerRow({ user }: { user: User }) {
             {user.username}
           </Text>
           {user.badges.includes('top_seller') ? <Icon name="ribbon" size={14} color="warning" /> : null}
-          {live ? (
-            <View style={[styles.livePill, { backgroundColor: colors.live }]}>
-              <Text variant="caption" weight="800" color={liveColors.text} style={styles.liveText}>
-                CANLI
-              </Text>
-            </View>
-          ) : null}
         </View>
         <Text variant="footnote" color="textSecondary" numberOfLines={1}>
           {category ? `${category.shortName} · ` : ''}
@@ -178,7 +170,5 @@ const styles = StyleSheet.create({
   rowTexts: { flex: 1, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   name: { flexShrink: 1 },
-  livePill: { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
-  liveText: { fontSize: 9, lineHeight: 12 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

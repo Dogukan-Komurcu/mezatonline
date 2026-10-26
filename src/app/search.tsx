@@ -71,7 +71,7 @@ export default function SearchScreen() {
             value={text}
             onChangeText={setText}
             autoFocus={!initial}
-            placeholder="Ürün, satıcı, yayın ya da kategori ara"
+            placeholder="Ürün, satıcı veya yayın ara"
             placeholderTextColor={colors.textTertiary}
             selectionColor={colors.text}
             returnKeyType="search"

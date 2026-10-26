@@ -31,6 +31,9 @@ export default function SellTab() {
   }, [status, me.isSeller]);
 
   if (!hydrated) return null;
+  // Yalnızca geliştirme: /sell?qa=landing | pending → satıcı olsa da tanıtım / inceleme ekranını göster
+  if (__DEV__ && qa === 'landing') return <SellLanding />;
+  if (__DEV__ && qa === 'pending') return <ApplicationPending />;
   if (isSeller) return <SellerHub />;
   if (status === 'pending') return <ApplicationPending />;
   return <SellLanding />;

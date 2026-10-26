@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Keyboard, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
@@ -28,6 +29,20 @@ const COPY: Record<PhoneMode, { header?: string; title: string; subtitle: string
   },
 };
 
+/** Bayrak görseli: emoji bayraklar bazı cihaz/simülatörlerde iki ayrı harf kutusu olarak geniş çiziliyor */
+function Flag({ country, width = 24 }: { country: Country; width?: number }) {
+  const { colors } = useTheme();
+  return (
+    <Image
+      source={{ uri: `https://flagcdn.com/w80/${country.code.toLowerCase()}.png` }}
+      style={[styles.flagImg, { width, height: Math.round(width * 0.7), backgroundColor: colors.surfaceAlt }]}
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      accessibilityLabel={country.name}
+    />
+  );
+}
+
 function CountrySheet({ visible, selected, onSelect, onClose }: { visible: boolean; selected: Country; onSelect: (c: Country) => void; onClose: () => void }) {
   const { colors } = useTheme();
   return (
@@ -44,7 +59,7 @@ function CountrySheet({ visible, selected, onSelect, onClose }: { visible: boole
                 onSelect(c);
               }}
               style={[styles.countryRow, { backgroundColor: active ? colors.surfaceAlt : 'transparent' }]}>
-              <Text style={styles.flag}>{c.flag}</Text>
+              <Flag country={c} width={28} />
               <Text variant="body" weight="600" style={styles.countryName} numberOfLines={1}>
                 {c.name}
               </Text>
@@ -62,14 +77,15 @@ function CountrySheet({ visible, selected, onSelect, onClose }: { visible: boole
 
 function PhoneScreen() {
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ mode?: string; country?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; country?: string; qa?: string }>();
   const mode: PhoneMode = params.mode === 'finish' || params.mode === 'login' ? params.mode : 'signup';
   const copy = COPY[mode];
   const [country, setCountry] = useState<Country>(getCountry(params.country ?? DEFAULT_COUNTRY.code));
-  const [digits, setDigits] = useState('');
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (?qa=filled | country)
+  const [digits, setDigits] = useState(() => (__DEV__ && params.qa === 'filled' ? '5321234567' : ''));
   const [focused, setFocused] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(() => __DEV__ && params.qa === 'country');
   const [sending, setSending] = useState(false);
   const inputRef = useRef<TextInputInstance>(null);
 
@@ -142,17 +158,20 @@ function PhoneScreen() {
               setSheetOpen(true);
             }}
             style={styles.countryBtn}>
-            <Text style={styles.flag}>{country.flag}</Text>
-            <Text variant="body" weight="700" tabular>
+            <Flag country={country} />
+            <Text variant="body" weight="700" tabular numberOfLines={1}>
               {country.dial}
             </Text>
-            <Icon name="chevron-down" size={16} color="textSecondary" />
+            <Icon name="chevron-down" size={13} color="textSecondary" />
           </PressableScale>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <Pressable style={styles.inputWrap} onPress={() => inputRef.current?.focus()}>
-            <Text variant="caption" color={error ? 'danger' : 'textSecondary'} style={styles.floatLabel}>
-              Telefon numarası<Text variant="caption" color="danger">*</Text>
-            </Text>
+            <View style={styles.labelRow}>
+              <Text variant="caption" color={error ? 'danger' : 'textSecondary'} numberOfLines={1} style={styles.floatLabel}>
+                Telefon numarası<Text variant="caption" color="danger">*</Text>
+              </Text>
+              {valid ? <Icon name="checkmark-circle" size={16} color="success" /> : null}
+            </View>
             <TextInput
               ref={inputRef}
               value={maskNational(digits, country)}
@@ -175,7 +194,6 @@ function PhoneScreen() {
               accessibilityLabel="Telefon numarası"
             />
           </Pressable>
-          {valid ? <Icon name="checkmark-circle" size={22} color="success" style={styles.valid} /> : null}
         </View>
         {error ? (
           <View style={styles.hintRow}>
@@ -219,13 +237,13 @@ export default function Phone() {
 
 const styles = StyleSheet.create({
   field: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderRadius: radius.md, minHeight: 62 },
-  countryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, alignSelf: 'stretch' },
-  flag: { fontSize: 22, lineHeight: 28 },
+  countryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 12, paddingRight: 8, alignSelf: 'stretch', flexGrow: 0, flexShrink: 0 },
+  flagImg: { borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.18)' },
   divider: { width: StyleSheet.hairlineWidth * 2, alignSelf: 'stretch', marginVertical: 12 },
-  inputWrap: { flex: 1, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 6 },
-  floatLabel: { fontWeight: '600' },
-  input: { fontSize: 19, fontWeight: '600', paddingVertical: 4, letterSpacing: 0.5, fontVariant: ['tabular-nums'] },
-  valid: { marginRight: 14 },
+  inputWrap: { flex: 1, minWidth: 0, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 6 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  floatLabel: { flex: 1, fontWeight: '600' },
+  input: { fontSize: 19, fontWeight: '600', paddingVertical: 4, paddingHorizontal: 0, letterSpacing: 0.3, fontVariant: ['tabular-nums'] },
   hintRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10, paddingHorizontal: 2 },
   hintText: { flex: 1 },
   countryList: { gap: 4 },

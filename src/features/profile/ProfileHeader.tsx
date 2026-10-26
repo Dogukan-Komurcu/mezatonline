@@ -57,7 +57,9 @@ export function ProfileHeader({
   onTip,
   onShare,
 }: ProfileHeaderProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  // Canlı kartı her iki temada da koyu kalır (Whatnot); koyu temada arka plandan ayrışsın diye bir ton açık + kenarlık
+  const liveCardStyle = isDark ? { backgroundColor: liveColors.panelAlt, borderWidth: StyleSheet.hairlineWidth, borderColor: liveColors.border } : { backgroundColor: colors.inverse };
   const [bioOpen, setBioOpen] = useState(false);
   const reminded = useSocialStore((s) => (nextShow ? s.remindedShowIds.includes(nextShow.id) : false));
   const cover = user.cover ?? getCategory(user.categoryIds[0])?.image;
@@ -194,16 +196,16 @@ export function ProfileHeader({
         )}
 
         {liveShow && !blocked ? (
-          <PressableScale scaleTo={0.98} onPress={() => router.push(`/live/${liveShow.id}`)} style={[styles.liveCard, { backgroundColor: colors.inverse }]} accessibilityRole="button" accessibilityLabel="Canlı yayına katıl">
+          <PressableScale scaleTo={0.98} onPress={() => router.push(`/live/${liveShow.id}`)} style={[styles.liveCard, liveCardStyle]} accessibilityRole="button" accessibilityLabel="Canlı yayına katıl">
             <View style={styles.liveThumb}>
               <Image source={{ uri: liveShow.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
             </View>
             <View style={styles.liveTexts}>
               <LiveBadge viewers={liveShow.viewers} />
-              <Text variant="subhead" weight="800" color={colors.onInverse} numberOfLines={1}>
+              <Text variant="subhead" weight="800" color={liveColors.text} numberOfLines={1}>
                 {isMe ? 'ŞU AN CANLIDASIN' : 'ŞU AN CANLI'}
               </Text>
-              <Text variant="footnote" color={colors.onInverse} numberOfLines={2} style={styles.liveTitle}>
+              <Text variant="footnote" color={liveColors.text} numberOfLines={2} style={styles.liveTitle}>
                 {liveShow.title}
               </Text>
             </View>

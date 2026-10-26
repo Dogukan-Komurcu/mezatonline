@@ -30,6 +30,9 @@ export type LotCardProps = {
   onUnpin: () => void;
   onOpenShop: (tab?: 'auction' | 'buy_now' | 'giveaway' | 'sold') => void;
   onDismissResult: () => void;
+  /** Sahne boşken önerilen sıradaki ürün */
+  next?: Product;
+  onPin: (p: Product) => void;
 };
 
 export function LotCard(props: LotCardProps) {
@@ -42,7 +45,7 @@ export function LotCard(props: LotCardProps) {
   if (flash && flashRunning) return <FlashCard flash={flash} now={now} extraSold={props.flashExtraSold} />;
   if (pinned) return <PinnedCard {...props} pinned={pinned} />;
   if (lot && !props.resultDismissed) return <ResultCard {...props} lot={lot} />;
-  return <EmptyCard onOpenShop={props.onOpenShop} />;
+  return <EmptyCard {...props} />;
 }
 
 function Thumb({ uri, id }: { uri?: string; id: string }) {
@@ -220,7 +223,28 @@ function ResultCard({ lot, remainingOf, onStartAuction, onOpenShop, onDismissRes
   );
 }
 
-function EmptyCard({ onOpenShop }: { onOpenShop: LotCardProps['onOpenShop'] }) {
+function EmptyCard({ next, onOpenShop, onStartAuction, onPin }: LotCardProps) {
+  // Sıradaki ürün önerisi: alt çubuktaki "Mağaza" düğmesini tekrarlamak yerine tek dokunuşla sahneye al
+  if (next) {
+    const auction = next.format === 'auction';
+    return (
+      <Animated.View entering={FadeInDown} style={[styles.card, styles.emptyCard]}>
+        <Thumb uri={next.images[0]} id={next.id} />
+        <View style={styles.mid}>
+          <Text variant="caption" weight="700" color={liveColors.textSecondary}>
+            SIRADAKİ ÜRÜN
+          </Text>
+          <Text variant="subhead" weight="700" color={liveColors.text} numberOfLines={2}>
+            {next.title}
+          </Text>
+          <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
+            {auction ? `Açılış ${formatTRY(next.price)}` : `Hemen Al · ${formatTRY(next.price)}`}
+          </Text>
+        </View>
+        <Button title={auction ? 'Başlat' : 'Sabitle'} icon={auction ? 'hammer' : 'pin'} size="sm" onPress={() => (auction ? onStartAuction(next) : onPin(next))} />
+      </Animated.View>
+    );
+  }
   return (
     <Animated.View entering={FadeInDown} style={[styles.card, styles.emptyCard]}>
       <View style={styles.emptyIcon}>
@@ -231,10 +255,10 @@ function EmptyCard({ onOpenShop }: { onOpenShop: LotCardProps['onOpenShop'] }) {
           Sahnede ürün yok
         </Text>
         <Text variant="caption" color={liveColors.textSecondary} numberOfLines={2}>
-          Bir ürün sabitle ya da açık artırma başlat
+          Mağazana ürün ekle, sonra sabitle ya da açık artırma başlat
         </Text>
       </View>
-      <Button title="Mağaza" icon="storefront" size="sm" onPress={() => onOpenShop()} />
+      <Button title="Ürün ekle" icon="add" size="sm" onPress={() => onOpenShop()} />
     </Animated.View>
   );
 }

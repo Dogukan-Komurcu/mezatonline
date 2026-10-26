@@ -2,7 +2,7 @@
  * Satıcı canlı yayın konsolu — yardımcı fonksiyonlar ve ortak tipler.
  */
 import { useEffect, useState } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { Dimensions, Keyboard, Platform, type KeyboardEvent } from 'react-native';
 
 import { getProductsByCategory, getProductsByShow, getMarketplaceProducts } from '@/data';
 import { SHIPPING_PRICES } from '@/lib/pricing';
@@ -52,18 +52,24 @@ export function useNow(intervalMs = 1000, enabled = true): number {
   return now;
 }
 
-/** Klavye yüksekliği (kapalıyken 0) */
+/**
+ * Klavye yüksekliği (kapalıyken 0). iOS'ta öneri şeridi klavye açıldıktan sonra eklenebildiği için
+ * çerçeve değişimleri de dinlenir ve yükseklik ekranın altından klavyenin üst kenarına göre hesaplanır.
+ */
 export function useKeyboardHeight(): number {
   const [height, setHeight] = useState(0);
   useEffect(() => {
-    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const a = Keyboard.addListener(showEvt, (e) => setHeight(e.endCoordinates.height));
-    const b = Keyboard.addListener(hideEvt, () => setHeight(0));
-    return () => {
-      a.remove();
-      b.remove();
-    };
+    const fromEvent = (e: KeyboardEvent) => Math.max(0, Math.round(Dimensions.get('window').height - e.endCoordinates.screenY));
+    const subs =
+      Platform.OS === 'ios'
+        ? [
+            Keyboard.addListener('keyboardWillShow', (e) => setHeight(fromEvent(e))),
+            Keyboard.addListener('keyboardWillChangeFrame', (e) => setHeight(fromEvent(e))),
+            Keyboard.addListener('keyboardDidShow', (e) => setHeight(fromEvent(e))),
+            Keyboard.addListener('keyboardWillHide', () => setHeight(0)),
+          ]
+        : [Keyboard.addListener('keyboardDidShow', (e) => setHeight(e.endCoordinates.height)), Keyboard.addListener('keyboardDidHide', () => setHeight(0))];
+    return () => subs.forEach((s) => s.remove());
   }, []);
   return height;
 }

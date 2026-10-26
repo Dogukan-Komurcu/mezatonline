@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInstance, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
 import { SCREEN_PADDING, useTheme } from '@/theme';
@@ -21,6 +22,22 @@ export type UnderlineTabsProps<K extends string> = {
 /** Alt çizgili sekmeler (profil: Yayınlar / Mağaza / Değerlendirmeler) */
 export function UnderlineTabs<K extends string>({ tabs, value, onChange, equal, style, dark }: UnderlineTabsProps<K>) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const offset = useRef(0);
+  const [layouts, setLayouts] = useState<Record<string, { x: number; w: number }>>({});
+  const target = layouts[value];
+  const tx = target?.x ?? -1;
+  const tw = target?.w ?? 0;
+  // Aktif sekme ekran dışındaysa görünür alana kaydır
+  useEffect(() => {
+    if (equal || tx < 0) return;
+    const left = offset.current;
+    const x = tx < left ? Math.max(0, tx - SCREEN_PADDING) : tx + tw > left + width ? tx + tw - width + SCREEN_PADDING : null;
+    if (x === null) return;
+    offset.current = x;
+    scrollRef.current?.scrollTo({ x, animated: true });
+  }, [tx, tw, width, equal]);
   const active = dark ? '#FFFFFF' : colors.text;
   const inactive = dark ? 'rgba(255,255,255,0.55)' : colors.textSecondary;
   const items = tabs.map((t) => {
@@ -35,6 +52,10 @@ export function UnderlineTabs<K extends string>({ tabs, value, onChange, equal, 
         }}
         accessibilityRole="tab"
         accessibilityState={{ selected }}
+        onLayout={(e) => {
+          const { x, width: w } = e.nativeEvent.layout;
+          setLayouts((prev) => (prev[t.key]?.x === x && prev[t.key]?.w === w ? prev : { ...prev, [t.key]: { x, w } }));
+        }}
         style={[styles.tab, equal && styles.equal]}>
         <Text variant="callout" weight={selected ? '700' : '600'} color={selected ? active : inactive} numberOfLines={1}>
           {t.label}
@@ -49,7 +70,15 @@ export function UnderlineTabs<K extends string>({ tabs, value, onChange, equal, 
       {equal ? (
         <View style={styles.row}>{items}</View>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+          onScroll={(e) => {
+            offset.current = e.nativeEvent.contentOffset.x;
+          }}
+          scrollEventThrottle={64}>
           {items}
         </ScrollView>
       )}

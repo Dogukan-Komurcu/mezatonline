@@ -64,7 +64,20 @@ export function useCameraAccess(): CameraAccess {
 }
 
 /** Kamerasız cihazlarda (simülatör) yavaşça hareket eden koyu degrade */
-export function CameraPlaceholder({ label = 'Kamera önizlemesi', hint, style }: { label?: string; hint?: string; style?: StyleProp<ViewStyle> }) {
+export function CameraPlaceholder({
+  label = 'Kamera önizlemesi',
+  hint,
+  bare,
+  inset,
+  style,
+}: {
+  label?: string;
+  hint?: string;
+  bare?: boolean;
+  /** Ortadaki içerik bu boşlukların arasındaki görünür alana ortalanır (ör. alttaki panel yüksekliği) */
+  inset?: { top: number; bottom: number };
+  style?: StyleProp<ViewStyle>;
+}) {
   const a = useSharedValue(0);
   const b = useSharedValue(0);
   const pulse = useSharedValue(1);
@@ -85,19 +98,21 @@ export function CameraPlaceholder({ label = 'Kamera önizlemesi', hint, style }:
       <LinearGradient colors={[liveColors.panelAlt, liveColors.panel, liveColors.panel]} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
       <Animated.View style={[styles.blob, styles.blobA, blobA]} />
       <Animated.View style={[styles.blob, styles.blobB, blobB]} />
-      <View style={styles.placeholderCenter}>
-        <Animated.View style={[styles.camIcon, iconStyle]}>
-          <Icon name="videocam" size={30} color={liveColors.text} />
-        </Animated.View>
-        <Text variant="headline" color={liveColors.text}>
-          {label}
-        </Text>
-        {hint ? (
-          <Text variant="footnote" color={liveColors.textSecondary} align="center" style={{ maxWidth: 260 }}>
-            {hint}
+      {bare ? null : (
+        <View style={[styles.placeholderCenter, inset && { paddingTop: inset.top, paddingBottom: inset.bottom }]}>
+          <Animated.View style={[styles.camIcon, iconStyle]}>
+            <Icon name="videocam" size={30} color={liveColors.text} />
+          </Animated.View>
+          <Text variant="headline" color={liveColors.text}>
+            {label}
           </Text>
-        ) : null}
-      </View>
+          {hint ? (
+            <Text variant="footnote" color={liveColors.textSecondary} align="center" style={{ maxWidth: 260 }}>
+              {hint}
+            </Text>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
@@ -111,12 +126,15 @@ export type CameraStageProps = {
   /** Ekran odakta değilken kamerayı kapat */
   active?: boolean;
   placeholderHint?: string;
+  /** Yer tutucuda ortadaki simge/metni gösterme (konsol kendi durum rozetini çizer) */
+  bare?: boolean;
+  placeholderInset?: { top: number; bottom: number };
 };
 
 /**
  * Tam ekran kamera önizlemesi. İzin yoksa / cihazda kamera yoksa / hata olursa yer tutucu gösterir.
  */
-export function CameraStage({ access, facing, zoom = 0, torch, muted, active = true, placeholderHint }: CameraStageProps) {
+export function CameraStage({ access, facing, zoom = 0, torch, muted, active = true, placeholderHint, bare, placeholderInset }: CameraStageProps) {
   const [mountError, setMountError] = useState(false);
   const canShow = access.available === true && access.camGranted && !mountError && active;
   if (!canShow) {
@@ -129,7 +147,7 @@ export function CameraStage({ access, facing, zoom = 0, torch, muted, active = t
           : access.ready && !access.camGranted
             ? 'Kamera izni verilmedi. Ayarlar › Mezatonline › Kamera adımından izin verebilirsin.'
             : undefined);
-    return <CameraPlaceholder hint={hint} />;
+    return <CameraPlaceholder hint={hint} bare={bare} inset={placeholderInset} />;
   }
   return (
     <CameraView

@@ -21,8 +21,23 @@ const CHART_H = 150;
 /** Sağdaki eksen etiketleri için ayrılan genişlik (çubuklarla çakışmasın) */
 const AXIS_W = 56;
 
+/** Kutucuk değerleri: ₺100.000'e kadar tam tutar (₺17.009), üstü kısaltılmış (₺1,2Mn) */
 function compactTRY(v: number): string {
-  return v >= 10_000 ? `₺${formatCompact(v)}` : formatTRY(Math.round(v));
+  return v >= 100_000 ? `₺${formatCompact(v)}` : formatTRY(Math.round(v));
+}
+
+/** Grafik ekseni için "yuvarlak" üst sınır: 10.020 → 12.000, 740 → 800 (orta çizgi de yuvarlak çıkar) */
+function niceCeil(v: number): number {
+  if (v <= 0) return 1;
+  const pow = 10 ** Math.floor(Math.log10(v));
+  const step = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((m) => m * pow >= v) ?? 10;
+  return step * pow;
+}
+
+/** Eksen etiketi: aynı eksende tutarlı biçim (büyük değerlerde hepsi kısaltılmış) */
+function axisLabel(v: number, max: number): string {
+  if (v === 0) return '₺0';
+  return max >= 10_000 ? `₺${formatCompact(v)}` : formatTRY(Math.round(v));
 }
 
 function KpiTile({ label, value, change, icon }: { label: string; value: string; change: number | null; icon: IconName }) {
@@ -64,7 +79,7 @@ export function AnalyticsScreen() {
   const a = buildAnalytics(orders, sessions, shows, period === '7' ? 7 : 28, now);
   const k = a.kpis;
   const p = a.previous;
-  const max = Math.max(1, ...a.bars.map((b) => b.value));
+  const max = niceCeil(Math.max(1, ...a.bars.map((b) => b.value)));
   const sel = selected !== null && a.bars[selected] ? selected : a.bars.length - 1;
   const bar = a.bars[sel];
   const chartTotal = a.bars.reduce((s, b) => s + b.value, 0);
@@ -136,7 +151,7 @@ export function AnalyticsScreen() {
             {[1, 0.5, 0].map((g) => (
               <View key={g} style={[styles.grid0, { bottom: 22 + g * CHART_H, borderTopColor: colors.border }]}>
                 <Text variant="caption" color="textTertiary" numberOfLines={1} style={[styles.gridLabel, { backgroundColor: colors.card }]}>
-                  {g === 0 ? '₺0' : compactTRY(max * g)}
+                  {axisLabel(max * g, max)}
                 </Text>
               </View>
             ))}

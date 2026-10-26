@@ -9,7 +9,7 @@ import { liveColors } from '@/theme';
 import type { Product } from '@/types';
 
 import { Confetti } from './Confetti';
-import { PANEL } from './styles';
+import { alpha } from './styles';
 
 export type CelebrationData = {
   id: number;
@@ -100,7 +100,8 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: PANEL,
+    // Arkadaki sohbet/kart metinleri kartın içinden okunmasın
+    backgroundColor: alpha(liveColors.panel, 0.96),
     borderRadius: 28,
     borderWidth: 1,
     borderColor: liveColors.border,

@@ -162,7 +162,7 @@ export default function ProductScreen() {
   } else if (soldOut) {
     bottom = (
       <View style={styles.bottomRow}>
-        <Button title={product.format === 'auction' ? 'Satıldı' : 'Tükendi'} size="lg" disabled style={styles.flex} />
+        <Button title={product.format === 'auction' ? 'Satıldı' : 'Tükendi'} variant="secondary" size="lg" disabled style={styles.flex} />
         {seller ? <Button title="Satıcıya sor" variant="outline" size="lg" icon="chatbubble-outline" onPress={message} /> : null}
       </View>
     );
@@ -202,14 +202,14 @@ export default function ProductScreen() {
         />
       );
     } else {
-      bottom = <Button title="Şu an satışta değil" size="lg" fullWidth disabled />;
+      bottom = <Button title="Şu an satışta değil" variant="secondary" size="lg" fullWidth disabled />;
     }
   } else {
     bottom =
       showLive && show ? (
         <Button title="Yayında Çekilişe Katıl" icon="gift" size="lg" fullWidth onPress={() => router.push(`/live/${show.id}`)} />
       ) : (
-        <Button title="Çekiliş yayında yapılacak" icon="gift-outline" size="lg" fullWidth disabled />
+        <Button title="Çekiliş yayında yapılacak" icon="gift-outline" variant="secondary" size="lg" fullWidth disabled />
       );
   }
 
@@ -264,15 +264,7 @@ export default function ProductScreen() {
             </View>
           ) : null}
           <View style={styles.heroBottom} pointerEvents="none">
-            {discount > 0 && !soldOut ? (
-              <View style={[styles.heroTag, { backgroundColor: colors.live }]}>
-                <Text variant="footnote" weight="800" color={liveColors.text}>
-                  %{discount} İNDİRİM
-                </Text>
-              </View>
-            ) : (
-              <View />
-            )}
+            {/* İndirim yüzdesi fiyat satırında gösteriliyor; görselde tekrar etmiyoruz */}
             <View style={styles.expand}>
               <Icon name="expand" size={14} color={liveColors.text} />
             </View>
@@ -688,16 +680,24 @@ function OfferBanner({
     );
   }
   if (offer.status === 'accepted') {
+    const agreed = offer.counterAmount ?? offer.amount;
     return (
-      <NoticeBox icon="checkmark-circle" tone="success" title={`${formatTRY(offer.counterAmount ?? offer.amount)} önerin kabul edildi`}>
-        <Text variant="footnote" color="textSecondary">
-          Siparişin oluşturuldu.{' '}
-          {orderId ? (
+      <NoticeBox icon="checkmark-circle" tone="success" title={`${formatTRY(agreed)} önerin kabul edildi`}>
+        {orderId ? (
+          <Text variant="footnote" color="textSecondary">
+            Siparişin oluşturuldu.{' '}
             <Text variant="footnote" weight="700" color="accent" onPress={() => router.push(`/orders/${orderId}`)} suppressHighlighting>
               Siparişi görüntüle
             </Text>
-          ) : null}
-        </Text>
+          </Text>
+        ) : (
+          <Text variant="footnote" color="textSecondary">
+            Anlaşılan fiyattan satın almayı tamamla.{' '}
+            <Text variant="footnote" weight="700" color="accent" onPress={() => onAccept(agreed)} suppressHighlighting>
+              {formatTRY(agreed)} ile satın al
+            </Text>
+          </Text>
+        )}
       </NoticeBox>
     );
   }
@@ -721,8 +721,7 @@ const styles = StyleSheet.create({
   noMargin: { marginBottom: 0 },
   hero: { width: '100%', overflow: 'hidden' },
   heroTop: { position: 'absolute', left: 0, right: 0, top: 0, height: 120 },
-  heroBottom: { position: 'absolute', left: 12, right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  heroTag: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  heroBottom: { position: 'absolute', left: 12, right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
   dotsWrap: { position: 'absolute', left: 0, right: 0, bottom: 18, alignItems: 'center' },
   dots: { flexDirection: 'row', gap: 5, backgroundColor: liveColors.glass, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: liveColors.textTertiary },

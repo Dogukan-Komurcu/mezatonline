@@ -58,7 +58,9 @@ export function ScheduleForm() {
   const dayScrollRef = useRef<ScrollViewInstance>(null);
   const timeScrollRef = useRef<ScrollViewInstance>(null);
   // Seçili gün / saat çipi ilk açılışta görünür olsun (ör. varsayılan 20:00 satırın sonunda kalıyor)
-  const revealIn = (ref: typeof timeScrollRef) => (e: LayoutChangeEvent) => ref.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - SCREEN_PADDING - 72), animated: false });
+  const revealX = (e: LayoutChangeEvent) => ({ x: Math.max(0, e.nativeEvent.layout.x - SCREEN_PADDING - 72), animated: false });
+  const revealDay = (e: LayoutChangeEvent) => dayScrollRef.current?.scrollTo(revealX(e));
+  const revealTime = (e: LayoutChangeEvent) => timeScrollRef.current?.scrollTo(revealX(e));
   const me = useMe();
   const now = useNow(60_000);
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -359,7 +361,7 @@ export function ScheduleForm() {
                 return (
                   <PressableScale
                     key={d.key}
-                    onLayout={on ? revealIn(dayScrollRef) : undefined}
+                    onLayout={on ? revealDay : undefined}
                     scaleTo={0.94}
                     onPress={() => {
                       haptic.tap();
@@ -380,7 +382,7 @@ export function ScheduleForm() {
             {slotList.length ? (
               <ScrollView ref={timeScrollRef} horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
                 {slotList.map((t) => (
-                  <View key={t.key} onLayout={s.time === t.key ? revealIn(timeScrollRef) : undefined}>
+                  <View key={t.key} onLayout={s.time === t.key ? revealTime : undefined}>
                     <Chip label={t.label} selected={s.time === t.key} onPress={() => set({ time: t.key })} />
                   </View>
                 ))}
