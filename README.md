@@ -69,10 +69,10 @@ Ardından telefondaki uygulama yerine `npx expo run:ios --device` ile Debug derl
 
 - **Disk:** iOS + Android derlemeleri ~10 GB yer ister. Disk dolarsa derleme ve Metro çöker.
 - **Masaüstü / iCloud:** Proje Masaüstünde olduğu için Xcode çıktıları `~/Library/Developer/Xcode/DerivedData/Mezatonline-*` altına yazılır (aksi halde kod imzalama "resource fork / detritus" hatası verir).
-- **Yavaş ağ ve CocoaPods:** `pod install` React Native çekirdek dosyasını indirirken takılırsa, indirilmiş arşivlerle kurulum:
+- **CocoaPods ve React Native çekirdeği:** `pod install` her zaman normal şekilde (ağdan indirerek) çalıştırılmalı. `RCT_TESTONLY_RNCORE_TARBALL_PATH` / `RCT_USE_LOCAL_RN_DEP` ile yerel arşivden kurulum yapılırsa Debug/Release geçiş adımı atlanır ve Release sürümü telefonda **açılışta kapanır** (Hermes "Symbol not found" hatası). İndirme takılırsa komutu tekrar çalıştır:
 
 ```bash
-cd ios && LANG=en_US.UTF-8 RCT_TESTONLY_RNCORE_TARBALL_PATH=$PWD/Pods/ReactNativeCore-artifacts/reactnative-core-0.88.0-debug.tar.gz RCT_USE_LOCAL_RN_DEP=$PWD/Pods/ReactNativeDependencies-artifacts/reactnative-dependencies-0.88.0-debug.tar.gz pod install
+cd ios && LANG=en_US.UTF-8 pod install
 ```
 
 - **Simülatörde emojiler "?" görünüyor:** Bu Mac'teki iOS simülatörünün emoji fontu bozuk (Safari'de de aynı). Gerçek telefonda düzgün görünür.

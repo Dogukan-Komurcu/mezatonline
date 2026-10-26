@@ -7,6 +7,14 @@ TEAM=4N6B7MPCY3
 DD=~/Library/Developer/Xcode/DerivedData/Mezatonline-device   # Masaüstü (iCloud) dışında olmalı
 APP=$DD/Build/Products/Release-iphoneos/Mezatonline.app
 
+# Yerel arşivle kurulmuş pod'lar Release'te açılışta çökmeye yol açar (bkz. README)
+if grep -q 'file://' "Pods/Local Podspecs/React-Core-prebuilt.podspec.json" 2>/dev/null; then
+  echo "▶ React Native çekirdeği yerel arşivden kurulmuş; pod'lar normal şekilde yeniden kuruluyor…"
+  rm -f "Pods/Local Podspecs/React-Core-prebuilt.podspec.json" "Pods/Local Podspecs/ReactNativeDependencies.podspec.json"
+  rm -rf Pods/React-Core-prebuilt Pods/ReactNativeDependencies
+  LANG=en_US.UTF-8 pod install
+fi
+
 echo "▶ iOS Release derleniyor…"
 xcodebuild -workspace Mezatonline.xcworkspace -scheme Mezatonline -configuration Release \
   -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$DD" \
