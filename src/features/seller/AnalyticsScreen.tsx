@@ -12,11 +12,14 @@ import { haptic } from '@/lib/haptics';
 import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
+import { useQaOffset } from './qaSeed';
 import { useNow } from './actions';
 import { buildAnalytics, delta, formatPercent, shortDate, type AnalyticsKpis } from './logic';
 import { Card, Thumb, tint } from './ui';
 
 const CHART_H = 150;
+/** Sağdaki eksen etiketleri için ayrılan genişlik (çubuklarla çakışmasın) */
+const AXIS_W = 56;
 
 function compactTRY(v: number): string {
   return v >= 10_000 ? `₺${formatCompact(v)}` : formatTRY(Math.round(v));
@@ -50,6 +53,7 @@ function KpiTile({ label, value, change, icon }: { label: string; value: string;
 
 export function AnalyticsScreen() {
   const { colors } = useTheme();
+  const qaOffset = useQaOffset();
   const now = useNow(60_000);
   const orders = useSellerStore((s) => s.orders);
   const sessions = useSellerStore((s) => s.sessions);
@@ -76,7 +80,7 @@ export function AnalyticsScreen() {
   return (
     <Screen>
       <Header title="Analizler" subtitle={a.demo ? 'Örnek veri' : 'Son güncelleme: az önce'} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Segmented
           options={[
             { key: '7', label: 'Son 7 gün' },
@@ -131,8 +135,8 @@ export function AnalyticsScreen() {
           <View style={styles.chart}>
             {[1, 0.5, 0].map((g) => (
               <View key={g} style={[styles.grid0, { bottom: 22 + g * CHART_H, borderTopColor: colors.border }]}>
-                <Text variant="caption" color="textTertiary" style={styles.gridLabel}>
-                  {g === 0 ? '' : compactTRY(max * g)}
+                <Text variant="caption" color="textTertiary" numberOfLines={1} style={[styles.gridLabel, { backgroundColor: colors.card }]}>
+                  {g === 0 ? '₺0' : compactTRY(max * g)}
                 </Text>
               </View>
             ))}
@@ -266,11 +270,11 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   kpi: { flexGrow: 1, flexBasis: '45%', borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 14, gap: 6 },
   delta: { flexDirection: 'row', alignItems: 'center', gap: 3, alignSelf: 'flex-start', paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
-  chart: { height: CHART_H + 22 + 8, marginTop: 16 },
-  grid0: { position: 'absolute', left: 0, right: 0, borderTopWidth: StyleSheet.hairlineWidth },
-  gridLabel: { position: 'absolute', right: 0, top: -15 },
+  chart: { height: CHART_H + 22 + 8, marginTop: 20 },
+  grid0: { position: 'absolute', left: 0, right: 0, borderTopWidth: 1 },
+  gridLabel: { position: 'absolute', right: 0, top: -8, width: AXIS_W - 6, textAlign: 'right', lineHeight: 16 },
   barLabel: { marginTop: 6, height: 16 },
-  bars: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'flex-end' },
+  bars: { position: 'absolute', left: 0, right: AXIS_W, bottom: 0, flexDirection: 'row', alignItems: 'flex-end' },
   barHit: { flex: 1, alignItems: 'center' },
   barCol: { width: '100%', alignItems: 'center', justifyContent: 'flex-end' },
   cardTitle: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 },

@@ -2,6 +2,7 @@
  * Arama ekranının giriş durumu (kaydedilen + son aramalar, popüler aramalar, popüler kategoriler)
  * ve yazarken gösterilen öneriler (sorgular, kullanıcılar, kategoriler).
  */
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
@@ -138,7 +139,7 @@ export function SearchEntry({ onSearch, bottomInset }: { onSearch: (q: string) =
       </View>
 
       <View style={styles.section}>
-        <SectionHead title="Popüler aramalar 🔥" />
+        <SectionHead title="Popüler aramalar" />
         <View style={styles.wrapChips}>
           {TRENDING_SEARCHES.map((q) => (
             <FilterChip key={q} label={q} icon="trending-up" onPress={() => onSearch(q)} />
@@ -151,7 +152,7 @@ export function SearchEntry({ onSearch, bottomInset }: { onSearch: (q: string) =
         <ChipScroller contentStyle={styles.catChips}>
           {CATEGORIES_BY_POPULARITY.slice(0, 10).map((c) => (
             <PressableScale key={c.id} scaleTo={0.95} onPress={() => router.push(`/category/${c.id}`)} style={[styles.catChip, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel={c.name}>
-              <Text variant="body">{c.emoji}</Text>
+              <Image source={{ uri: c.image }} style={styles.catThumb} contentFit="cover" cachePolicy="memory-disk" recyclingKey={c.id} />
               <Text variant="subhead" weight="600" numberOfLines={1}>
                 {c.shortName}
               </Text>
@@ -277,9 +278,7 @@ export function SearchSuggestions({ text, onSearch, onFill, bottomInset }: { tex
           case 'category':
             return (
               <PressableScale scaleTo={0.99} onPress={() => router.push(`/category/${item.category.id}`)} style={styles.row} accessibilityRole="button" accessibilityLabel={item.category.name}>
-                <View style={[styles.iconCircle, { backgroundColor: colors.surface }]}>
-                  <Text variant="body">{item.category.emoji}</Text>
-                </View>
+                <Image source={{ uri: item.category.image }} style={[styles.iconCircle, { backgroundColor: colors.surface }]} contentFit="cover" cachePolicy="memory-disk" recyclingKey={item.category.id} />
                 <View style={styles.flex}>
                   <Highlight text={item.category.name} query={text} />
                   <Text variant="footnote" color="textSecondary">
@@ -306,7 +305,8 @@ const styles = StyleSheet.create({
   muted: { paddingHorizontal: SCREEN_PADDING, paddingVertical: 8 },
   wrapChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: SCREEN_PADDING, paddingTop: 6 },
   catChips: { paddingTop: 6 },
-  catChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 14, borderRadius: 12 },
+  catChip: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingLeft: 6, paddingRight: 14, borderRadius: 12 },
+  catThumb: { width: 28, height: 28, borderRadius: 7 },
   fillIcon: { transform: [{ rotate: '-45deg' }] },
   liveTag: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   divider: { marginVertical: 4, marginLeft: SCREEN_PADDING },

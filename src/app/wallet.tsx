@@ -8,6 +8,7 @@ import { Button, EmptyState, Header, Icon, PressableScale, Screen, Sheet, Text, 
 import { useAccountStore } from '@/features/account/store';
 import { IconCircle, InfoNote, MenuRow } from '@/features/account/ui';
 import { shareLink } from '@/features/shared/sheets';
+import { useQaParams } from '@/features/account/qa';
 import { formatDateTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
@@ -29,6 +30,7 @@ const STEPS = [
 ];
 
 export default function WalletScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const credits = useWalletStore((s) => s.credits);
@@ -101,6 +103,7 @@ export default function WalletScreen() {
     <Screen>
       <Header title="Cüzdan" />
       <FlatList
+        contentOffset={qa.offset}
         data={history}
         keyExtractor={(t) => t.id}
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}

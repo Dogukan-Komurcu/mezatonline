@@ -16,6 +16,7 @@ import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import { useNow } from './actions';
 import { IbanSheet } from './IbanSheet';
 import { addBusinessDays, bankFromIban, buildLedger, maskIban, orderNet, payoutDisplay, type LedgerEntry, type LedgerKind } from './logic';
+import { useQaOffset, useQaParam } from './qaSeed';
 import { useSellerExtras } from './store';
 import { Card, KeyValue, StatusPill, tint } from './ui';
 
@@ -151,10 +152,12 @@ export function PayoutsScreen() {
   const iban = useSellerStore((s) => s.iban);
   const setIban = useSellerStore((s) => s.setIban);
   const labels = useSellerExtras((s) => s.labels);
-  const [tab, setTab] = useState<'payouts' | 'ledger'>('payouts');
+  const qa = useQaParam();
+  const [tab, setTab] = useState<'payouts' | 'ledger'>(qa === 'ledger' ? 'ledger' : 'payouts');
   const [filter, setFilter] = useState<LedgerFilter>('all');
   const [withdraw, setWithdraw] = useState(params.withdraw === '1');
   const [ibanOpen, setIbanOpen] = useState(false);
+  const qaOffset = useQaOffset();
 
   const paidOut = payouts.reduce((s, p) => s + p.amount, 0);
   const earned = orders.filter((o) => o.status !== 'cancelled' && o.status !== 'refunded').reduce((s, o) => s + orderNet(o), 0);
@@ -175,7 +178,7 @@ export function PayoutsScreen() {
   return (
     <Screen>
       <Header title="Ödemeler" right={<IconButton name="help-circle-outline" onPress={() => router.push('/settings/help')} accessibilityLabel="Yardım" />} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.hero, { backgroundColor: colors.inverse }]}>
           <Text variant="subhead" color={colors.onInverse} style={{ opacity: 0.7 }}>
             Çekilebilir bakiye

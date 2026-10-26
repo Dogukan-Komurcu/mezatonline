@@ -5,7 +5,7 @@
  */
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -70,7 +70,7 @@ function LeaderRow({ entry, cardBg }: { entry: LeaderEntry; cardBg: string }) {
 }
 
 export default function TopSellersScreen() {
-  const params = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string; qa?: string }>();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [scope, setScope] = useState<string>(params.id && (params.id === ALL_SCOPE || getCategory(params.id)) ? params.id : ALL_SCOPE);
@@ -78,6 +78,17 @@ export default function TopSellersScreen() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (?qa=info | picker | today)
+  useEffect(() => {
+    if (!__DEV__ || !params.qa) return;
+    const t = setTimeout(() => {
+      if (params.qa === 'info') setInfoOpen(true);
+      else if (params.qa === 'picker') setPickerOpen(true);
+      else if (params.qa === 'today') setPeriod('today');
+    }, 900);
+    return () => clearTimeout(t);
+  }, [params.qa]);
 
   const pageBg = isDark ? colors.bg : colors.surface;
   const cardBg = isDark ? colors.surface : colors.card;

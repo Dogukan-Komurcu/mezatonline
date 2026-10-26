@@ -6,6 +6,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import { Button, Header, Screen, Sheet, Text, toast } from '@/components/ui';
 import { BottomBar, IconCircle, InfoNote, SwitchRow } from '@/features/account/ui';
 import { CardForm, emptyCard, TestCardHint, validateCard, type CardDraft } from '@/features/wallet/forms';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { detectCardBrand, useWalletStore } from '@/store/wallet';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
@@ -15,6 +16,7 @@ type Phase = 'idle' | 'connecting' | 'verified' | 'saved';
 const BRAND_NAME = { visa: 'Visa', mastercard: 'Mastercard', troy: 'Troy', amex: 'American Express' } as const;
 
 export default function AddCardScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const cards = useWalletStore((s) => s.paymentMethods);
   const addPaymentMethod = useWalletStore((s) => s.addPaymentMethod);
@@ -67,7 +69,7 @@ export default function AddCardScreen() {
     <Screen>
       <Header title="Kart ekle" back="close" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+        <ScrollView contentOffset={qa.offset} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <CardForm
             value={card}
             onChange={(v) => {

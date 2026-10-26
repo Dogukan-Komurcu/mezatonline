@@ -5,7 +5,7 @@
  */
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -44,7 +44,7 @@ const money = (v: number) => formatTRY(v, { cents: !Number.isInteger(round2(v)) 
 type Result = { order: Order; points: number; payment?: PaymentMethod; installmentLabel?: string };
 
 export default function CheckoutScreen() {
-  const params = useLocalSearchParams<{ id: string; price?: string; source?: string; showId?: string; qty?: string }>();
+  const params = useLocalSearchParams<{ id: string; price?: string; source?: string; showId?: string; qty?: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const me = useMe();
@@ -87,6 +87,16 @@ export default function CheckoutScreen() {
   const [threeDS, setThreeDS] = useState(false);
   const [paying, setPaying] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+
+  // Yalnızca geliştirme: QA ekran görüntüleri için 3D Secure adımını doğrudan aç (?qa=3ds; otomatik SMS kodu ile başarı ekranına geçer)
+  useEffect(() => {
+    if (!__DEV__ || params.qa !== '3ds') return;
+    const t = setTimeout(() => {
+      setAgreed(true);
+      setThreeDS(true);
+    }, 900);
+    return () => clearTimeout(t);
+  }, [params.qa]);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const iosSheet = Platform.OS === 'ios';

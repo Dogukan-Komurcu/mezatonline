@@ -9,7 +9,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, PressableScale, Text, toast } from '@/components/ui';
+import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
@@ -105,11 +105,13 @@ export type LiveShowPageProps = {
   /** Ekran odakta (başka bir sayfaya gidilmedi) */
   focused: boolean;
   nextShow?: Show;
+  /** Yalnızca geliştirme (görsel QA): /live/s1?qa=custom gibi bir durum/sayfa açar */
+  qa?: string;
   onClose: () => void;
   onNext: () => void;
 };
 
-export function LiveShowPage({ show, width, height, visible, focused, nextShow, onClose, onNext }: LiveShowPageProps) {
+export function LiveShowPage({ show, width, height, visible, focused, nextShow, qa, onClose, onNext }: LiveShowPageProps) {
   const insets = useSafeAreaInsets();
   const me = useMe();
   const [seller] = useState(() => getUser(show.sellerId)!);
@@ -651,6 +653,41 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     openSheet('viewers');
   };
 
+  // Yalnızca geliştirme: ?qa=… ile sayfa/durum aç (simülatörde dokunmadan ekran görüntüsü almak için)
+  const [qaDone, setQaDone] = useState(false);
+  useEffect(() => {
+    if (!__DEV__ || !qa || qaDone || !visible) return;
+    const snap = engine.getSnapshot();
+    if (!snap.lot && !['ended', 'giveaway', 'giveawayWon', 'flash', 'shop', 'wallet', 'seller', 'viewers', 'more', 'boost', 'club', 'reactions', 'composer'].includes(qa)) return;
+    setQaDone(true);
+    const sheetNames: SheetName[] = ['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'intro', 'reactions', 'tip', 'giveawayInfo'];
+    // Temizlenmez: setQaDone sonrası yeniden render bu zamanlayıcıyı iptal etmemeli (yalnızca __DEV__)
+    setTimeout(() => {
+      const s = engine.getSnapshot();
+      const shopItem = s.shop.find((p) => p.quantity - p.sold > 0) ?? products[0];
+      if (qa === 'viewers') openViewers();
+      else if (qa === 'buy') openBuy(shopItem);
+      else if (qa === 'product' && s.lot) {
+        setSheetProduct(s.lot.product);
+        setSheet('product');
+      } else if (qa === 'prebid' && s.queue[0]) {
+        setSheetProduct(s.queue[0]);
+        setSheet('prebid');
+      } else if (qa === 'user') {
+        const m = s.messages.find((x) => x.type === 'chat' && !x.isSeller && !x.isMe);
+        if (m) onChatUser(m);
+      } else if (qa === 'composer') setComposer({ open: true, text: '' });
+      else if (qa === 'giveaway') engine.startGiveaway(undefined, 120, true);
+      else if (qa === 'giveawayWon') engine.startGiveaway(undefined, 2, false);
+      else if (qa === 'flash' && shopItem) engine.startFlashSale(shopItem, 0.3, 120);
+      else if (qa === 'sold') engine.endAuctionNow();
+      else if (qa === 'ended') engine.endShow();
+      else if (qa === 'won' && s.lot) {
+        setCelebration({ id: Date.now(), kind: 'won', product: s.lot.product, price: s.lot.currentBid, quantity: 1, discount: 0, bundled: false });
+      } else if ((sheetNames as string[]).includes(qa)) setSheet(qa as SheetName);
+    }, 2500);
+  });
+
   // ─── Türetilmiş değerler ───────────────────────────────────────────────────
 
   const nextBid = lot ? nextMinBid(lot.currentBid, lot.bidCount > 0) : 0;
@@ -667,7 +704,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const muted = !liveSoundOn;
   const shareCount = show.savedCount * 3 + (hashOf(show.id) % 400);
   const friends = BUYER_USERS.slice(hashOf(show.id) % 20, (hashOf(show.id) % 20) + (hashOf(show.id) % 3));
-  const chatH = Math.max(0, Math.min(height * 0.4, middleH - 4));
+  const bottomPad = Math.max(insets.bottom, 10) + 2;
+  // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; orta bölgeye sığmazsa küçülür
+  const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 6));
   const ended = state.ended || endedShow;
   const mentionables = [
     { username: seller.username, avatar: seller.avatar },
@@ -706,6 +745,17 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   );
   const rail: RailItem[] = railAll.filter((r) => railKeep.has(r.key));
 
+  const actionRow = (
+    <ActionRow
+      state={running ? 'bidding' : 'waiting'}
+      nextBid={nextBid}
+      leading={leading}
+      onCustom={() => withGate(() => openSheet('custom'), { intro: true })}
+      onSwipe={onSwipe}
+      onTapHint={() => toast(`Teklif vermek için sağa kaydır → ${formatTRY(nextBid)}`, 'hand-right')}
+    />
+  );
+
   // ─── Görünüm ───────────────────────────────────────────────────────────────
 
   return (
@@ -714,7 +764,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       <Pressable style={StyleSheet.absoluteFill} onPress={onBackgroundPress} accessibilityLabel="Tepki göndermek için iki kez dokun" />
 
       {!ended ? (
-        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        /*
+          Tek sütunlu yerleşim (yukarıdan aşağı): üst bilgi → üst bant (çekiliş / yayın notu) →
+          orta bölge [sohbet (sabit yükseklik, sol) | eylem sütunu (sağ)] → sabit ürün kartı
+          (+ Özel / kaydır-teklif-ver) → alt çubuk [Bir şey yaz… | tepki | mağaza] → ev göstergesi boşluğu.
+          Hiçbir katman diğerinin üstüne taşmaz.
+        */
+        <View style={[StyleSheet.absoluteFill, { paddingBottom: bottomPad }]} pointerEvents="box-none">
           <LiveHeader
             show={show}
             seller={seller}
@@ -736,39 +792,31 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
                 onDismiss={() => setDismissedGiveaway(giveaway.id)}
                 onInfo={() => openSheet('giveawayInfo')}
               />
-            ) : (
+            ) : show.description || muteHint ? (
               <View style={styles.notesRow} pointerEvents="box-none">
                 {show.description ? <ShowNotes text={show.description} highlights={show.highlights} /> : <View />}
                 {muteHint ? (
                   <Animated.View entering={FadeIn} exiting={FadeOut}>
                     <PressableScale scaleTo={0.94} onPress={toggleMute} style={styles.muteHint} accessibilityLabel="Sesi aç">
+                      <Icon name="volume-mute" size={15} color={liveColors.text} />
                       <Text variant="footnote" weight="700" color={liveColors.text}>
-                        🔇 Sesi açmak için dokun
+                        Sesi açmak için dokun
                       </Text>
                     </PressableScale>
                   </Animated.View>
                 ) : null}
               </View>
-            )}
+            ) : null}
           </View>
 
-          <View style={styles.middle} pointerEvents="box-none" onLayout={(e) => setMiddleH(e.nativeEvent.layout.height)}>
+          <View style={styles.middle} pointerEvents="box-none" onLayout={(e) => setMiddleH(Math.round(e.nativeEvent.layout.height))}>
             <View style={styles.chatCol} pointerEvents="box-none">
-              {!chatHidden && chatH > 60 ? <ChatList messages={state.messages} height={chatH} pinned={state.pinned} blockedIds={blockedIds} onUserPress={onChatUser} /> : null}
+              {!chatHidden && chatH > 56 ? <ChatList messages={state.messages} height={chatH} pinned={state.pinned} blockedIds={blockedIds} onUserPress={onChatUser} /> : null}
             </View>
             <ActionRail items={rail} compact={railCompact} />
           </View>
 
-          <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 10) + 4 }]} pointerEvents="box-none" onLayout={(e) => setBottomH(e.nativeEvent.layout.height)}>
-            <BottomBar
-              shopCount={shopCount}
-              shopThumb={lot?.product.images[0]}
-              reactionEmoji={reactionEmoji}
-              onCompose={() => setComposer({ open: true, text: '' })}
-              onReact={sendReaction}
-              onReactLong={() => openSheet('reactions')}
-              onShop={() => openSheet('shop')}
-            />
+          <View style={styles.dock} pointerEvents="box-none" onLayout={(e) => setBottomH(Math.round(e.nativeEvent.layout.height) + bottomPad)}>
             {flash ? (
               <FlashSaleCard
                 key={flash.id}
@@ -788,22 +836,26 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
                 onPress={() => {
                   setSheetProduct(lot.product);
                   openSheet('product');
-                }}
-              />
-            ) : null}
-            <ActionRow
-              state={running ? 'bidding' : 'waiting'}
-              nextBid={nextBid}
-              leading={leading}
-              onCustom={() => withGate(() => openSheet('custom'), { intro: true })}
-              onSwipe={onSwipe}
-              onTapHint={() => toast(`Teklif vermek için sağa kaydır → ${formatTRY(nextBid)}`, 'hand-right')}
+                }}>
+                {actionRow}
+              </AuctionCard>
+            ) : (
+              actionRow
+            )}
+            <BottomBar
+              shopCount={shopCount}
+              shopThumb={lot?.product.images[0]}
+              reactionEmoji={reactionEmoji}
+              onCompose={() => setComposer({ open: true, text: '' })}
+              onReact={sendReaction}
+              onReactLong={() => openSheet('reactions')}
+              onShop={() => openSheet('shop')}
             />
           </View>
         </View>
       ) : null}
 
-      <ReactionLayer particles={reactions.particles} style={{ right: 16, bottom: bottomH + 8 }} />
+      <ReactionLayer particles={reactions.particles} style={{ right: 12, bottom: bottomH + 4 }} />
       {giveaway?.status === 'done' && visible && !celebration ? <Confetti burst={hashOf(giveaway.id) || 1} count={40} /> : null}
 
       {ended ? (
@@ -1057,12 +1109,12 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
 const styles = StyleSheet.create({
   page: { overflow: 'hidden', backgroundColor: liveColors.panel },
-  topSlot: { minHeight: 8 },
+  topSlot: { minHeight: 6 },
   notesRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: SCREEN_PADDING - 4, marginTop: 10, gap: 8 },
-  muteHint: { backgroundColor: liveColors.glassStrong, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
-  middle: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', paddingLeft: SCREEN_PADDING - 4, paddingRight: 6, paddingBottom: 8, gap: 6 },
-  chatCol: { flex: 1, justifyContent: 'flex-end', maxWidth: '78%' },
-  bottom: { paddingHorizontal: SCREEN_PADDING - 4, gap: 8 },
+  muteHint: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: liveColors.glassStrong, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  middle: { flex: 1, minHeight: 0, flexDirection: 'row', alignItems: 'flex-end', paddingLeft: SCREEN_PADDING - 4, paddingRight: 4, paddingBottom: 8, gap: 6, overflow: 'hidden' },
+  chatCol: { flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', maxWidth: '76%' },
+  dock: { paddingHorizontal: SCREEN_PADDING - 4, gap: 8 },
   endedClose: { position: 'absolute', right: SCREEN_PADDING, zIndex: 60 },
   blocked: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 70, backgroundColor: liveColors.panel, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   blockedButtons: { flexDirection: 'row', gap: 10, marginTop: 10 },

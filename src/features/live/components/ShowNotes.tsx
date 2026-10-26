@@ -21,8 +21,9 @@ export function ShowNotes({ text, highlights }: { text: string; highlights: stri
         }}
         accessibilityLabel="Yayın notları">
         <View style={styles.head}>
+          <Icon name="document-text" size={12} color={liveColors.onPrimary} />
           <Text variant="caption" weight="800" color={liveColors.onPrimary} numberOfLines={1} style={styles.flex}>
-            📝 Yayın Notları
+            Yayın Notları
           </Text>
           {open ? <Icon name="remove-circle-outline" size={16} color={liveColors.onPrimary} /> : null}
         </View>
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     transform: [{ rotate: '-1.5deg' }],
   },
-  closed: { width: 112 },
+  closed: { width: 126 },
   open: { width: 250 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   flex: { flex: 1 },

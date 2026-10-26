@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Text, toast, type IconName } from '@/components/ui';
 import { getUser } from '@/data';
+import { useQaParams } from '@/features/account/qa';
 import { timeAgoLong } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
@@ -75,6 +76,7 @@ function NotificationVisual({ n }: { n: AppNotification }) {
 }
 
 export default function NotificationsScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const notifications = useInboxStore((s) => s.notifications);
@@ -118,6 +120,7 @@ export default function NotificationsScreen() {
         }
       />
       <SectionList
+        contentOffset={qa.offset}
         sections={sections}
         keyExtractor={(n) => n.id}
         stickySectionHeadersEnabled={false}

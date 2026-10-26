@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Header, Icon, Screen, Sheet, Text, toast, type IconName } from '@/components/ui';
 import { useAccountStore } from '@/features/account/store';
 import { BottomBar, CardBrandBadge, IconCircle, InfoNote, MenuGroup, MenuRow, OutlineCard } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { formatDate, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
@@ -31,6 +32,7 @@ const STEPS = [
 type Phase = 'confirm' | 'processing' | 'done';
 
 export default function VerifiedBuyerScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const verified = useAccountStore((s) => s.verified);
@@ -71,7 +73,7 @@ export default function VerifiedBuyerScreen() {
   return (
     <Screen>
       <Header title="Doğrulanmış Alıcı" />
-      <ScrollView contentContainerStyle={{ paddingBottom: verified ? insets.bottom + 32 : 24 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: verified ? insets.bottom + 32 : 24 }}>
         <View style={styles.hero}>
           <View style={[styles.heroIcon, { backgroundColor: verified ? colors.success : colors.primary }]}>
             <Icon name={verified ? 'shield-checkmark' : 'shield-half-outline'} size={44} color={verified ? '#FFFFFF' : colors.onPrimary} />

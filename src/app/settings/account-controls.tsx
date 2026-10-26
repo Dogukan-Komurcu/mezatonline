@@ -17,6 +17,7 @@ import {
   type ControlType,
 } from '@/features/account/store';
 import { IconCircle, InfoNote, MenuGroup, MenuRow, OutlineCard, PinSheet, ProgressBar, SwitchRow, Tag } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { formatDayLong, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useOrdersStore } from '@/store/orders';
@@ -35,6 +36,7 @@ function fmt(kind: ControlKind, v: number) {
 }
 
 export default function AccountControlsScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const pin = useAccountStore((s) => s.pin);
@@ -119,7 +121,7 @@ export default function AccountControlsScreen() {
   return (
     <Screen>
       <Header title="Hesap Kontrolleri" />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <View style={styles.pad}>
           <Text variant="subhead" color="textSecondary">
             İzleme süreni ve harcamalarını kontrol altında tut. Hatırlatıcılar seni bilgilendirir; limitler ise dönem sonuna kadar izlemeyi ya da harcamayı durdurur.

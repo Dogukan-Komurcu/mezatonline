@@ -9,6 +9,7 @@ import { Avatar, Button, CountBadge, EmptyState, Icon, IconButton, PressableScal
 import { getUser } from '@/data';
 import { useAccountStore } from '@/features/account/store';
 import { CARD_BRAND_NAMES, ConfirmSheet, IconCircle, MenuGroup, MenuRow, Tag } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { useInboxExtras } from '@/features/inbox/store';
 import { shareLink } from '@/features/shared/sheets';
 import { formatCompact, formatNumber, formatTRY } from '@/lib/format';
@@ -51,6 +52,7 @@ export default function AccountScreen() {
   const unreadMessages = useUnreadMessageCount();
   const supportUnread = useInboxExtras((s) => s.supportUnread);
   const referralCode = useWalletStore((s) => s.referralCode);
+  const qa = useQaParams();
 
   const [blockedOpen, setBlockedOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -83,7 +85,7 @@ export default function AccountScreen() {
         <IconButton name="chatbubble-ellipses-outline" badge={unreadMessages + supportUnread} onPress={() => router.push('/inbox')} accessibilityLabel="Mesajlar" />
         <IconButton name="notifications-outline" badge={unreadNotifications} onPress={() => router.push('/notifications')} accessibilityLabel="Bildirimler" />
       </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         {/* Profil başlığı */}
         <View style={styles.profile}>
           <PressableScale scaleTo={0.95} onPress={() => router.push('/settings/profile')} accessibilityLabel="Profil fotoğrafını değiştir">

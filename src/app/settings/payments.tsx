@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Header, Icon, IconButton, PressableScale, Screen, Text, toast } from '@/components/ui';
 import { useAccountStore, type DeliveryPreference } from '@/features/account/store';
 import { ActionSheet, CARD_BRAND_NAMES, CardBrandBadge, ConfirmSheet, InfoNote, isCardExpired, MenuGroup, MenuRow, OutlineCard, SwitchRow, Tag } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { selectDefaultAddress, useWalletStore } from '@/store/wallet';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
@@ -17,6 +18,7 @@ const DELIVERY_OPTIONS: { key: DeliveryPreference; title: string; text: string }
 ];
 
 export default function PaymentsScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const cards = useWalletStore((s) => s.paymentMethods);
@@ -47,7 +49,7 @@ export default function PaymentsScreen() {
   return (
     <Screen>
       <Header title="Ödeme ve Kargo" right={<IconButton name="add" onPress={() => router.push('/settings/add-card')} accessibilityLabel="Kart ekle" />} />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <Text variant="subhead" color="textSecondary" style={styles.intro}>
           Teklif vermek, sipariş vermek ya da yayında ürün satın almak için gereklidir. Kartından yalnızca teklifini kazandığında, satın aldığında ya da fiyat önerin kabul edildiğinde çekim yapılır.
         </Text>

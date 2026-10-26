@@ -1,5 +1,5 @@
 /**
- * Aktivite sekmesi (Whatnot S60): Siparişlerim · Ön Tekliflerim · Fiyat Önerilerim · Kaydedilenler
+ * Aktivite sekmesi (Whatnot S60): Siparişler · Ön Teklifler · Öneriler · Kaydedilenler
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -51,9 +51,9 @@ export default function ActivityScreen() {
       />
       <UnderlineTabs
         tabs={[
-          { key: 'purchases', label: 'Siparişlerim' },
-          { key: 'bids', label: 'Ön Tekliflerim' },
-          { key: 'offers', label: 'Fiyat Önerilerim', count: counterOffers || undefined },
+          { key: 'purchases', label: 'Siparişler' },
+          { key: 'bids', label: 'Ön Teklifler' },
+          { key: 'offers', label: 'Öneriler', count: counterOffers || undefined },
           { key: 'saved', label: 'Kaydedilenler' },
         ]}
         value={tab}

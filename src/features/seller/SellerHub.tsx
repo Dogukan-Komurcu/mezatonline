@@ -22,6 +22,7 @@ import { useNow } from './actions';
 import { HealthSheet, HubMenuSheet, OffersSheet, RehearsalSheet, ShippingSettingsSheet, TierSheet, TipsSheet, VerifySheet, type HubSheetKey } from './HubSheets';
 import { deadlineInfo, deriveOffers, formatRate, isValidIban, isValidTckn, orderBucket, resolveBuyer, SELLER_ORDER_STATUS, tierProgress } from './logic';
 import { showActions, startShow } from './showActions';
+import { useQaOffset } from './qaSeed';
 import { useSellerExtras } from './store';
 import { ActionSheet, Card, Confetti, ProgressBar, StatusPill, Thumb, tint } from './ui';
 
@@ -103,6 +104,7 @@ export function SellerHub() {
   const [sheet, setSheet] = useState<HubSheetKey | null>(null);
   const [moreShow, setMoreShow] = useState<Show | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const qaOffset = useQaOffset();
 
   const upcoming = shows.filter((s) => s.status !== 'ended').sort((a, b) => (a.status === 'live' ? -1 : b.status === 'live' ? 1 : a.scheduledAt.localeCompare(b.scheduledAt)));
   const liveShow = shows.find((s) => s.status === 'live');
@@ -147,7 +149,7 @@ export function SellerHub() {
           </>
         }
       />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textSecondary} />}>
+      <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textSecondary} />}>
         {vacation ? (
           <Card style={[styles.banner, { backgroundColor: tint(colors.info, 0.12), borderColor: tint(colors.info, 0.3) }]}>
             <Icon name="airplane" size={22} color={colors.info} />
@@ -341,7 +343,16 @@ export function SellerHub() {
             </PressableScale>
           </View>
           <View style={styles.balanceActions}>
-            <Button title="Para Çek" size="sm" style={{ flex: 1 }} disabled={balance <= 0} onPress={() => router.push({ pathname: '/seller/payouts', params: { withdraw: '1' } })} />
+            <Button
+              title="Para Çek"
+              size="sm"
+              style={{ flex: 1 }}
+              onPress={() =>
+                balance > 0
+                  ? router.push({ pathname: '/seller/payouts', params: { withdraw: '1' } })
+                  : toast('Çekilebilir bakiyen yok. Siparişlerin kargolanınca bakiyene geçer.', 'information-circle')
+              }
+            />
             <Button title="Ödemeler" size="sm" variant="secondary" iconRight="chevron-forward" style={{ flex: 1 }} onPress={() => router.push('/seller/payouts')} />
           </View>
         </View>

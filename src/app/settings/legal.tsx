@@ -6,10 +6,12 @@ import { Button, Header, Screen, Sheet, Text, toast } from '@/components/ui';
 import { LEGAL_DOCS, type LegalDoc } from '@/features/account/content';
 import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { SCREEN_PADDING } from '@/theme';
 
 export default function LegalScreen() {
+  const qa = useQaParams();
   const insets = useSafeAreaInsets();
   const personalizedAds = useAccountStore((s) => s.personalizedAds);
   const iysEmail = useAccountStore((s) => s.iysEmail);
@@ -21,7 +23,7 @@ export default function LegalScreen() {
   return (
     <Screen>
       <Header title="Yasal & KVKK" />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <Text variant="subhead" color="textSecondary" style={styles.intro}>
           Mezatonline’ı kullanırken geçerli olan sözleşmeler, kişisel verilerinin nasıl işlendiği ve izin tercihlerin.
         </Text>

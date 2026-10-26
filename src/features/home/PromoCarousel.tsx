@@ -11,7 +11,7 @@ import { PROMO_BANNERS, type PromoBanner } from '@/data';
 import { haptic } from '@/lib/haptics';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
-const GAP = 10;
+const GAP = SCREEN_PADDING;
 const HEIGHT = 128;
 
 function Banner({ banner, width }: { banner: PromoBanner; width: number }) {

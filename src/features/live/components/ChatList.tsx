@@ -43,7 +43,7 @@ export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: 
   };
 
   return (
-    <View style={{ height }}>
+    <View style={[styles.root, { height }]} pointerEvents="box-none">
       {pinned ? (
         <PressableScale scaleTo={0.98} onPress={() => setPinOpen((o) => !o)} style={styles.pinned} accessibilityLabel="Sabitlenmiş mesaj">
           <Icon name="pin" size={14} color={liveColors.primary} />
@@ -56,9 +56,11 @@ export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: 
           <Icon name={pinOpen ? 'chevron-up' : 'chevron-down'} size={14} color={liveColors.textSecondary} />
         </PressableScale>
       ) : null}
-      <View style={styles.flex}>
+      {/* Liste kapsayıcısını mutlak olarak doldurur ve kırpılır: sohbet asla kartın/alt çubuğun üstüne taşmaz */}
+      <View style={styles.listWrap} onLayout={(e) => setListH(e.nativeEvent.layout.height)}>
         <FlatList
           ref={listRef}
+          style={StyleSheet.absoluteFill}
           data={data}
           inverted
           keyExtractor={(m) => m.id}
@@ -69,7 +71,6 @@ export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: 
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           viewabilityConfigCallbackPairs={viewabilityPairs}
-          onLayout={(e) => setListH(e.nativeEvent.layout.height)}
           onContentSizeChange={(_, h) => {
             const o = h > listH + 4;
             if (o !== overflow) setOverflow(o);
@@ -106,7 +107,9 @@ export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: 
 }
 
 const styles = StyleSheet.create({
+  root: { overflow: 'hidden' },
   flex: { flex: 1 },
+  listWrap: { flex: 1, minHeight: 0, overflow: 'hidden' },
   content: { paddingTop: 4, gap: 2 },
   pinned: {
     flexDirection: 'row',

@@ -104,22 +104,22 @@ export function ProfileHeader({
               ★ {rating ? formatRating(rating) : '—'}
             </Text>
             <Text variant="footnote" color="textSecondary" onPress={onRatingPress} suppressHighlighting>
-              {' '}Puan •{' '}
+              {'\u00A0Puan • '}
             </Text>
             <Text variant="footnote" weight="700" color="text" onPress={onRatingPress} suppressHighlighting>
               {formatCompact(reviewTotal)}
             </Text>
             <Text variant="footnote" color="textSecondary" onPress={onRatingPress} suppressHighlighting>
-              {' '}Değerlendirme •{' '}
+              {'\u00A0Değerlendirme • '}
             </Text>
             <Text variant="footnote" weight="700" color="text">
               {formatCompact(user.itemsSold)}
             </Text>
-            {' Satış • '}
+            {'\u00A0Satış • '}
             <Text variant="footnote" weight="700" color="text">
-              {shipTimeLabel(user.avgShipDays)}
+              {shipTimeLabel(user.avgShipDays).replace(' ', '\u00A0')}
             </Text>
-            {' Ort. Kargolama'}
+            {'\u00A0Ort.\u00A0Kargolama'}
           </Text>
         ) : null}
 

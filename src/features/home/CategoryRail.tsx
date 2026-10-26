@@ -16,6 +16,8 @@ import { useSocialStore } from '@/store/social';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Category } from '@/types';
 
+import { Glyph3D } from './Glyph3D';
+
 export const FOR_YOU = 'for_you';
 export const FOLLOWING = 'following';
 const ALL = 'all';
@@ -72,7 +74,7 @@ function TileArt({ item }: { item: RailItem }) {
         </View>
       );
     case 'following':
-      return <Text style={styles.emoji}>💛</Text>;
+      return <Glyph3D name="heart" size={54} />;
     case 'all': {
       const pics = CATEGORIES_BY_POPULARITY.slice(0, 4);
       return (
@@ -197,7 +199,6 @@ const styles = StyleSheet.create({
   tileLabel: { fontSize: 14, lineHeight: 17 },
   art: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 4 },
   avatarRing: { padding: 3, borderRadius: 30 },
-  emoji: { fontSize: 44, lineHeight: 52 },
   photo: { width: 54, height: 54, borderRadius: 12, borderWidth: 2, transform: [{ rotate: '-6deg' }] },
   collage: { width: 64, height: 56, flexDirection: 'row', flexWrap: 'wrap', gap: 3, justifyContent: 'center', alignContent: 'center' },
   collageImg: { width: 27, height: 25, borderRadius: 6, borderWidth: 1.5 },

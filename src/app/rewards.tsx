@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EmptyState, Header, Icon, PressableScale, Screen, Text, toast, UnderlineTabs } from '@/components/ui';
 import { ConfirmSheet, IconCircle, InfoNote, SegmentedProgress } from '@/features/account/ui';
 import { BouncyEmoji, ChallengeCard, Coin, nextMidnight, ReactionCard, ShopActionPill, shopState, useNow } from '@/features/rewards/components';
+import { useQaParams } from '@/features/account/qa';
 import { formatNumber, formatTimeUntil, formatTRY, timeAgoLong } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -16,6 +17,7 @@ import { liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
 type Tab = 'tasks' | 'shop' | 'history';
 
 export default function RewardsScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -101,7 +103,7 @@ export default function RewardsScreen() {
           </View>
         }
       />
-      <ScrollView stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qa.offset} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
         <Text variant="title2" style={styles.title}>
           Ödül Kazan, Ayrıcalıkların Kilidini Aç
         </Text>

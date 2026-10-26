@@ -298,9 +298,9 @@ function TopTab({ results, onTab, bottomInset }: { results: Results; onTab: (t: 
 
 // ─── Ana bileşen ─────────────────────────────────────────────────────────────
 
-export function SearchResults({ query, bottomInset, onSearch }: { query: string; bottomInset: number; onSearch: (q: string) => void }) {
+export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top' }: { query: string; bottomInset: number; onSearch: (q: string) => void; initialTab?: ResultTab }) {
   const results = useMemo(() => search(query), [query]);
-  const [tab, setTab] = useState<ResultTab>('top');
+  const [tab, setTab] = useState<ResultTab>(initialTab);
   const total = results.products.length + results.shows.length + results.users.length + results.categories.length;
 
   if (!total) {
@@ -319,12 +319,14 @@ export function SearchResults({ query, bottomInset, onSearch }: { query: string;
     );
   }
 
+  // Sayılar etikete Türkçe biçimle (1.210) eklenir; 0 sonuçlu sekmede sayı gösterilmez
+  const withCount = (label: string, n: number) => (n > 0 ? `${label} ${formatNumber(n)}` : label);
   const tabs: TabItem<ResultTab>[] = [
     { key: 'top', label: 'Öne Çıkanlar' },
-    { key: 'products', label: 'Ürünler', count: results.products.length },
-    { key: 'shows', label: 'Yayınlar', count: results.shows.length },
-    { key: 'users', label: 'Kullanıcılar', count: results.users.length },
-    { key: 'categories', label: 'Kategoriler', count: results.categories.length },
+    { key: 'products', label: withCount('Ürünler', results.products.length) },
+    { key: 'shows', label: withCount('Yayınlar', results.shows.length) },
+    { key: 'users', label: withCount('Kullanıcılar', results.users.length) },
+    { key: 'categories', label: withCount('Kategoriler', results.categories.length) },
   ];
 
   return (

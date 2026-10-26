@@ -17,7 +17,7 @@ import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Order, OrderStatus } from '@/types';
 
 import { useActivityExtras } from './store';
-import { estimatedDelivery, ORDER_STEPS, orderStatusDisplay, orderStepIndex, shortDate, toneColor, withAlpha, type Tone } from './utils';
+import { deliveryDayLabel, estimatedDelivery, ORDER_STEPS, orderStatusDisplay, orderStepIndex, shortDate, toneColor, withAlpha, type Tone } from './utils';
 
 // ─── Durum çipi ──────────────────────────────────────────────────────────────
 
@@ -35,6 +35,12 @@ export function StatusChip({ label, tone, style }: { label: string; tone: Tone; 
 }
 
 // ─── Sipariş kartı (Siparişlerim listesi) ───────────────────────────────────
+
+/** "Bugün" / "Yarın" / "28 Eki" */
+function etaLabel(ms: number): string {
+  const d = deliveryDayLabel(ms);
+  return d.relative ? d.label : shortDate(ms);
+}
 
 export function OrderCard({ order }: { order: Order }) {
   const { colors } = useTheme();
@@ -73,7 +79,7 @@ export function OrderCard({ order }: { order: Order }) {
           {` · ${ORDER_SOURCE_LABELS[order.source]}`}
         </Text>
         <Text variant="footnote" color="textSecondary" numberOfLines={1}>
-          {inTransit ? `Tahmini teslimat: ${shortDate(estimatedDelivery(order))}` : `Satın alma: ${shortDate(order.createdAt)}`}
+          {inTransit ? `Tahmini teslimat: ${etaLabel(estimatedDelivery(order))}` : `Satın alma: ${shortDate(order.createdAt)}`}
         </Text>
         <View style={styles.cardFooter}>
           <Text variant="footnote" color="textSecondary" numberOfLines={1} style={styles.flexShrink}>

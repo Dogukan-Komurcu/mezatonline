@@ -51,20 +51,36 @@ function OrderRow({ order, now }: { order: Order; now: number }) {
     <PressableScale scaleTo={0.99} onPress={() => router.push(`/seller/order/${order.id}`)} style={styles.row}>
       <Thumb uri={order.productImage} size={56} />
       <View style={{ flex: 1, gap: 3 }}>
-        <Text variant="subhead" weight="600" numberOfLines={1}>
-          {order.productTitle}
-        </Text>
-        <View style={styles.inline}>
-          <Avatar uri={buyer.avatar} name={buyer.username} size={16} />
-          <Text variant="footnote" color="textSecondary" numberOfLines={1} style={{ flexShrink: 1 }}>
-            @{buyer.username} · #{order.number} · {ORDER_SOURCE_LABELS[order.source]}
+        <View style={styles.line}>
+          <Text variant="subhead" weight="600" numberOfLines={1} style={{ flex: 1 }}>
+            {order.productTitle}
           </Text>
+          <Text variant="subhead" weight="800" tabular>
+            {formatTRY(order.itemPrice * order.quantity)}
+          </Text>
+        </View>
+        <View style={styles.line}>
+          <View style={[styles.inline, { flex: 1 }]}>
+            <Avatar uri={buyer.avatar} name={buyer.username} size={16} />
+            <Text variant="footnote" color="textSecondary" numberOfLines={1} style={{ flexShrink: 1 }}>
+              @{buyer.username} · #{order.number}
+            </Text>
+          </View>
+          {bucket === 'toship' ? (
+            label ? <StatusPill label="Kod hazır" tone="info" icon="barcode-outline" /> : <StatusPill label="Kod bekliyor" tone="warning" />
+          ) : bucket === 'shipped' ? (
+            <StatusPill label="Kargoda" tone="info" />
+          ) : bucket === 'delivered' ? (
+            <StatusPill label="Teslim edildi" tone="success" />
+          ) : (
+            <StatusPill label={order.status === 'refunded' ? 'İade edildi' : order.status === 'return_requested' ? 'İade talebi' : 'İptal'} />
+          )}
         </View>
         {due ? (
           <View style={styles.inline}>
             <Icon name={due.tone === 'late' ? 'alert-circle' : 'time-outline'} size={14} color={dueColor} />
             <Text variant="footnote" weight="700" color={dueColor} numberOfLines={1} style={{ flexShrink: 1 }}>
-              {due.tone === 'late' ? 'Gönderim süresi geçti' : `Son gönderim: ${formatShowTime(due.deadline, now)} · ${due.left}`}
+              {due.tone === 'late' ? 'Gönderim süresi geçti, hemen kargola' : `Kargola: ${formatShowTime(due.deadline, now)} · ${due.left}`}
             </Text>
           </View>
         ) : bucket === 'shipped' ? (
@@ -73,27 +89,13 @@ function OrderRow({ order, now }: { order: Order; now: number }) {
             {shippedAt ? ` · ${timeAgo(shippedAt, now)}` : ''}
           </Text>
         ) : bucket === 'delivered' ? (
-          <Text variant="footnote" color="textSecondary">
-            Teslim: {formatDate(deliveredAt ?? order.createdAt)}
+          <Text variant="footnote" color="textSecondary" numberOfLines={1}>
+            Teslim: {formatDate(deliveredAt ?? order.createdAt)} · {ORDER_SOURCE_LABELS[order.source]}
           </Text>
         ) : (
-          <Text variant="footnote" color="textSecondary">
-            {formatDate(order.createdAt)}
+          <Text variant="footnote" color="textSecondary" numberOfLines={1}>
+            {formatDate(order.createdAt)} · {ORDER_SOURCE_LABELS[order.source]}
           </Text>
-        )}
-      </View>
-      <View style={{ alignItems: 'flex-end', gap: 4 }}>
-        <Text variant="subhead" weight="800">
-          {formatTRY(order.itemPrice * order.quantity)}
-        </Text>
-        {bucket === 'toship' ? (
-          label ? <StatusPill label="Kod hazır" tone="info" icon="barcode-outline" /> : <StatusPill label="Kod bekliyor" tone="warning" />
-        ) : bucket === 'shipped' ? (
-          <StatusPill label="Kargoda" tone="info" />
-        ) : bucket === 'delivered' ? (
-          <StatusPill label="Teslim edildi" tone="success" />
-        ) : (
-          <StatusPill label={order.status === 'refunded' ? 'İade edildi' : order.status === 'return_requested' ? 'İade talebi' : 'İptal'} />
         )}
       </View>
     </PressableScale>
@@ -178,5 +180,6 @@ const styles = StyleSheet.create({
   filter: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 6, flexDirection: 'row' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: SCREEN_PADDING, paddingVertical: 12 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   info: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, alignItems: 'flex-start' },
 });

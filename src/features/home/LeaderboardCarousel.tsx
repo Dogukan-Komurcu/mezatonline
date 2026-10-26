@@ -12,6 +12,8 @@ import { ALL_SCOPE, getLeaderboard, type LeaderEntry, type LeaderboardScope } fr
 import { Medal, medalFor, SectionTitle, ViewersMetric } from '@/features/browse/ui';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
+import { Glyph3D } from './Glyph3D';
+
 const CARD_W = 172;
 
 function LeaderCard({ entry }: { entry: LeaderEntry }) {
@@ -44,7 +46,6 @@ function LeaderCard({ entry }: { entry: LeaderEntry }) {
 }
 
 export function LeaderboardCarousel({ scope }: { scope: LeaderboardScope }) {
-  const { colors } = useTheme();
   const entries = getLeaderboard(scope, 'live', 10);
   if (!entries.length) return null;
   const category = scope === ALL_SCOPE ? undefined : getCategory(scope);
@@ -52,13 +53,9 @@ export function LeaderboardCarousel({ scope }: { scope: LeaderboardScope }) {
     <View style={styles.wrap}>
       <SectionTitle
         title="En İyi Satıcılar"
-        subtitle={category ? `${category.shortName} kategorisinde şu an canlı` : 'Şu an canlı olan en iyi satıcılar'}
+        subtitle={category ? `Şu an canlı · ${category.shortName}` : 'Şu an canlı olan en iyiler'}
         onAction={() => router.push(`/top-sellers/${scope}`)}
-        left={
-          <View style={[styles.trophy, { backgroundColor: colors.primary }]}>
-            <Text style={styles.trophyEmoji}>🏆</Text>
-          </View>
-        }
+        left={<Glyph3D name="trophy" size={40} />}
       />
       <FlatList
         data={entries}
@@ -82,6 +79,4 @@ const styles = StyleSheet.create({
   medal: { position: 'absolute', top: -8, left: -10 },
   name: { alignSelf: 'stretch', marginBottom: 3 },
   cta: { marginTop: 12 },
-  trophy: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  trophyEmoji: { fontSize: 22, lineHeight: 28 },
 });

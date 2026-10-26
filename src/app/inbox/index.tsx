@@ -9,6 +9,7 @@ import { ActionSheet, ConfirmSheet, type SheetAction } from '@/features/account/
 import { useAccountStore } from '@/features/account/store';
 import { ComposeSheet, ConversationRow } from '@/features/inbox/components';
 import { ensureRequestsSeeded, isRequest, SUPPORT_THREAD_ID, SUPPORT_USER, useInboxExtras } from '@/features/inbox/store';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
 import { useOrdersStore } from '@/store/orders';
@@ -27,6 +28,7 @@ const lastOf = (c: Conversation): DirectMessage | undefined => c.messages[c.mess
 const norm = (s: string) => s.toLocaleLowerCase('tr-TR');
 
 export default function InboxScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const conversations = useInboxStore((s) => s.conversations);
@@ -134,6 +136,7 @@ export default function InboxScreen() {
         ]}
       />
       <FlatList
+        contentOffset={qa.offset}
         data={visible}
         keyExtractor={(i) => i.key}
         keyboardShouldPersistTaps="handled"

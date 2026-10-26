@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
@@ -17,6 +18,8 @@ export type AuctionCardProps = {
   bundled: boolean;
   couponDiscount: number;
   onPress: () => void;
+  /** Kartın altındaki eylem satırı ([Özel] + kaydır-teklif-ver / "Sıradaki ürün bekleniyor") */
+  children?: ReactNode;
 };
 
 /** Kartın üstündeki durum hapı: "@x önde!" / "@x kazandı!" */
@@ -38,7 +41,7 @@ function StatusPill({ lot }: { lot: LiveLot }) {
 }
 
 /** S20-F: sabitlenmiş ürün / açık artırma kartı */
-export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPress }: AuctionCardProps) {
+export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPress, children }: AuctionCardProps) {
   const running = lot.status === 'running';
   const leading = !!lot.leader?.isMe;
   const outbid = running && lot.iBid && !leading;
@@ -49,7 +52,8 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
   return (
     <View>
       <StatusPill lot={lot} />
-      <PressableScale scaleTo={0.985} onPress={onPress} style={[styles.card, leading && running && styles.cardLeading, outbid && styles.cardOutbid]} accessibilityLabel={`${product.title} ürün ayrıntıları`}>
+      <View style={[styles.card, leading && running && styles.cardLeading, outbid && styles.cardOutbid]}>
+        <PressableScale scaleTo={0.985} onPress={onPress} accessibilityLabel={`${product.title} ürün ayrıntıları`}>
         {!running ? (
           <Animated.View key={lot.id} entering={ZoomIn.springify().damping(14)} style={[styles.soldBanner, lot.status === 'unsold' && styles.unsoldBanner]}>
             <Text variant="footnote" weight="900" color={liveColors.text}>
@@ -123,7 +127,9 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
             ) : null}
           </View>
         </View>
-      </PressableScale>
+        </PressableScale>
+        {children ? <View style={styles.actions}>{children}</View> : null}
+      </View>
     </View>
   );
 }
@@ -143,7 +149,8 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   statusText: { flexShrink: 1 },
-  card: { backgroundColor: PANEL, borderRadius: 16, padding: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: liveColors.border, overflow: 'hidden' },
+  card: { backgroundColor: PANEL, borderRadius: 18, padding: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: liveColors.border, overflow: 'hidden' },
+  actions: { marginTop: 10 },
   cardLeading: { borderColor: alpha(liveColors.success, 0.7), borderWidth: 1 },
   cardOutbid: { borderColor: alpha(liveColors.live, 0.7), borderWidth: 1 },
   soldBanner: {

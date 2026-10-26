@@ -27,9 +27,10 @@ export function SubcategoryTile({ sub, selected, onPress }: { sub: Subcategory; 
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={sub.name}
-      style={[styles.tile, { backgroundColor: colors.primary, borderColor: selected ? colors.primary : 'transparent' }]}>
+      style={[styles.tile, { backgroundColor: colors.primary }]}>
       <Image source={{ uri: sub.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} cachePolicy="memory-disk" recyclingKey={sub.id} />
       <View style={[StyleSheet.absoluteFill, { backgroundColor: liveColors.glassStrong }]} />
+      {selected ? <View pointerEvents="none" style={[styles.ring, { borderColor: colors.primary }]} /> : null}
       <Text variant="subhead" weight="700" color={liveColors.text} align="center" numberOfLines={1} style={styles.label}>
         {sub.name}
       </Text>
@@ -51,11 +52,11 @@ const styles = StyleSheet.create({
     height: SUBCATEGORY_TILE_H,
     borderRadius: radius.sm,
     overflow: 'hidden',
-    borderWidth: 3,
     justifyContent: 'space-between',
     paddingVertical: 9,
     paddingHorizontal: 10,
   },
+  ring: { ...StyleSheet.absoluteFill, borderWidth: 3, borderRadius: radius.sm },
   label: { textShadowColor: 'rgba(0,0,0,0.35)', textShadowRadius: 3 },
   bottom: { flexDirection: 'row', justifyContent: 'center' },
   check: { position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

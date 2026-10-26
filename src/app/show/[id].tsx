@@ -7,23 +7,23 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/cards/UserRow';
 import { ShowCard } from '@/components/cards/ShowCard';
 import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, UnderlineTabs, type IconName } from '@/components/ui';
-import { getCategory, getLiveShowOf, getShowsBySeller, getSubcategory, getUpcomingShows } from '@/data';
+import { getCategory, getLiveShowOf, getProduct, getShowsBySeller, getSubcategory, getUpcomingShows } from '@/data';
 import { BuyerProtectionSheet } from '@/features/commerce/infoSheets';
 import { InfoLine } from '@/features/commerce/components';
 import { useNow, useSellerOf, useShowById, useShowProducts } from '@/features/commerce/hooks';
 import { PreBidSheet } from '@/features/commerce/PreBidSheet';
 import { ShowItemRow } from '@/features/commerce/ShowItemRow';
-import { ablativeSuffix, countdownClock, countdownParts } from '@/features/commerce/utils';
+import { ablativeSuffix, countdownParts, pad2 } from '@/features/commerce/utils';
 import { APP_URL, ReportSheet, shareLink } from '@/features/shared/sheets';
-import { formatCompact, formatDate, formatRating, formatShowTime, formatTimeUntil, formatTRY } from '@/lib/format';
+import { formatClock, formatCompact, formatDate, formatDayLong, formatRating, formatShowTime, formatTimeUntil, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { ME_ID } from '@/store/auth';
 import { completeChallenge } from '@/store/rewards';
@@ -45,7 +45,7 @@ const HIGHLIGHT_META: Record<string, { label: string; icon: IconName }> = {
 };
 
 export default function ShowScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, qa } = useLocalSearchParams<{ id: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width, height: screenH } = useWindowDimensions();
@@ -63,6 +63,23 @@ export default function ShowScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [protectionOpen, setProtectionOpen] = useState(false);
   const [overHero, setOverHero] = useState(true);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+
+  // Yalnızca geliştirme: QA ekran görüntüleri için sheet / kaydırma kancası (?qa=prebid|more|scroll<y>)
+  useEffect(() => {
+    if (!__DEV__ || !qa) return;
+    const t = setTimeout(() => {
+      if (qa === 'more') setMoreOpen(true);
+      else if (qa === 'prebid') {
+        const first = show?.productIds.map((pid) => getProduct(pid)).find((p) => p?.format === 'auction');
+        if (first) {
+          setPreBidFor(first);
+          setPreBidOpen(true);
+        }
+      } else if (qa.startsWith('scroll')) scrollRef.current?.scrollTo({ y: Number(qa.slice(6)) || 600, animated: false });
+    }, 900);
+    return () => clearTimeout(t);
+  }, [qa, show]);
 
   if (!show) {
     return (
@@ -138,7 +155,7 @@ export default function ShowScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {focused && overHero ? <StatusBar style="light" /> : null}
-      <ScrollView onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
+      <ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
         {/* ─── Kapak ─── */}
         <View style={[styles.hero, { height: heroH, backgroundColor: colors.skeleton }]}>
           <Image source={{ uri: show.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" transition={200} />
@@ -457,24 +474,40 @@ export default function ShowScreen() {
   );
 }
 
-/** Saniyede bir güncellenen geri sayım kartı (sayfanın geri kalanı yeniden çizilmez) */
+/** Saniyede bir güncellenen geri sayım kartı (sayfanın geri kalanı yeniden çizilmez). Whatnot: "Show starts in 6d 1h 9m 32s" */
 function ShowCountdown({ startAt }: { startAt: number }) {
   const now = useNow(1000);
   const parts = countdownParts(startAt, now);
   const soon = parts.total <= 0;
+  const segments: [number, string][] = [];
+  if (parts.days > 0) segments.push([parts.days, 'g']);
+  if (parts.days > 0 || parts.hours > 0) segments.push([parts.hours, 's']);
+  segments.push([parts.minutes, 'dk'], [parts.seconds, 'sn']);
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.countCard}>
       <Text variant="footnote" weight="600" color={liveColors.textSecondary}>
         {soon ? 'Satıcı yayını başlatmak üzere' : 'Yayının başlamasına'}
       </Text>
-      <Text style={styles.countText} color={liveColors.primary} tabular>
-        {soon ? 'Birazdan' : countdownClock(startAt, now)}
-      </Text>
-      {!soon ? (
-        <Text variant="footnote" color={liveColors.textSecondary}>
-          {parts.total < 60 ? 'Birkaç saniye içinde başlıyor' : `${formatTimeUntil(startAt, now)} sonra başlıyor`}
+      {soon ? (
+        <Text style={styles.countText} color={liveColors.primary}>
+          Birazdan
         </Text>
-      ) : null}
+      ) : (
+        <Text style={styles.countText} color={liveColors.primary} tabular numberOfLines={1} adjustsFontSizeToFit>
+          {segments.map(([v, unit], i) => (
+            <Text key={unit} style={styles.countText} color={liveColors.primary} tabular>
+              {i > 0 ? ' ' : ''}
+              {i > 0 ? pad2(v) : v}
+              <Text style={styles.countUnit} color={liveColors.primary}>
+                {unit}
+              </Text>
+            </Text>
+          ))}
+        </Text>
+      )}
+      <Text variant="footnote" color={liveColors.textSecondary} numberOfLines={1}>
+        {formatDayLong(startAt)} · {formatClock(startAt)}
+      </Text>
     </Animated.View>
   );
 }
@@ -483,9 +516,9 @@ function ReminderButton({ show, onPress, count, label }: { show: Show; onPress: 
   const reminded = useSocialStore((s) => s.remindedShowIds.includes(show.id));
   return (
     <Button
-      title={reminded ? 'Hatırlatıcı kuruldu' : (label ?? 'Hatırlat 🔔')}
-      subtitle={count !== undefined ? `${formatCompact(count)} kişi hatırlatıcı kurdu` : formatShowTime(show.scheduledAt)}
-      icon={reminded ? 'checkmark-circle' : undefined}
+      title={reminded ? 'Kaydedildi · Hatırlatılacak' : (label ?? 'Kaydet ve Hatırlat')}
+      subtitle={count !== undefined ? `${formatCompact(count)} kişi kaydetti` : formatShowTime(show.scheduledAt)}
+      icon={reminded ? 'bookmark' : 'bookmark-outline'}
       variant={reminded ? 'secondary' : 'primary'}
       size="lg"
       fullWidth
@@ -544,7 +577,8 @@ const styles = StyleSheet.create({
   dateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: liveColors.glassStrong, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   catBadge: { backgroundColor: liveColors.glassLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   countCard: { backgroundColor: liveColors.glassStrong, borderRadius: radius.lg, padding: 14, gap: 2, borderWidth: StyleSheet.hairlineWidth, borderColor: liveColors.border },
-  countText: { fontSize: 34, lineHeight: 40, fontWeight: '900', letterSpacing: 0.5 },
+  countText: { fontSize: 34, lineHeight: 40, fontWeight: '900', letterSpacing: 0.3 },
+  countUnit: { fontSize: 20, lineHeight: 40, fontWeight: '800' },
   sellerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: SCREEN_PADDING, paddingTop: 16, paddingBottom: 6 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   block: { paddingHorizontal: SCREEN_PADDING, paddingVertical: 12, gap: 10 },

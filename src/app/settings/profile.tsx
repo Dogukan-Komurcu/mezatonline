@@ -10,6 +10,7 @@ import { PROVINCES } from '@/data/turkey';
 import { pickImage } from '@/features/account/media';
 import { useAccountStore } from '@/features/account/store';
 import { BottomBar, ConfirmSheet, MenuRow } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { formatTimeUntil } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore, useMe } from '@/store/auth';
@@ -46,6 +47,7 @@ function usernameError(v: string): string | undefined {
 type PickerKind = 'avatar' | 'cover' | null;
 
 export default function EditProfileScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const me = useMe();
@@ -139,7 +141,7 @@ export default function EditProfileScreen() {
     <Screen>
       <Header title="Profili düzenle" onBack={back} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView contentOffset={qa.offset} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 32 }}>
           {/* Kapak + profil fotoğrafı */}
           <PressableScale scaleTo={0.99} onPress={() => setPicker('cover')} accessibilityRole="button" accessibilityLabel="Kapak fotoğrafını değiştir">
             <Image source={{ uri: cover }} style={[styles.cover, { backgroundColor: colors.skeleton }]} contentFit="cover" cachePolicy="memory-disk" transition={150} />

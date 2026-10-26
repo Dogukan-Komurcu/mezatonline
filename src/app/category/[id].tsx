@@ -4,7 +4,7 @@
  * alt ortada yüzen "Yayınlar | Ürünler" hapı ile ürün grid'ine geçiş.
  */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, RefreshControl, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -59,7 +59,7 @@ function matchesSub(show: Show, sub: string | null): boolean {
 }
 
 export default function CategoryScreen() {
-  const params = useLocalSearchParams<{ id: string; sub?: string; view?: string }>();
+  const params = useLocalSearchParams<{ id: string; sub?: string; view?: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const cardW = useGridWidth(2);
@@ -90,6 +90,19 @@ export default function CategoryScreen() {
   const products = useMemo(() => sortProducts(baseProducts.filter((p) => productMatches(p, productFilters)), productSort), [baseProducts, productFilters, productSort]);
 
   const liveCount = baseShows.filter((s) => s.status === 'live').length;
+
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (?qa=filter | sort | scroll)
+  const listRef = useRef<FlatList<Row>>(null);
+  useEffect(() => {
+    if (!__DEV__ || !params.qa) return;
+    const t = setTimeout(() => {
+      if (params.qa === 'filter' || params.qa === 'sort') {
+        setSheetKey((k) => k + 1);
+        setSheet(params.qa);
+      } else if (params.qa === 'scroll') listRef.current?.scrollToOffset({ offset: 700, animated: false });
+    }, 900);
+    return () => clearTimeout(t);
+  }, [params.qa]);
 
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [
@@ -172,7 +185,7 @@ export default function CategoryScreen() {
         return (
           <View style={styles.hero}>
             <Text variant="title1" numberOfLines={2}>
-              {category.emoji} {category.name}
+              {category.name}
             </Text>
             <View style={styles.heroRow}>
               <Button
@@ -282,6 +295,7 @@ export default function CategoryScreen() {
         }
       />
       <FlatList
+        ref={listRef}
         data={rows}
         keyExtractor={(r) => r.key}
         renderItem={renderRow}

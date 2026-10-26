@@ -225,6 +225,15 @@ export function longDay(input: string | number): string {
   return `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()]}`;
 }
 
+/** Tahmini teslimat günü: "Bugün" / "Yarın" / "Çarşamba, 28 Ekim" (geçmiş tarihler "Bugün" sayılır) */
+export function deliveryDayLabel(input: string | number, now: number = Date.now()): { label: string; relative: boolean } {
+  const t = typeof input === 'number' ? input : Date.parse(input);
+  const diff = Math.round((startOfDay(t) - startOfDay(now)) / DAY);
+  if (diff <= 0) return { label: 'Bugün', relative: true };
+  if (diff === 1) return { label: 'Yarın', relative: true };
+  return { label: longDay(t), relative: false };
+}
+
 /** Liste grup başlığı: Bugün / Dün / Çarşamba, 21 Ekim / 3 Eylül 2026 */
 export function dayGroupLabel(input: string, now: number = Date.now()): string {
   const t = Date.parse(input);

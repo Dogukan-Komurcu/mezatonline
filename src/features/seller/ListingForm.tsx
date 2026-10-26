@@ -17,6 +17,7 @@ import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Condition, ListingFormat, Product, ShippingProfile } from '@/types';
 
+import { useQaOffset } from './qaSeed';
 import { assignListingsToShow, createListingWithStatus, deleteListings } from './actions';
 import { pickFromLibrary, SamplePhotoSheet, takePhoto } from './media';
 import { useSellerExtras } from './store';
@@ -83,6 +84,7 @@ function initialState(p: Product | undefined, presetShow: string | undefined): F
 
 export function ListingForm() {
   const { colors } = useTheme();
+  const qaOffset = useQaOffset();
   const params = useLocalSearchParams<{ id?: string; showId?: string }>();
   const listings = useSellerStore((s) => s.listings);
   const shows = useSellerStore((s) => s.shows);
@@ -231,7 +233,7 @@ export function ListingForm() {
     <Screen>
       <Header safeTop={MODAL_SAFE_TOP} back="close" onBack={close} title={editing ? 'Ürünü Düzenle' : 'Ürün Oluştur'} subtitle={editing && status === 'draft' ? 'Taslak' : undefined} border />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <FormSection title="Fotoğraflar" subtitle={`${f.images.length}/${MAX_PHOTOS} · İlk fotoğraf kapak olur`}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.photos}>
               {remaining > 0 ? (

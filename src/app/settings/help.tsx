@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, EmptyState, Header, Icon, PressableScale, Screen, Text, TextField, toast } from '@/components/ui';
 import { FAQ_TOPICS, FAQS, type Faq, type FaqTopic } from '@/features/account/content';
 import { MenuGroup, MenuRow } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
@@ -63,6 +64,7 @@ function FaqItem({ faq, open, onToggle }: { faq: Faq; open: boolean; onToggle: (
 }
 
 export default function HelpScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState('');
@@ -77,7 +79,7 @@ export default function HelpScreen() {
   return (
     <Screen>
       <Header title="Yardım Merkezi" />
-      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <View style={styles.hero}>
           <Text variant="title2">Nasıl yardımcı olabiliriz?</Text>
           <TextField icon="search" placeholder="Soru ya da anahtar kelime ara" value={q} onChangeText={setQ} autoCorrect={false} returnKeyType="search" containerStyle={{ marginTop: 12 }} />

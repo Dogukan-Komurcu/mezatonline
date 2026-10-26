@@ -18,6 +18,7 @@ import { useSellerStore } from '@/store/seller';
 import { ForceScheme, radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Carrier } from '@/types';
 
+import { useQaOffset } from './qaSeed';
 import { cancelSellerOrder, createLabel, shipOrder, useNow } from './actions';
 import { buyerAddress, deadlineInfo, inLaunchCampaign, orderBucket, resolveBuyer, SELLER_ORDER_STATUS, SHIP_CARRIERS } from './logic';
 import { useSellerExtras } from './store';
@@ -41,6 +42,7 @@ const EVENT_LABELS: Record<string, string> = {
 
 export function OrderDetailScreen() {
   const { colors } = useTheme();
+  const qaOffset = useQaOffset();
   const me = useMe();
   const now = useNow(30_000);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -143,7 +145,7 @@ export function OrderDetailScreen() {
   return (
     <Screen>
       <Header title={`#${order.number}`} subtitle={SELLER_ORDER_STATUS[order.status]} right={<IconButton name="ellipsis-horizontal" onPress={() => setMenu(true)} accessibilityLabel="Diğer seçenekler" />} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.banner, { backgroundColor: tint(banner.tone, 0.12) }]}>
           <Icon name={banner.icon} size={24} color={banner.tone} />
           <View style={{ flex: 1 }}>

@@ -5,12 +5,14 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { Button, EmptyState, Header, Screen, Text, toast } from '@/components/ui';
 import { BottomBar, ConfirmSheet, InfoNote, SwitchRow } from '@/features/account/ui';
 import { AddressForm, emptyAddress, validateAddress, type AddressDraft } from '@/features/wallet/forms';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
 import { useWalletStore } from '@/store/wallet';
 import { SCREEN_PADDING } from '@/theme';
 
 export default function AddressFormScreen() {
+  const qa = useQaParams();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const me = useMe();
   const existing = useWalletStore((s) => (id ? s.addresses.find((a) => a.id === id) : undefined));
@@ -66,7 +68,7 @@ export default function AddressFormScreen() {
     <Screen>
       <Header title={editing ? 'Adresi düzenle' : 'Yeni adres'} back="close" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+        <ScrollView contentOffset={qa.offset} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <AddressForm
             value={draft}
             onChange={(v) => {

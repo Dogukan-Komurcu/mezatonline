@@ -16,7 +16,7 @@ import type { Address, Order, OrderEvent, OrderStatus, PaymentMethod, User } fro
 
 import { OrderProgress } from '../components';
 import type { HelpRequest, SubmittedReview } from '../store';
-import { carrierTrackingUrl, eventAt, estimatedDelivery, longDay, paymentLabel, protectionLabel, withAlpha, type ProtectionInfo } from '../utils';
+import { carrierTrackingUrl, deliveryDayLabel, eventAt, estimatedDelivery, paymentLabel, protectionLabel, withAlpha, type ProtectionInfo } from '../utils';
 
 export async function copyText(text: string, message = 'Kopyalandı') {
   try {
@@ -59,12 +59,14 @@ export function statusCopy(order: Order, ctx: { seller?: User; address?: Address
         subtitle: `Genelde ${shipText(ctx.seller)} kargolanır`,
         body: `${sellerName} paketini hazırlıyor ve genelde ${shipText(ctx.seller)} kargoya verir. Paket kargoya verildiğinde takip bilgileri burada görünecek.`,
       };
-    case 'shipped':
+    case 'shipped': {
+      const eta = deliveryDayLabel(estimatedDelivery(order));
       return {
         title: 'Kargoda',
-        subtitle: `Tahmini teslimat: ${longDay(estimatedDelivery(order))}`,
-        body: `Paketin ${order.carrier ?? 'kargo'} ile yolda. ${place(ctx.address)} adresine ${longDay(estimatedDelivery(order))} tarihinde teslim edilmesi bekleniyor.`,
+        subtitle: `Tahmini teslimat: ${eta.label}`,
+        body: `Paketin ${order.carrier ?? 'kargo'} ile yolda. ${place(ctx.address)} adresine ${eta.relative ? eta.label.toLocaleLowerCase('tr-TR') : `${eta.label} tarihinde`} teslim edilmesi bekleniyor.`,
       };
+    }
     case 'out_for_delivery':
       return {
         title: 'Dağıtıma çıktı',
@@ -153,17 +155,6 @@ export function StatusCard({
           <IconButton name="copy-outline" size={36} onPress={() => copyText(order.trackingNumber ?? '')} accessibilityLabel="Takip numarasını kopyala" />
         </View>
       ) : null}
-      {hasTracking && !closed && order.status !== 'delivered' ? (
-        <Button
-          title="Kargoyu takip et"
-          iconRight="open-outline"
-          variant="secondary"
-          fullWidth
-          style={styles.mt12}
-          onPress={() => openTracking(order, { bg: colors.bg, fg: colors.text })}
-        />
-      ) : null}
-
       {canReview ? (
         <View style={styles.reviewBlock}>
           <Button title="Değerlendir" variant="inverse" icon="star" fullWidth onPress={onReview} />
@@ -291,7 +282,7 @@ export function Receipt({ order, payment }: { order: Order; payment?: PaymentMet
           </Text>
           {payment ? (
             <Text variant="caption" color="textSecondary">
-              {payment.bank} · Tek çekim
+              {payment.bank} · {installmentNote(order) ?? 'Tek çekim'}
             </Text>
           ) : null}
         </View>
@@ -299,6 +290,13 @@ export function Receipt({ order, payment }: { order: Order; payment?: PaymentMet
       </View>
     </View>
   );
+}
+
+/** Ödemede taksit seçildiyse sipariş notundan "3 taksit × ₺1.250" bilgisini çıkar */
+function installmentNote(order: Order): string | undefined {
+  const note = order.timeline[0]?.note;
+  const m = note?.match(/(\d+) taksit × ([^·]+)/);
+  return m ? `${m[1]} taksit × ${m[2].trim()}` : undefined;
 }
 
 function ReceiptLine({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {

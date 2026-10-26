@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Header, Icon, PressableScale, Screen, Segmented, Sheet, Text, TextField, toast } from '@/components/ui';
 import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore } from '@/store/auth';
 import { useOrdersStore } from '@/store/orders';
@@ -18,6 +19,7 @@ const DELETE_REASONS = ['Uygulamayı artık kullanmıyorum', 'Aradığım ürün
 const OPEN_STATUSES = ['paid', 'preparing', 'shipped', 'out_for_delivery', 'return_requested'];
 
 export default function PreferencesScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const appearance = useSettingsStore((s) => s.appearance);
@@ -77,7 +79,7 @@ export default function PreferencesScreen() {
   return (
     <Screen>
       <Header title="Tercihler" />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <MenuGroup title="Görünüm">
           <View style={styles.pad}>
             <Segmented<Appearance>

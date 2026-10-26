@@ -8,8 +8,8 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState, type ReactNode } from 'react';
-import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -40,7 +40,7 @@ import type { Offer, Product } from '@/types';
 const GRID_GAP = 12;
 
 export default function ProductScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, qa } = useLocalSearchParams<{ id: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width, height: screenH } = useWindowDimensions();
@@ -67,6 +67,20 @@ export default function ProductScreen() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   const [overHero, setOverHero] = useState(true);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+
+  // Yalnızca geliştirme: QA ekran görüntüleri için sheet / kaydırma kancası (?qa=offer|prebid|more|protection|scroll<y>)
+  useEffect(() => {
+    if (!__DEV__ || !qa) return;
+    const t = setTimeout(() => {
+      if (qa === 'offer') setOfferOpen(true);
+      else if (qa === 'prebid') setPreBidOpen(true);
+      else if (qa === 'more') setMoreOpen(true);
+      else if (qa === 'protection') setProtectionOpen(true);
+      else if (qa.startsWith('scroll')) scrollRef.current?.scrollTo({ y: Number(qa.slice(6)) || 600, animated: false });
+    }, 900);
+    return () => clearTimeout(t);
+  }, [qa]);
 
   if (!product) {
     return (
@@ -158,7 +172,7 @@ export default function ProductScreen() {
         {product.acceptsOffers ? (
           <Button
             title="Fiyat Öner"
-            variant="outline"
+            variant="inverse"
             size="lg"
             onPress={() => {
               if (offer?.status === 'pending') {
@@ -175,7 +189,7 @@ export default function ProductScreen() {
     );
   } else if (product.format === 'auction') {
     if (showLive && show) {
-      bottom = <Button title="Yayına Git" subtitle="🔴 Canlı · Açık artırmaya katıl" icon="radio" size="lg" fullWidth onPress={() => router.push(`/live/${show.id}`)} />;
+      bottom = <Button title="Yayına Git" subtitle="Canlı · Açık artırmaya katıl" icon="radio" size="lg" fullWidth onPress={() => router.push(`/live/${show.id}`)} />;
     } else if (showScheduled && show) {
       bottom = (
         <Button
@@ -214,7 +228,7 @@ export default function ProductScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {focused && overHero ? <StatusBar style="light" /> : null}
-      <ScrollView onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}>
+      <ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}>
         {/* ─── Galeri ─── */}
         <View style={[styles.hero, { height: heroH, backgroundColor: colors.skeleton }]}>
           <FlatList

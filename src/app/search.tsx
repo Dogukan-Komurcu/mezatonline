@@ -15,7 +15,9 @@ import { useSocialStore } from '@/store/social';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 export default function SearchScreen() {
-  const params = useLocalSearchParams<{ q?: string }>();
+  const params = useLocalSearchParams<{ q?: string; qa?: string }>();
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı için başlangıç sekmesi (?q=…&qa=products)
+  const qaTab = __DEV__ && (['products', 'shows', 'users', 'categories'] as const).find((t) => t === params.qa);
   const initial = typeof params.q === 'string' ? params.q.trim() : '';
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -96,7 +98,7 @@ export default function SearchScreen() {
 
       {mode === 'entry' ? <SearchEntry onSearch={submit} bottomInset={insets.bottom} /> : null}
       {mode === 'suggest' ? <SearchSuggestions text={text} onSearch={submit} onFill={fill} bottomInset={insets.bottom} /> : null}
-      {mode === 'results' && query ? <SearchResults key={query} query={query} onSearch={submit} bottomInset={insets.bottom} /> : null}
+      {mode === 'results' && query ? <SearchResults key={query} query={query} onSearch={submit} bottomInset={insets.bottom} initialTab={qaTab || undefined} /> : null}
     </View>
   );
 }

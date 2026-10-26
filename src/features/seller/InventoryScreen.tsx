@@ -245,7 +245,7 @@ export function InventoryScreen() {
         }
       />
       <View style={styles.tools}>
-        <TextField icon="search" placeholder="Envanterde ara" value={query} onChangeText={setQuery} containerStyle={{ flex: 1 }} returnKeyType="search" autoCorrect={false} />
+        <TextField icon="search" placeholder="Envanterde ara" value={query} onChangeText={setQuery} returnKeyType="search" autoCorrect={false} clearButtonMode="while-editing" />
       </View>
       <UnderlineTabs
         equal

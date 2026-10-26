@@ -17,6 +17,7 @@ import { useAuthStore, useMe } from '@/store/auth';
 import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
+import { useQaOffset } from './qaSeed';
 import { scheduleAutoApproval, useNow } from './actions';
 import { EXPERIENCE_LABELS, SELLER_TYPE_LABELS } from './ApplicationPending';
 import { IbanField } from './IbanSheet';
@@ -582,6 +583,7 @@ function SuccessView() {
 
 export function ApplyFlow() {
   const { colors } = useTheme();
+  const qaOffset = useQaOffset();
   const me = useMe();
   const status = useSellerStore((s) => s.application.status);
   const submitApplication = useSellerStore((s) => s.submitApplication);
@@ -730,7 +732,7 @@ export function ApplyFlow() {
       <Header safeTop={MODAL_SAFE_TOP} back={step === 0 ? 'close' : true} onBack={back} title="Satıcı Başvurusu" subtitle={`Adım ${step + 1}/${STEP_TITLES.length} · ${STEP_TITLES[step]}`} />
       <StepBar step={step} total={STEP_TITLES.length} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentOffset={qaOffset} ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {step === 0 ? <WelcomeStep draft={draft} set={set} onLegal={setLegal} /> : null}
           {step === 1 ? <CategoryStep draft={draft} set={set} /> : null}
           {step === 2 ? <ExperienceStep draft={draft} set={set} /> : null}

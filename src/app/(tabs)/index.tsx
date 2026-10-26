@@ -2,7 +2,7 @@
  * Ana Sayfa (Whatnot Home feed, S11): arama + gelen kutusu/bildirim/ödüller başlığı, büyük kategori şeridi
  * (kaydırınca kompakt çipler), seçime göre 2 sütunlu canlı yayın grid'i ve arasına serpiştirilmiş bölümler.
  */
-import { router, useScrollToTop } from 'expo-router';
+import { router, useLocalSearchParams, useScrollToTop } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import { Button, EmptyState, Icon, PressableScale, Text, toast } from '@/compone
 import { getCategory } from '@/data';
 import { ProductGridRow, ShowGridRow } from '@/features/browse/grids';
 import { Band, SectionTitle, useGridWidth } from '@/features/browse/ui';
-import { CategoryRail, CompactRail, FOR_YOU, useRailItems } from '@/features/home/CategoryRail';
+import { CategoryRail, CompactRail, FOLLOWING, FOR_YOU, useRailItems } from '@/features/home/CategoryRail';
 import { Coachmark, type Rect } from '@/features/home/Coachmark';
 import { buildHomeFeed, type HomeRow } from '@/features/home/feed';
 import { HomeHeader } from '@/features/home/HomeHeader';
@@ -89,6 +89,19 @@ export default function HomeScreen() {
   }, [wantCoach, target, root]);
 
   const coachVisible = wantCoach && coach !== null;
+
+  // Yalnızca geliştirme: ekran görüntüsü QA'sı (/?qa=scroll | y<offset> | bottom | following | cat_<id>)
+  const { qa } = useLocalSearchParams<{ qa?: string }>();
+  useEffect(() => {
+    if (!__DEV__ || !qa) return;
+    dismissCoach();
+    if (qa === 'following') setSelection(FOLLOWING);
+    else if (qa.startsWith('cat_')) setSelection(qa.slice(4));
+    const offset = qa === 'scroll' ? 1500 : qa.startsWith('y') ? Number(qa.slice(1)) || 0 : 0;
+    if (!offset && qa !== 'bottom') return;
+    const timers = [1200, 1700, 2200, 2700].map((ms) => setTimeout(() => (offset ? listRef.current?.scrollToOffset({ offset, animated: false }) : listRef.current?.scrollToEnd({ animated: false })), ms));
+    return () => timers.forEach(clearTimeout);
+  }, [qa, dismissCoach]);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;

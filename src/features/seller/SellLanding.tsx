@@ -19,6 +19,7 @@ import { sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
 import { liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Show } from '@/types';
 
+import { useQaOffset } from './qaSeed';
 import { Card, KeyValue, StickyFooter, tint } from './ui';
 
 const BENEFITS: { icon: IconName; title: string; body: string }[] = [
@@ -80,6 +81,7 @@ function PhoneMock({ show, w, rotate, style }: { show?: Show; w: number; rotate:
 
 export function SellLanding() {
   const { colors, isDark } = useTheme();
+  const qaOffset = useQaOffset();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -101,7 +103,7 @@ export function SellLanding() {
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.bg }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentOffset={qaOffset} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.hero, { backgroundColor: colors.primary, paddingTop: insets.top + 16 }]}>
           <View style={[styles.heroTag, { backgroundColor: colors.onPrimary }]}>
             <Icon name="storefront" size={14} color={colors.primary} />

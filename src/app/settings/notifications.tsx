@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, Screen, Text, toast } from '@/components/ui';
 import { useAccountStore, type AccountFlag } from '@/features/account/store';
 import { IconCircle, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
+import { useQaParams } from '@/features/account/qa';
 import { useSettingsStore, type NotificationPrefs } from '@/store/settings';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
@@ -42,6 +43,7 @@ const IYS: { key: AccountFlag; title: string }[] = [
 ];
 
 export default function NotificationSettingsScreen() {
+  const qa = useQaParams();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const prefs = useSettingsStore((s) => s.notifications);
@@ -58,7 +60,7 @@ export default function NotificationSettingsScreen() {
   return (
     <Screen>
       <Header title="Bildirimler" />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <View style={styles.pad}>
           <View style={[styles.push, { backgroundColor: colors.surface }]}>
             <IconCircle name="notifications" size={44} bg={colors.primary} color={colors.onPrimary} />

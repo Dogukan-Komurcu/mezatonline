@@ -4,8 +4,8 @@
  * ücretsiz kargo eşiği, ürünler, moderatörler, görünürlük → Planla + paylaş.
  */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Button, Chip, EmptyState, Header, Icon, PressableScale, Screen, Segmented, SelectField, Sheet, Text, TextField, toast } from '@/components/ui';
@@ -18,6 +18,7 @@ import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Show } from '@/types';
 
+import { useQaOffset } from './qaSeed';
 import { setShowProducts, useNow } from './actions';
 import { dayKeyOf, dayOptions, listingTab, priceLabel, timeSlots } from './logic';
 import { pickFromLibrary, SamplePhotoSheet } from './media';
@@ -53,6 +54,11 @@ function pad(n: number) {
 
 export function ScheduleForm() {
   const { colors } = useTheme();
+  const qaOffset = useQaOffset();
+  const dayScrollRef = useRef<ScrollViewInstance>(null);
+  const timeScrollRef = useRef<ScrollViewInstance>(null);
+  // Seçili gün / saat çipi ilk açılışta görünür olsun (ör. varsayılan 20:00 satırın sonunda kalıyor)
+  const revealIn = (ref: typeof timeScrollRef) => (e: LayoutChangeEvent) => ref.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - SCREEN_PADDING - 72), animated: false });
   const me = useMe();
   const now = useNow(60_000);
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -195,7 +201,7 @@ export function ScheduleForm() {
       const cover = s.cover ?? categoryPhotos(s.categoryId!)[0];
       const highlights = [
         ...(s.freeShip ? [`${formatTRY(s.freeShip)} üzeri ücretsiz kargo`] : []),
-        ...(s.format === 'breaks' ? ['Kırılım'] : s.format === 'buy_now' ? ['Hemen Al'] : []),
+        ...(s.format === 'breaks' ? ['Kutu açılışı'] : s.format === 'buy_now' ? ['Hemen Al'] : []),
         ...(s.visibility === 'private' ? ['Özel yayın'] : []),
       ];
       let show: Show;
@@ -279,7 +285,7 @@ export function ScheduleForm() {
     <Screen>
       <Header safeTop={MODAL_SAFE_TOP} back="close" onBack={close} title={existing ? 'Yayını Düzenle' : 'Yayın Planla'} border />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.coverRow}>
             <PressableScale scaleTo={0.97} onPress={() => setSamples(true)} style={[styles.cover, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {s.cover ? (
@@ -347,12 +353,13 @@ export function ScheduleForm() {
           </FormSection>
 
           <FormSection title="Tarih ve saat" subtitle={s.time && scheduledAt > now ? `${formatDayLong(scheduledAt)}, ${s.time}` : 'Yayınını birkaç gün önceden planla'}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
+            <ScrollView ref={dayScrollRef} horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
               {days.map((d) => {
                 const on = d.key === day.key;
                 return (
                   <PressableScale
                     key={d.key}
+                    onLayout={on ? revealIn(dayScrollRef) : undefined}
                     scaleTo={0.94}
                     onPress={() => {
                       haptic.tap();
@@ -371,9 +378,11 @@ export function ScheduleForm() {
               })}
             </ScrollView>
             {slotList.length ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
+              <ScrollView ref={timeScrollRef} horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
                 {slotList.map((t) => (
-                  <Chip key={t.key} label={t.label} selected={s.time === t.key} onPress={() => set({ time: t.key })} />
+                  <View key={t.key} onLayout={s.time === t.key ? revealIn(timeScrollRef) : undefined}>
+                    <Chip label={t.label} selected={s.time === t.key} onPress={() => set({ time: t.key })} />
+                  </View>
                 ))}
               </ScrollView>
             ) : (
@@ -425,7 +434,7 @@ export function ScheduleForm() {
           <FormSection title="Yayın formatı" subtitle="Yayında ağırlıklı olarak nasıl satış yapacaksın?">
             <OptionCard icon="hammer-outline" title="Açık artırma ağırlıklı" subtitle="Ürünler teklifle satılır, heyecan yüksek" selected={s.format === 'auction'} onPress={() => set({ format: 'auction' })} />
             <OptionCard icon="flash-outline" title="Hemen Al" subtitle="Sabit fiyat, flaş indirimlerle hızlı satış" selected={s.format === 'buy_now'} onPress={() => set({ format: 'buy_now' })} />
-            <OptionCard icon="cube-outline" title="Kırılım (Break)" subtitle="Kutu açılışı; alıcılar slot / takım satın alır" selected={s.format === 'breaks'} onPress={() => set({ format: 'breaks' })} />
+            <OptionCard icon="cube-outline" title="Kutu Açılışı (Break)" subtitle="Alıcılar slot ya da takım satın alır, kutuyu canlı açarsın" selected={s.format === 'breaks'} onPress={() => set({ format: 'breaks' })} />
           </FormSection>
 
           <FormSection title="Ücretsiz kargo" subtitle="Bu tutarın üzerindeki alışverişlerde kargo ücretini sen karşılarsın">

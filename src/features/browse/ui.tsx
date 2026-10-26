@@ -180,7 +180,7 @@ export function SectionTitle({ title, subtitle, actionLabel = 'Daha fazla', onAc
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="footnote" color="textSecondary" numberOfLines={1}>
+          <Text variant="footnote" color="textSecondary" numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
