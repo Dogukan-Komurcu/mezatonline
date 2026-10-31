@@ -232,7 +232,7 @@ export function OrderProgress({ status }: { status: OrderStatus }) {
           {delivered ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.success }]} />
           ) : (
-            <LinearGradient colors={[colors.primary, colors.warning]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+            <LinearGradient colors={[colors.primary, colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
           )}
         </Animated.View>
       </View>
@@ -246,7 +246,7 @@ export function OrderProgress({ status }: { status: OrderStatus }) {
                 style={[
                   styles.stepDot,
                   {
-                    backgroundColor: done ? (delivered ? colors.success : current ? colors.warning : colors.primary) : colors.surfaceAlt,
+                    backgroundColor: done ? (delivered ? colors.success : current ? colors.accent : colors.primary) : colors.surfaceAlt,
                     borderColor: colors.card,
                   },
                 ]}>

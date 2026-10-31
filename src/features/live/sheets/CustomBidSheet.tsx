@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Sheet, Text } from '@/components/ui';
 import { BINDING_BID_SHORT, WIN_COST_NOTE } from '@/features/commerce/utils';
-import { nextMinBid, quickBidOptions } from '@/lib/auction';
+import { nextMinBid, quickIncrements } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { liveColors, useTheme } from '@/theme';
@@ -46,7 +46,16 @@ export type CustomBidSheetProps = {
   onSubmit: (v: CustomBidSubmit) => boolean;
 };
 
-/** S22: Özel teklif / Maks. teklif sayfası */
+/** Tutar girişi en fazla 7 hane */
+const MAX_AMOUNT = 9_999_999;
+/** Hızlı tutar düğmelerinin köşe yarıçapı (tasarım kimliği §3; Button varsayılanıyla aynı) */
+const BUTTON_RADIUS = 14;
+
+/**
+ * Özel tutar penceresi: tutar girişi, fiyat ölçeğine göre hızlı artış düğmeleri (+₺10 / +₺50 / +₺100 …)
+ * ve "Otomatik teklif (en fazla)" seçeneği (varsayılan kapalı; açıkken tutar gizli üst sınır olur).
+ * Ön teklif modunda ve öndeyken tutar her zaman otomatik teklif üst sınırı olarak kaydedilir.
+ */
 export function CustomBidSheet({ visible, onClose, mode, product, lot, startPrice = 1, existingPreBid, shippingLine, onSubmit }: CustomBidSheetProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -60,25 +69,34 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
   const baseMin = live && lot ? nextMinBid(lot.currentBid, lot.bidCount > 0) : Math.max(startPrice, existingPreBid ? existingPreBid + 1 : startPrice);
   const myMax = live ? lot?.myMaxBid : existingPreBid;
   const min = leading && myMax ? Math.max(baseMin, myMax + 1) : baseMin;
-  const chips = live && lot ? quickBidOptions(lot.currentBid, lot.bidCount > 0).filter((v) => v >= min).slice(0, 4) : quickBidOptions(min, false).slice(0, 4);
+  const increments = quickIncrements(min);
 
   const [text, setText] = useState('');
-  const [maxOn, setMaxOn] = useState(true);
+  const [autoOn, setAutoOn] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Pencere her açılışta temiz başlar (otomatik teklif kapalı)
+  const [wasVisible, setWasVisible] = useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
     if (visible) {
       setText('');
       setError(null);
-      setMaxOn(true);
+      setAutoOn(false);
       setShowHow(false);
     }
-  }, [visible]);
+  }
 
   const amount = parseInt(text.replace(/\D/g, ''), 10) || 0;
-  // Öndeyken yalnızca maks. teklif artırılabilir (kendi teklifini geçemezsin)
-  const isMax = mode === 'prebid' || leading ? true : maxOn;
+  // Öndeyken yalnızca otomatik teklif üst sınırı yükseltilebilir (kendi teklifini geçemezsin)
+  const isMax = mode === 'prebid' || leading ? true : autoOn;
+
+  const setAmount = (v: number) => {
+    haptic.tap();
+    setText(String(Math.min(MAX_AMOUNT, v)));
+    setError(null);
+  };
 
   const submit = () => {
     if (!running) return;
@@ -89,7 +107,7 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
     }
     if (amount < min) {
       haptic.error();
-      setError(leading && myMax ? `Mevcut maks. teklifin ${formatTRY(myMax)}. Daha yüksek bir tutar gir.` : `Teklif ${formatTRY(min)} altında olamaz`);
+      setError(leading && myMax ? `Otomatik teklif üst sınırın ${formatTRY(myMax)}. Daha yüksek bir tutar gir.` : `Teklif ${formatTRY(min)} altında olamaz`);
       return;
     }
     setError(null);
@@ -98,23 +116,18 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
 
   const status = !live
     ? existingPreBid
-      ? `Ön teklifin: maks. ${formatTRY(existingPreBid)} · Ürün sahneye gelince otomatik teklif verilir`
+      ? `Ön teklifin: en fazla ${formatTRY(existingPreBid)} · Ürün sahneye gelince otomatik teklif verilir`
       : 'Ürün sahneye gelince ön teklifin otomatik olarak devreye girer.'
     : !lot || !running
       ? 'Bu açık artırma sona erdi'
       : lot.bidCount === 0
-        ? 'İlk teklifi sen ver!'
+        ? 'Henüz teklif yok · ilk teklifi sen ver'
         : leading
-          ? `Şu an öndesin · ${formatTRY(lot.currentBid)}${lot.myMaxBid ? ` (maks. ${formatTRY(lot.myMaxBid)})` : ''}`
-          : `Şu an @${lot.leader?.username} önde · ${formatTRY(lot.currentBid)}`;
+          ? `Lider sensin · ${formatTRY(lot.currentBid)}${lot.myMaxBid ? ` (otomatik en fazla ${formatTRY(lot.myMaxBid)})` : ''}`
+          : `Lider: @${lot.leader?.username} · ${formatTRY(lot.currentBid)}`;
 
-  const cta = !running
-    ? 'Açık artırma sona erdi'
-    : mode === 'prebid'
-      ? `Ön teklif ver${amount ? ` · ${formatTRY(amount)}` : ''}`
-      : isMax
-        ? `Maks. teklif ver${amount ? ` · ${formatTRY(amount)}` : ''}`
-        : `${amount ? formatTRY(amount) + ' ' : ''}Teklif Ver`;
+  const amountText = amount ? ` · ${formatTRY(amount)}` : '';
+  const cta = !running ? 'Açık artırma sona erdi' : mode === 'prebid' ? `Ön teklif ver${amountText}` : isMax ? `Otomatik teklif ver${amountText}` : `Teklif ver${amountText}`;
 
   return (
     <Sheet
@@ -124,20 +137,27 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
       maxHeight={maxHeight}
       footer={
         <View style={styles.footer}>
-          <Button title={cta} size="lg" fullWidth disabled={!running} onPress={submit} />
+          <Button title={cta} size="lg" fullWidth disabled={!running} onPress={submit} icon="hammer-outline" />
           <Button title="Vazgeç" variant="ghost" size="md" fullWidth onPress={onClose} />
         </View>
       }>
       <Text variant="title2" weight="800" align="center">
-        {mode === 'prebid' ? 'Ön teklif ver' : 'Teklifini ver'}
+        {mode === 'prebid' ? 'Ön teklif ver' : 'Özel tutar'}
       </Text>
       <Text variant="footnote" color="textSecondary" align="center" style={styles.body}>
-        {isMax ? (
+        {mode === 'prebid' ? (
           <>
             <Text variant="footnote" weight="700" color="text">
               {product?.title}
             </Text>{' '}
-            için maksimum teklifini giriyorsun. Biri sana karşı teklif verdiğinde, tavanına kadar otomatik teklif veririz.
+            sahneye geldiğinde, girdiğin tutara kadar senin yerine en küçük artışla teklif veririz.
+          </>
+        ) : isMax ? (
+          <>
+            <Text variant="footnote" weight="700" color="text">
+              {product?.title}
+            </Text>{' '}
+            için ödemeye razı olduğun en yüksek tutarı gir. Biri seni geçtiğinde, bu tutara kadar senin yerine teklif veririz.
           </>
         ) : (
           <>
@@ -145,17 +165,18 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
             <Text variant="footnote" weight="700" color="text">
               {product?.title}
             </Text>{' '}
-            için tek seferde teklif olarak verilir.
+            için tek bir teklif olarak hemen verilir.
           </>
         )}
       </Text>
       <View style={[styles.status, { backgroundColor: leading ? alpha(liveColors.success, 0.14) : colors.surface }]}>
-        <Text variant="footnote" weight="700" color={leading ? liveColors.success : 'text'} align="center">
+        <Icon name={leading ? 'checkmark-circle' : 'pulse-outline'} size={14} color={leading ? liveColors.success : 'textSecondary'} />
+        <Text variant="footnote" weight="700" color={leading ? liveColors.success : 'text'} align="center" style={styles.shrink}>
           {status}
         </Text>
       </View>
 
-      <View style={[styles.amountBox, { borderColor: error ? colors.danger : colors.border }]}>
+      <View style={[styles.amountBox, { borderColor: error ? colors.danger : amount ? colors.primary : colors.border, backgroundColor: colors.surface }]}>
         <Text style={styles.currency} color="textSecondary">
           ₺
         </Text>
@@ -177,50 +198,45 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
         />
       </View>
       <Text variant="footnote" color={error ? 'danger' : 'textSecondary'} align="center" style={styles.helper}>
-        {error ?? `En az ${formatTRY(min)} gir · ${shippingLine}`}
+        {error ?? `En az ${formatTRY(min)} · ${shippingLine}`}
       </Text>
 
-      <View style={styles.chips}>
-        {chips.map((c) => {
-          const selected = amount === c;
-          return (
-            <PressableScale
-              key={c}
-              scaleTo={0.94}
-              onPress={() => {
-                haptic.tap();
-                setText(String(c));
-                setError(null);
-              }}
-              style={[styles.chip, { backgroundColor: selected ? colors.inverse : colors.surfaceAlt }]}>
-              <Text variant="subhead" weight="800" color={selected ? colors.onInverse : colors.text}>
-                {formatTRY(c)}
-              </Text>
-            </PressableScale>
-          );
-        })}
+      <View style={styles.quick}>
+        <QuickButton label={`En az ${formatTRY(min)}`} selected={amount === min} onPress={() => setAmount(min)} accessibilityLabel={`En düşük tutar ${formatTRY(min)}`} />
+        {increments.map((inc) => (
+          <QuickButton key={inc} label={`+${formatTRY(inc)}`} onPress={() => setAmount(Math.max(amount, min) + inc)} accessibilityLabel={`${formatTRY(inc)} artır`} />
+        ))}
       </View>
 
       {mode === 'live' && !leading ? (
-        <View style={[styles.maxRow, { borderColor: colors.border }]}>
+        <View style={[styles.autoRow, { borderColor: colors.border }]}>
+          <Icon name="sync-outline" size={20} color={autoOn ? colors.primary : colors.textSecondary} />
           <View style={styles.flex}>
             <Text variant="headline" weight="700">
-              Maks. teklif
+              Otomatik teklif (en fazla)
             </Text>
             <Text variant="footnote" color="textSecondary">
-              {maxOn ? 'Biri sana karşı teklif verdiğinde, tavanına kadar otomatik teklif veririz.' : 'Kapalıyken girdiğin tutar tek bir teklif olarak hemen verilir.'}
+              {autoOn ? 'Tutar gizli üst sınırın olur; yalnızca biri seni geçtiğinde en küçük artışla teklif veririz.' : 'Kapalıyken girdiğin tutar tek bir teklif olarak hemen verilir.'}
             </Text>
           </View>
           <Switch
-            value={maxOn}
+            value={autoOn}
             onValueChange={(v) => {
               haptic.tap();
-              setMaxOn(v);
+              setAutoOn(v);
             }}
             trackColor={{ true: colors.primary, false: colors.surfaceAlt }}
             thumbColor={liveColors.text}
             ios_backgroundColor={colors.surfaceAlt}
+            accessibilityLabel="Otomatik teklif (en fazla)"
           />
+        </View>
+      ) : leading ? (
+        <View style={[styles.autoRow, { borderColor: colors.border }]}>
+          <Icon name="information-circle-outline" size={20} color={colors.textSecondary} />
+          <Text variant="footnote" color="textSecondary" style={styles.flex}>
+            Öndeyken kendi teklifini geçemezsin; girdiğin tutar otomatik teklif üst sınırın olarak kaydedilir.
+          </Text>
         </View>
       ) : null}
 
@@ -231,24 +247,24 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
         </Text>
       </View>
       <View style={styles.legalNext}>
-        <Icon name="shield-checkmark" size={14} color="textSecondary" />
+        <Icon name="shield-checkmark-outline" size={14} color="textSecondary" />
         <Text variant="caption" weight="500" color="textSecondary" style={styles.flex}>
           {BINDING_BID_SHORT} Teklifini artırabilirsin ama düşüremezsin; kazanırsan kayıtlı kartından otomatik çekim yapılır.
         </Text>
       </View>
       <Text variant="footnote" weight="700" color="accent" onPress={() => setShowHow((s) => !s)} suppressHighlighting style={styles.howLink}>
-        {showHow ? 'Kapat' : 'Maks. teklif nasıl çalışır?'}
+        {showHow ? 'Kapat' : 'Otomatik teklif nasıl çalışır?'}
       </Text>
       {showHow ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.how, { backgroundColor: colors.surface }]}>
           <Text variant="footnote" color="textSecondary">
-            Maks. teklif, ödemeye razı olduğun en yüksek tutardır ve gizli kalır. Sistem yalnızca biri sana karşı teklif verdiğinde, en küçük artışla senin adına teklif verir.
+            Otomatik teklifte girdiğin tutar, bu ürün için ödemeye hazır olduğun üst sınırdır ve kimseye gösterilmez. Başka biri seni geçtiğinde sistem, sınırına ulaşana kadar en küçük artışla senin adına karşılık verir.
           </Text>
           <Text variant="footnote" color="textSecondary">
-            Örnek: Güncel teklif ₺300 ve sen ₺500 maks. teklif verdin. Başka biri ₺320 verirse sistem otomatik olarak ₺330 verir. Kimse karşı çıkmazsa ₺500’ün altında kazanabilirsin.
+            Örnek: Fiyat ₺300 iken üst sınırını ₺500 yaptın. Biri ₺320 verirse sen otomatik olarak ₺330 ile yeniden lider olursun. Kimse ₺500’e yaklaşmazsa ürünü daha düşük bir fiyata alabilirsin.
           </Text>
           <Text variant="footnote" color="textSecondary">
-            Aynı tutarda iki maks. teklif varsa önce veren önde kalır.
+            İki kişi aynı üst sınırı girerse, sınırı daha önce giren lider kalır.
           </Text>
         </Animated.View>
       ) : null}
@@ -256,17 +272,34 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
   );
 }
 
+function QuickButton({ label, selected, onPress, accessibilityLabel }: { label: string; selected?: boolean; onPress: () => void; accessibilityLabel: string }) {
+  const { colors } = useTheme();
+  return (
+    <PressableScale
+      scaleTo={0.94}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.quickBtn, { backgroundColor: selected ? colors.primarySoft : colors.surface, borderColor: selected ? colors.primary : colors.border }]}>
+      <Text variant="subhead" weight="800" color={selected ? colors.accent : colors.text} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {label}
+      </Text>
+    </PressableScale>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  shrink: { flexShrink: 1 },
   body: { marginTop: 6, marginBottom: 12, paddingHorizontal: 6 },
-  status: { borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14 },
+  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14 },
   amountBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderRadius: 16, minHeight: 72, paddingHorizontal: 16 },
   currency: { fontSize: 34, lineHeight: 42, fontWeight: '800', marginRight: 2 },
   amountInput: { fontSize: 40, fontWeight: '800', minWidth: 110, paddingVertical: 8, textAlign: 'center', fontVariant: ['tabular-nums'] },
   helper: { marginTop: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, justifyContent: 'center' },
-  chip: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, minWidth: 72, alignItems: 'center' },
-  maxRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  quick: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  quickBtn: { flex: 1, height: 42, borderRadius: BUTTON_RADIUS, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  autoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   legal: { flexDirection: 'row', gap: 6, marginTop: 14, alignItems: 'flex-start' },
   legalNext: { flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'flex-start' },
   howLink: { marginTop: 10, alignSelf: 'flex-start' },

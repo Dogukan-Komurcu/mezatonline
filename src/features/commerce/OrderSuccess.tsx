@@ -14,7 +14,7 @@ import type { Order, PaymentMethod } from '@/types';
 
 import { CardBrandMark } from './components';
 
-const CONFETTI = ['🎉', '✨', '🛍️', '💛', '🎊', '⭐️'];
+const CONFETTI = ['🎉', '✨', '🛍️', '❤️', '🎊', '⭐️'];
 
 export function OrderSuccess({
   order,

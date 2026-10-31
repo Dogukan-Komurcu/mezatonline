@@ -1,7 +1,7 @@
 /**
  * S83 — Ürün Oluştur / Düzenle (modal). ?id= düzenleme, ?showId= yayını önceden seç.
  * Fotoğraflar (8'e kadar), başlık, açıklama, kategori, durum, satış formatı ve fiyat, adet,
- * Ani Bitiş / Fiyat önerisi, kargo profili, yayına ekle; Taslak / Yayınla / Sil.
+ * Uzatmasız (suddenDeath) / Fiyat önerisi, kargo profili, yayına ekle; Taslak / Yayınla / Sil.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -348,8 +348,9 @@ export function ListingForm() {
                   ))}
                 </View>
                 <ListRow
-                  title="Ani Bitiş 💀"
-                  subtitle="Süre uzamaz; sayaç sıfırlandığında son teklif kazanır"
+                  icon="flag-outline"
+                  title="Uzatmasız"
+                  subtitle="Son saniyelerde gelen teklifler süreyi uzatmaz; süre dolduğunda en yüksek teklif kazanır"
                   switchValue={f.suddenDeath}
                   onSwitch={(suddenDeath) => set({ suddenDeath })}
                   style={styles.flushRow}

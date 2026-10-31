@@ -39,10 +39,10 @@ export default function RewardsScreen() {
   // Yalnızca geliştirme: ?qa=shop|history ile o sekme açık başlar
   const [tab, setTab] = useState<Tab>(() => (__DEV__ && (qa.qa === 'shop' || qa.qa === 'history') ? qa.qa : 'tasks'));
   const [confirm, setConfirm] = useState<ShopItem | null>(null);
-  const jumbotrons = POINTS_SHOP.filter((i) => i.kind === 'jumbotron');
+  const bigReactions = POINTS_SHOP.filter((i) => i.kind === 'jumbotron');
   const reactions = POINTS_SHOP.filter((i) => i.kind === 'reaction');
-  const [heroId, setHeroId] = useState(jumbotrons[0]?.id);
-  const hero = jumbotrons.find((j) => j.id === heroId) ?? jumbotrons[0];
+  const [heroId, setHeroId] = useState(bigReactions[0]?.id);
+  const hero = bigReactions.find((j) => j.id === heroId) ?? bigReactions[0];
 
   const doneToday = completed[todayKey(new Date(now))] ?? [];
   const earnedToday = DAILY_CHALLENGES.filter((c) => doneToday.includes(c.kind)).reduce((s, c) => s + c.points, 0);
@@ -60,7 +60,7 @@ export default function RewardsScreen() {
         setActiveReaction(item.id);
         haptic.success();
         toast.success(`${item.emoji} ${item.title} artık aktif tepkin`);
-      } else toast(`${item.emoji} Bu jumbotron koleksiyonunda. Bir sonraki satın alımında gösterilecek.`);
+      } else toast(`${item.emoji} Bu dev tepki koleksiyonunda. Bir sonraki satın alımında gösterilecek.`);
       return;
     }
     if (state === 'locked') {
@@ -109,7 +109,7 @@ export default function RewardsScreen() {
       />
       <ScrollView contentOffset={qa.offset} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
         <Text variant="title2" style={styles.title}>
-          Ödül Kazan, Ayrıcalıkların Kilidini Aç
+          Görevlerle puan topla, ayrıcalık kazan
         </Text>
         <View style={{ backgroundColor: colors.bg }}>
           <UnderlineTabs
@@ -205,9 +205,9 @@ export default function RewardsScreen() {
             {hero ? (
               <>
                 <View>
-                  <Text variant="title3">Jumbotronlar</Text>
+                  <Text variant="title3">Dev tepkiler</Text>
                   <Text variant="footnote" color="textSecondary">
-                    Satın alım yaptığında tüm izleyicilere adınla kutlama gösterilir
+                    Bir ürün aldığında yayındaki herkes adınla bu kutlamayı görür
                   </Text>
                 </View>
                 <View style={[styles.hero, { backgroundColor: liveColors.panel }]}>
@@ -235,7 +235,7 @@ export default function RewardsScreen() {
                   </View>
                 </View>
                 <View style={styles.strip}>
-                  {jumbotrons.map((j) => {
+                  {bigReactions.map((j) => {
                     const selected = j.id === hero.id;
                     return (
                       <PressableScale

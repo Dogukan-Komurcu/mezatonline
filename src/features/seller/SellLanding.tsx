@@ -1,6 +1,6 @@
 /**
  * S80 — "Sat" sekmesi (satıcı olmayan kullanıcı): Whatnot "Sell live. Grow fast." tanıtım sayfası.
- * Sarı hero + canlı yayın telefon kolajı, avantajlar, nasıl çalışır, ücretler, satıcı hikayeleri, SSS ve sabit "Hemen Başla".
+ * Turkuaz hero (beyaz metin) + canlı yayın telefon kolajı, avantajlar, nasıl çalışır, ücretler, satıcı hikayeleri, SSS ve sabit "Hemen Başla".
  */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,17 +18,17 @@ import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
-import { liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
+import { brand, liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Show } from '@/types';
 
 import { useQaOffset } from './qaSeed';
-import { Card, KeyValue, StickyFooter, tint } from './ui';
+import { Card, KeyValue, StickyFooter } from './ui';
 
 const BENEFITS: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'pricetags', title: "Komisyon %8, ilk ay %0", body: 'Sektörün en düşük oranlarından. Yeni satıcılara ilk 30 gün komisyon iadesi.' },
-  { icon: 'cube', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
-  { icon: 'card', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
-  { icon: 'people', title: 'Milyonlarca alıcı', body: 'Koleksiyonerler ve fırsat avcıları her gün canlı yayınlarda alışveriş yapıyor.' },
+  { icon: 'pricetags-outline', title: "Komisyon %8, ilk ay %0", body: 'Sektörün en düşük oranlarından. Yeni satıcılara ilk 30 gün komisyon iadesi.' },
+  { icon: 'cube-outline', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
+  { icon: 'card-outline', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
+  { icon: 'people-outline', title: 'Milyonlarca alıcı', body: 'Koleksiyonerler ve fırsat avcıları her gün canlı yayınlarda alışveriş yapıyor.' },
 ];
 
 const STEPS: { title: string; body: string }[] = [
@@ -54,11 +54,10 @@ const FAQ: { q: string; a: string }[] = [
 ];
 
 function PhoneMock({ show, w, rotate, style }: { show?: Show; w: number; rotate: number; style: object }) {
-  const { colors } = useTheme();
   const seller = show ? getUser(show.sellerId) : undefined;
   const h = Math.round(w * 2);
   return (
-    <View style={[styles.phone, { width: w, height: h, borderColor: colors.onPrimary, backgroundColor: colors.onPrimary, transform: [{ rotate: `${rotate}deg` }] }, style]}>
+    <View style={[styles.phone, { width: w, height: h, borderColor: brand.ink, backgroundColor: brand.ink, transform: [{ rotate: `${rotate}deg` }] }, style]}>
       {show ? <Image source={{ uri: show.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" transition={200} /> : null}
       <LinearGradient colors={[liveColors.glass, 'transparent', liveColors.glassStrong]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
       <View style={styles.phoneTop}>
@@ -87,17 +86,17 @@ export function SellLanding() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  // Sarı hero kaydırılıp geçilince durum çubuğunun arkasına zemin rengi gelir (metin saatle çakışmasın)
+  // Turkuaz hero kaydırılıp geçilince durum çubuğunun arkasına zemin rengi gelir (metin saatle çakışmasın)
   const [heroH, setHeroH] = useState(0);
   const [pastHero, setPastHero] = useState(false);
   const shows = getLiveShows().slice(0, 3);
   const sellers = getSellers().slice(0, 3);
   const example = sellerFees(1000, SHIPPING_PRICES.small);
 
-  // Sarı hero üstünde durum çubuğu koyu; hero geçilince temaya göre
+  // Turkuaz hero üstünde durum çubuğu açık (beyaz); hero geçilince temaya göre
   useFocusEffect(
     useCallback(() => {
-      setStatusBarStyle(pastHero && isDark ? 'light' : 'dark', true);
+      setStatusBarStyle(!pastHero || isDark ? 'light' : 'dark', true);
       return () => setStatusBarStyle(isDark ? 'light' : 'dark', true);
     }, [isDark, pastHero]),
   );
@@ -126,7 +125,7 @@ export function SellLanding() {
           }}
           style={[styles.hero, { backgroundColor: colors.primary, paddingTop: insets.top + 16 }]}>
           <View style={[styles.heroTag, { backgroundColor: colors.onPrimary }]}>
-            <Icon name="storefront" size={14} color={colors.primary} />
+            <Icon name="storefront-outline" size={14} color={colors.primary} />
             <Text variant="caption" color={colors.primary}>
               MEZATONLINE SATICI
             </Text>
@@ -175,8 +174,8 @@ export function SellLanding() {
           <Text variant="title2">Neden Mezatonline?</Text>
           {BENEFITS.map((b) => (
             <View key={b.title} style={styles.benefit}>
-              <View style={[styles.benefitIcon, { backgroundColor: tint(colors.primary, isDark ? 0.18 : 0.45) }]}>
-                <Icon name={b.icon} size={22} color={isDark ? colors.primary : colors.onPrimary} />
+              <View style={[styles.benefitIcon, { backgroundColor: colors.primarySoft }]}>
+                <Icon name={b.icon} size={22} color={isDark ? colors.accent : colors.primary} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text variant="headline" weight="700">
@@ -344,7 +343,7 @@ const styles = StyleSheet.create({
   phoneTop: { position: 'absolute', top: 8, left: 8 },
   phoneBottom: { position: 'absolute', left: 8, right: 8, bottom: 10, gap: 6 },
   phoneUser: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  phoneBid: { borderRadius: radius.pill, paddingVertical: 6, alignItems: 'center' },
+  phoneBid: { borderRadius: radius.sm, paddingVertical: 6, alignItems: 'center' },
   floatChip: { position: 'absolute', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill },
   stats: { flexDirection: 'row', marginHorizontal: SCREEN_PADDING, marginTop: 16, borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, paddingVertical: 14 },
   stat: { flex: 1, paddingHorizontal: 6, gap: 2 },

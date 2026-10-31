@@ -3,12 +3,21 @@
  *
  * - Normal açık artırma: kalan süre 10 sn'nin altındayken gelen her teklif süreyi
  *   satıcının "karşı teklif süresi"ne (counterBidTime, varsayılan 10 sn) çeker; süre asla kısalmaz.
- * - Ani Bitiş (sudden death 💀): süre asla uzamaz; 00:01'de son teklif veren kazanır.
- * - Özel teklif + "Maks. teklif" açık (varsayılan): sistem yalnızca biri sana karşı teklif
- *   verdiğinde, minimum artışla, belirlediğin tavana kadar otomatik teklif verir (gizli).
+ * - Uzatmasız mezat (kodda `suddenDeath`): süre asla uzamaz; 00:01'de son teklif veren kazanır.
+ * - Özel tutar + "Otomatik teklif (en fazla)" açıksa (varsayılan kapalı): sistem yalnızca biri sana
+ *   karşı teklif verdiğinde, minimum artışla, belirlediğin tavana kadar otomatik teklif verir (gizli).
  * - Tüm teklifler bağlayıcıdır; kurumsal satıcılardan alımlarda alıcının 14 günlük yasal cayma hakkı saklıdır
  *   (alıcıya gösterilen metin: features/commerce/utils.ts BINDING_BID_TEXT).
  */
+
+/** Kullanıcıya gösterilen mezat biçimi adları (Ani Bitiş → Uzatmasız, bkz. docs/TASARIM-KIMLIGI.md §5) */
+export const AUCTION_FORMAT_LABEL = 'Açık artırma';
+export const SUDDEN_DEATH_LABEL = 'Uzatmasız';
+
+/** Mezat biçimi etiketi: suddenDeath → "Uzatmasız", değilse "Açık artırma" */
+export function auctionFormatLabel(suddenDeath: boolean): string {
+  return suddenDeath ? SUDDEN_DEATH_LABEL : AUCTION_FORMAT_LABEL;
+}
 
 /** Son kaç saniye içinde gelen teklif süreyi uzatır (Whatnot ile aynı, sabit) */
 export const EXTEND_THRESHOLD_SEC = 10;
@@ -63,16 +72,31 @@ export function nextMinBid(current: number, hasBids: boolean): number {
   return current + bidIncrement(current);
 }
 
-/** Özel teklif ekranındaki hızlı seçim çipleri */
-export function quickBidOptions(current: number, hasBids: boolean): number[] {
-  const min = nextMinBid(current, hasBids);
-  const step = bidIncrement(min);
-  return [min, min + step, min + step * 3, min + step * 7, min + step * 15];
+/**
+ * Özel tutar penceresindeki hızlı artış düğmeleri (₺).
+ * Fiyat ölçeğine uyar: ₺100 altı +5 / +10 / +20; ₺1.000 altı +10 / +50 / +100; ₺10.000 altı +100 / +500 / +1.000 …
+ */
+export function quickIncrements(min: number): [number, number, number] {
+  if (min < 100) return [5, 10, 20];
+  if (min < 1_000) return [10, 50, 100];
+  if (min < 10_000) return [100, 500, 1_000];
+  if (min < 100_000) return [1_000, 5_000, 10_000];
+  return [10_000, 50_000, 100_000];
+}
+
+/** Teklif panelindeki tutar seçicide [−] ile bir alt adım (en düşük geçerli teklifin altına inmez) */
+export function stepDown(amount: number, min: number): number {
+  return Math.max(min, amount - bidIncrement(Math.max(0, amount - 1)));
+}
+
+/** Teklif panelindeki tutar seçicide [+] ile bir üst adım */
+export function stepUp(amount: number): number {
+  return amount + bidIncrement(amount);
 }
 
 /**
  * Kabul edilen bir teklif sonrası yeni bitiş zamanı (ms).
- * Kalan < 10 sn ise: endsAt = now + max(kalan, counterBidTime). Ani bitişte değişmez.
+ * Kalan < 10 sn ise: endsAt = now + max(kalan, counterBidTime). Uzatmasız mezatta değişmez.
  */
 export function extendedEndsAt(endsAt: number, now: number, suddenDeath: boolean, counterBidTime: number = DEFAULT_COUNTER_BID_TIME): number {
   if (suddenDeath) return endsAt;

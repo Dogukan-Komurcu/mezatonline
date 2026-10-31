@@ -498,11 +498,11 @@ export class LiveEngine {
       userId: this.opts.seller.id,
       username: this.opts.seller.username,
       avatar: this.opts.seller.avatar,
-      text: 'Bugünlük bu kadar! Katıldığınız için çok teşekkürler, bir sonraki yayında görüşmek üzere 💛',
+      text: 'Bugünlük bu kadar! Katıldığınız için çok teşekkürler, bir sonraki yayında görüşmek üzere ❤️',
       isSeller: true,
     });
     this.stop();
-    this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! 💛' });
+    this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! ❤️' });
     this.state = { ...this.state, ended: true, endReason: 'sold_out', lot: this.state.lot?.status === 'running' ? undefined : this.state.lot };
     this.emit();
     this.opts.events?.onEnded?.('sold_out');
@@ -573,7 +573,7 @@ export class LiveEngine {
     if (now >= this.nextExtraAt && viewerMode) {
       const b = random.pick(this.bots);
       if (FEATURES.tips && random.chance(0.45)) {
-        this.pushMessage({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi 💛', amount: random.pick([20, 50, 50, 100, 250]) });
+        this.pushMessage({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi ❤️', amount: random.pick([20, 50, 50, 100, 250]) });
       } else {
         this.pushMessage({ type: 'follow', userId: b.id, username: b.username, avatar: b.avatar, text: 'satıcıyı takip etti' });
       }
@@ -721,7 +721,7 @@ export class LiveEngine {
     if (this.state.mode === 'viewer' && random.chance(0.45)) {
       setTimeout(() => {
         if (this.state.ended) return;
-        const replies = ['@' + this.me.username + ' hoş geldin 💛', '@' + this.me.username + ' tabii, hemen gösteriyorum', '@' + this.me.username + ' evet orijinal ✅', '@' + this.me.username + ' kargo 24 saatte çıkıyor 📦', '@' + this.me.username + ' teşekkürler 🙏'];
+        const replies = ['@' + this.me.username + ' hoş geldin ❤️', '@' + this.me.username + ' tabii, hemen gösteriyorum', '@' + this.me.username + ' evet orijinal ✅', '@' + this.me.username + ' kargo 24 saatte çıkıyor 📦', '@' + this.me.username + ' teşekkürler 🙏'];
         this.pushMessage({ type: 'chat', userId: this.opts.seller.id, username: this.opts.seller.username, avatar: this.opts.seller.avatar, text: random.pick(replies), isSeller: true });
         this.emit();
       }, random.int(1500, 4000));
@@ -739,7 +739,7 @@ export class LiveEngine {
   }
 
   tip(amount: number) {
-    this.pushMessage({ type: 'tip', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: `${this.opts.seller.username} adlı satıcıya bahşiş gönderdi 💛`, amount, isMe: true });
+    this.pushMessage({ type: 'tip', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: `${this.opts.seller.username} adlı satıcıya bahşiş gönderdi ❤️`, amount, isMe: true });
     this.emit();
   }
 
@@ -751,7 +751,7 @@ export class LiveEngine {
 
   /** Kullanıcı satıcıyı takip etti → sohbette görünür */
   announceFollow() {
-    this.pushMessage({ type: 'follow', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: 'satıcıyı takip etti 💛', isMe: true });
+    this.pushMessage({ type: 'follow', userId: this.me.id, username: this.me.username, avatar: this.me.avatar, text: 'satıcıyı takip etti ❤️', isMe: true });
     this.emit();
   }
 
@@ -862,7 +862,7 @@ export class LiveEngine {
 
   endShow() {
     this.stop();
-    this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! 💛' });
+    this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayın sona erdi. İzlediğiniz için teşekkürler! ❤️' });
     this.state = { ...this.state, ended: true, endReason: this.state.endReason ?? 'seller' };
     this.emit();
     this.opts.events?.onEnded?.('seller');

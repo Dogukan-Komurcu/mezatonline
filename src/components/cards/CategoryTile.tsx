@@ -4,7 +4,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Icon, PressableScale, Text } from '@/components/ui';
 import { formatCompact } from '@/lib/format';
-import { radius, useTheme } from '@/theme';
+import { brand, radius, useTheme } from '@/theme';
 import type { Category, Subcategory } from '@/types';
 
 /**
@@ -23,7 +23,7 @@ export function CategoryTile({ category, width, style }: { category: Category; w
       </View>
       <View style={styles.viewers}>
         <View style={[styles.liveIcon, { backgroundColor: colors.live }]}>
-          <Icon name="stats-chart" size={8} color="#FFFFFF" />
+          <Icon name="stats-chart" size={8} color={brand.white} />
         </View>
         <Text variant="caption" color="textSecondary">
           {formatCompact(category.viewers)} izleyici
@@ -37,18 +37,18 @@ export function CategoryTile({ category, width, style }: { category: Category; w
 export function SubcategoryPill({ sub, selected, onPress }: { sub: Subcategory; selected?: boolean; onPress: () => void }) {
   const { colors } = useTheme();
   return (
-    <PressableScale onPress={onPress} style={[styles.pill, { borderColor: selected ? colors.text : 'transparent', backgroundColor: colors.surface }]}>
+    <PressableScale onPress={onPress} style={[styles.pill, { borderColor: selected ? colors.primary : 'transparent', backgroundColor: colors.surface }]}>
       <Image source={{ uri: sub.image }} style={styles.pillImage} contentFit="cover" />
       <View style={styles.pillShade} />
       <View style={styles.pillTexts}>
-        <Text variant="footnote" weight="700" color="#FFFFFF" numberOfLines={1}>
+        <Text variant="footnote" weight="700" color={brand.white} numberOfLines={1}>
           {sub.name}
         </Text>
         <View style={styles.viewers}>
           <View style={[styles.liveIcon, { backgroundColor: colors.live }]}>
-            <Icon name="stats-chart" size={8} color="#FFFFFF" />
+            <Icon name="stats-chart" size={8} color={brand.white} />
           </View>
-          <Text variant="caption" color="#FFFFFF">
+          <Text variant="caption" color={brand.white}>
             {formatCompact(sub.viewers)}
           </Text>
         </View>
@@ -65,6 +65,6 @@ const styles = StyleSheet.create({
   liveIcon: { width: 14, height: 14, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   pill: { width: 142, height: 70, borderRadius: radius.md, overflow: 'hidden', borderWidth: 2 },
   pillImage: { ...StyleSheet.absoluteFill },
-  pillShade: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)' },
+  pillShade: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(8,12,18,0.45)' },
   pillTexts: { flex: 1, padding: 8, justifyContent: 'space-between' },
 });

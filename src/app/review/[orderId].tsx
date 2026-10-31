@@ -92,7 +92,7 @@ export default function ReviewScreen() {
     const reason = !order
       ? { title: 'Sipariş bulunamadı', message: 'Bu sipariş artık mevcut değil.' }
       : order.reviewed
-        ? { title: 'Bu siparişi zaten değerlendirdin', message: 'Değerlendirmeler düzenlenemez. Geri bildirimin için teşekkürler! 💛' }
+        ? { title: 'Bu siparişi zaten değerlendirdin', message: 'Değerlendirmeler düzenlenemez. Geri bildirimin için teşekkürler! ❤️' }
         : { title: 'Henüz değerlendirilemez', message: 'Siparişini teslim aldıktan sonra 30 gün içinde değerlendirebilirsin.' };
     return (
       <Screen>
@@ -127,7 +127,7 @@ export default function ReviewScreen() {
         createdAt: new Date().toISOString(),
       });
       haptic.success();
-      toast.success('Değerlendirmen için teşekkürler! 💛', 'star');
+      toast.success('Değerlendirmen için teşekkürler! ❤️', 'star');
       close();
     }, 800);
   };

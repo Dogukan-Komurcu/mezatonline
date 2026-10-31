@@ -8,7 +8,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInsta
 import { Icon, PressableScale, Text, type IconName } from '@/components/ui';
 import { formatCompact } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { radius, SCREEN_PADDING, useTheme } from '@/theme';
+import { brand, radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 /** Grid kart genişliği (ekran kenar boşluğu 16, sütun arası 12) */
 export function useGridWidth(columns = 2, gap = 12): number {
@@ -154,16 +154,14 @@ export function SearchPill({ placeholder, variant = 'outline', height = 44, styl
 
 // ─── İzleyici metriği ────────────────────────────────────────────────────────
 
-/** Kırmızı daire içinde sinyal ikonu + "2,3B izleyici" (kategori kutucukları, satıcı kartları) */
+/** Göz ikonu + "2,3B izleyici" (kategori kutucukları, satıcı kartları); canlıyken ikon nar kırmızısı */
 export function ViewersMetric({ viewers, live = true, light, suffix = ' izleyici', size = 'md' }: { viewers: number; live?: boolean; light?: boolean; suffix?: string; size?: 'sm' | 'md' }) {
   const { colors } = useTheme();
-  const dot = size === 'sm' ? 14 : 16;
+  const iconSize = size === 'sm' ? 13 : 15;
   return (
     <View style={styles.metric}>
-      <View style={[styles.metricDot, { width: dot, height: dot, borderRadius: dot / 2, backgroundColor: live ? colors.live : colors.textTertiary }]}>
-        <Icon name="stats-chart" size={dot * 0.55} color="#FFFFFF" />
-      </View>
-      <Text variant={size === 'sm' ? 'caption' : 'footnote'} weight="600" color={light ? '#FFFFFF' : 'textSecondary'} numberOfLines={1}>
+      <Icon name="eye-outline" size={iconSize} color={live ? colors.live : light ? brand.white : colors.textTertiary} />
+      <Text variant={size === 'sm' ? 'caption' : 'footnote'} weight="600" color={light ? brand.white : 'textSecondary'} numberOfLines={1}>
         {formatCompact(viewers)}
         {suffix}
       </Text>
@@ -267,8 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingHorizontal: 14,
   },
-  metric: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metricDot: { alignItems: 'center', justifyContent: 'center' },
+  metric: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   medalBox: { alignItems: 'center', justifyContent: 'center' },
   ribbon: { position: 'absolute', top: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 },
   medal: {

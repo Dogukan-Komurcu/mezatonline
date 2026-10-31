@@ -61,7 +61,7 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
             Yayın sona erdi
           </Text>
           <Text variant="footnote" color={liveColors.textSecondary} align="center">
-            {soldCount > 0 ? `Bu yayında ${soldCount} ürün yeni sahibini buldu 🎉` : 'İzlediğin için teşekkürler 💛'}
+            {soldCount > 0 ? `Bu yayında ${soldCount} ürün yeni sahibini buldu 🎉` : 'İzlediğin için teşekkürler ❤️'}
           </Text>
           <Avatar uri={seller.avatar} name={seller.username} size={72} style={styles.avatar} />
           <Text variant="headline" weight="800" color={liveColors.text}>
@@ -82,7 +82,7 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
 
         {nextShow ? (
           <Animated.View entering={FadeInDown.delay(120).springify().damping(18)} style={styles.card}>
-            <Text variant="caption" weight="800" color={liveColors.primary}>
+            <Text variant="caption" weight="800" color={liveColors.accent}>
               SIRADAKİ CANLI YAYIN
             </Text>
             <PressableScale scaleTo={0.98} onPress={onRaid} style={styles.next}>
@@ -134,7 +134,7 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
                 <View key={s.id} style={styles.upRow}>
                   <Image source={{ uri: s.coverImage }} style={styles.upThumb} contentFit="cover" cachePolicy="memory-disk" />
                   <View style={styles.flex}>
-                    <Text variant="caption" weight="800" color={liveColors.primary}>
+                    <Text variant="caption" weight="800" color={liveColors.accent}>
                       {formatShowTime(s.scheduledAt)}
                     </Text>
                     <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={2}>
@@ -185,6 +185,6 @@ const styles = StyleSheet.create({
   cancel: { paddingVertical: 6 },
   upRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   upThumb: { width: 44, height: 58, borderRadius: 8, backgroundColor: liveColors.panelAlt },
-  remind: { width: 34, height: 34, borderRadius: 17, backgroundColor: liveColors.glassLight, alignItems: 'center', justifyContent: 'center' },
+  remind: { width: 34, height: 34, borderRadius: 12, backgroundColor: liveColors.glassLight, alignItems: 'center', justifyContent: 'center' },
   remindOn: { backgroundColor: liveColors.primary },
 });

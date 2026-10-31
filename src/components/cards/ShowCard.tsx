@@ -8,7 +8,7 @@ import { getCategory, getSubcategory, getUser } from '@/data';
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
-import { radius, useTheme } from '@/theme';
+import { brand, liveColors, radius, useTheme } from '@/theme';
 import type { Show } from '@/types';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 
@@ -52,13 +52,13 @@ export function ShowCard({ show, width, hideSeller, style }: ShowCardProps) {
       ) : null}
       <View style={[styles.cover, { height: imageH, backgroundColor: colors.skeleton }]}>
         <Image source={{ uri: show.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} cachePolicy="memory-disk" recyclingKey={show.id} />
-        <LinearGradient colors={['rgba(0,0,0,0.35)', 'transparent']} style={styles.topShade} />
+        <LinearGradient colors={['rgba(8,12,18,0.35)', 'transparent']} style={styles.topShade} />
         <View style={styles.badgeRow}>
           {show.status === 'live' ? (
             <LiveBadge viewers={show.viewers} />
           ) : (
             <View style={styles.timePill}>
-              <Text variant="caption" color="#FFFFFF" weight="700">
+              <Text variant="caption" color={liveColors.text} weight="700">
                 {formatShowTime(show.scheduledAt)}
               </Text>
             </View>
@@ -79,13 +79,13 @@ export function ShowCard({ show, width, hideSeller, style }: ShowCardProps) {
             }
             style={styles.bookmark}
             accessibilityLabel="Hatırlatıcı">
-            <Icon name={reminded ? 'bookmark' : 'bookmark-outline'} size={18} color={reminded ? colors.primary : '#FFFFFF'} />
+            <Icon name={reminded ? 'bookmark' : 'bookmark-outline'} size={18} color={reminded ? liveColors.primaryBright : liveColors.text} />
           </PressableScale>
         ) : null}
         {show.highlights.length ? (
           <View style={styles.highlightRow}>
-            <View style={styles.highlight}>
-              <Text variant="caption" color="#0A0A0A" weight="700" numberOfLines={1}>
+            <View style={[styles.highlight, { backgroundColor: colors.copper }]}>
+              <Text variant="caption" color={brand.white} weight="700" numberOfLines={1}>
                 {show.highlights[0]}
               </Text>
             </View>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   cover: { borderRadius: radius.md, overflow: 'hidden' },
   topShade: { position: 'absolute', left: 0, right: 0, top: 0, height: 56 },
   badgeRow: { position: 'absolute', top: 8, left: 8 },
-  timePill: { backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  timePill: { backgroundColor: liveColors.glassStrong, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3 },
   bookmark: {
     position: 'absolute',
     top: 6,
@@ -118,11 +118,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: liveColors.glass,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   highlightRow: { position: 'absolute', left: 8, bottom: 8, right: 8, flexDirection: 'row' },
-  highlight: { backgroundColor: '#FFE414', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, maxWidth: '100%' },
+  highlight: { borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },
   title: { marginTop: 8, marginBottom: 2 },
 });

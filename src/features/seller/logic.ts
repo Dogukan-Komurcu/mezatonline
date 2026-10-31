@@ -501,7 +501,7 @@ export function deriveOffers(
 
 export type TipItem = { id: string; buyer: BuyerInfo; amount: number; message: string; at: number; showTitle: string };
 
-const TIP_MESSAGES = ['Harika yayındı 💛', 'Kolay gelsin!', 'Hızlı kargo için teşekkürler 📦', 'Efsane ürünler 🔥', "Bursa'dan selamlar 👋", 'Yine bekleriz!', 'Paketleme çok özenliydi 🙏'];
+const TIP_MESSAGES = ['Harika yayındı ❤️', 'Kolay gelsin!', 'Hızlı kargo için teşekkürler 📦', 'Efsane ürünler 🔥', "Bursa'dan selamlar 👋", 'Yine bekleriz!', 'Paketleme çok özenliydi 🙏'];
 
 export function deriveTips(sessions: LiveSessionSummary[], shows: Show[]): TipItem[] {
   const out: TipItem[] = [];

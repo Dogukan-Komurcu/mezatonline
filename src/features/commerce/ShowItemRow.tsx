@@ -52,8 +52,8 @@ export function ShowItemRow({ product, ended, onPreBid }: { product: Product; en
       <View style={[styles.thumbWrap, { backgroundColor: colors.skeleton }]}>
         <Image source={{ uri: product.images[0] }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" recyclingKey={product.id} transition={150} />
         {product.suddenDeath && product.format === 'auction' ? (
-          <View style={styles.skull}>
-            <Text style={styles.skullText}>💀</Text>
+          <View style={styles.flagBadge} accessibilityLabel="Uzatmasız">
+            <Icon name="flag-outline" size={11} color={liveColors.text} />
           </View>
         ) : null}
       </View>
@@ -112,8 +112,7 @@ function Meta({ icon, text, tint }: { icon: IconName; text: string; tint: string
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: SCREEN_PADDING, paddingVertical: 10 },
   thumbWrap: { width: 68, height: 68, borderRadius: radius.sm, overflow: 'hidden' },
-  skull: { position: 'absolute', left: 4, top: 4, borderRadius: 6, paddingHorizontal: 3, backgroundColor: liveColors.glassStrong },
-  skullText: { fontSize: 11, lineHeight: 15 },
+  flagBadge: { position: 'absolute', left: 4, top: 4, width: 20, height: 20, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: liveColors.glassStrong },
   texts: { flex: 1, gap: 3 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   strike: { textDecorationLine: 'line-through' },

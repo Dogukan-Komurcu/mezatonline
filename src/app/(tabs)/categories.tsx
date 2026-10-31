@@ -78,8 +78,8 @@ export default function CategoriesScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            tintColor={colors.textSecondary}
-            colors={[colors.text]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
             progressBackgroundColor={colors.card}
             onRefresh={() => {
               setRefreshing(true);

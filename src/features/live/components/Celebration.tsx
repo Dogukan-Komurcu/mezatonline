@@ -29,7 +29,7 @@ const COPY = {
   purchase: { emoji: '🛍️', title: 'Satın aldın! 🎉', caption: 'Siparişin alındı' },
 } as const;
 
-/** S28: tam ekran kutlama (Jumbotron) — konfeti, ürün, fiyat, Siparişi gör / Yayına devam */
+/** S28: kazanınca tam ekran kutlama — konfeti, ürün, fiyat, Siparişi gör / Yayına devam */
 export function Celebration({ data, me, onViewOrder, onClose }: { data: CelebrationData; me: { username: string; avatar?: string }; onViewOrder: () => void; onClose: () => void }) {
   const copy = COPY[data.kind];
   const bob = useSharedValue(0);
@@ -76,7 +76,7 @@ export function Celebration({ data, me, onViewOrder, onClose }: { data: Celebrat
           {data.product.title.replace(/^🎁\s*(Çekiliş:\s*)?/, '')}
           {data.quantity > 1 ? ` × ${data.quantity}` : ''}
         </Text>
-        <Text variant="display" weight="900" color={liveColors.primary} align="center" tabular>
+        <Text variant="display" weight="900" color={liveColors.accent} align="center" tabular>
           {data.kind === 'giveaway' ? 'Ücretsiz' : formatTRY(total)}
         </Text>
         {data.discount > 0 ? (

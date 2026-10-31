@@ -1,6 +1,6 @@
 /**
  * Kategori sayfası alt kategori kutucuğu (Whatnot /tag sayfası): 2:1 görsel, %50 karartma,
- * üstte ortalı beyaz ad, altta kırmızı sinyal ikonu + izleyici. Seçili = sarı çerçeve.
+ * üstte ortalı beyaz ad, altta göz ikonu + izleyici. Seçili = turkuaz çerçeve.
  */
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';

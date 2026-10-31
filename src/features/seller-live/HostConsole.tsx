@@ -382,7 +382,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
     if (FEATURES.tips && viewers > 8 && random.chance(0.01)) {
       const b = random.pick(bots);
       const amount = random.pick([20, 50, 50, 100, 250]);
-      pushLocal({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi 💛', amount });
+      pushLocal({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi ❤️', amount });
       setTips((t) => t + amount);
       haptic.light();
     }
@@ -561,7 +561,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
       const sec = Number.isFinite(n) && n > 0 ? Math.min(60, n) : 0;
       setSlowMode(sec);
       pushLocal({ type: 'system', username: 'Mezatonline', text: sec ? `🐢 Yavaş mod açıldı: ${sec} sn` : '🐇 Yavaş mod kapatıldı' });
-    } else if (cmd === '/baskin' || cmd === '/baskın' || cmd === '/raid') {
+    } else if (cmd === '/devret' || cmd === '/baskin' || cmd === '/baskın' || cmd === '/raid') {
       setDraft('');
       openRaid(arg.replace(/^@/, ''));
       return;
@@ -647,7 +647,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   };
   const openRaid = (query?: string) => {
     if (rehearsal) {
-      toast('Provada baskın yapılamaz', 'lock-closed-outline');
+      toast('Provada yayın devredilemez', 'lock-closed-outline');
       return;
     }
     setRaidQuery(query);
@@ -893,7 +893,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
             {draft.trim() ? <IconButton name="arrow-up" variant="primary" size={30} onPress={send} accessibilityLabel="Gönder" /> : null}
           </View>
           <PressableScale onPress={() => openShop()} accessibilityRole="button" accessibilityLabel="Mağaza" style={[styles.shopBtn, { backgroundColor: liveColors.primary }]}>
-            <Icon name="storefront" size={18} color={liveColors.onPrimary} />
+            <Icon name="storefront-outline" size={18} color={liveColors.onPrimary} />
             <Text variant="subhead" weight="800" color={liveColors.onPrimary}>
               Mağaza
             </Text>
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 42,
-    borderRadius: radius.pill,
+    borderRadius: 14,
     backgroundColor: liveColors.glassLight,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: liveColors.border,
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
     paddingRight: 6,
   },
   input: { flex: 1, color: liveColors.text, fontSize: 15, paddingVertical: 10 },
-  shopBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 42, paddingHorizontal: 14, borderRadius: radius.pill },
+  shopBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 42, paddingHorizontal: 14, borderRadius: 14 },
   shopCount: { position: 'absolute', top: -6, right: -4, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   shopCountText: { fontSize: 10, lineHeight: 12 },
 });

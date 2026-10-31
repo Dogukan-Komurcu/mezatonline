@@ -18,11 +18,11 @@ import { withAlpha } from '../activity/utils';
 // ─── Rozetler ────────────────────────────────────────────────────────────────
 
 const BADGES: Record<UserBadge, { label: string; icon: IconName; tone: keyof Pick<ColorTokens, 'warning' | 'info' | 'success' | 'accent' | 'text'> }> = {
-  top_seller: { label: 'Top Satıcı', icon: 'ribbon', tone: 'warning' },
-  verified: { label: 'Doğrulanmış', icon: 'checkmark-circle', tone: 'info' },
-  fast_shipper: { label: 'Hızlı Kargo', icon: 'rocket', tone: 'success' },
-  new_seller: { label: 'Yeni Satıcı', icon: 'sparkles', tone: 'accent' },
-  partner: { label: 'Seçkin Mağaza', icon: 'diamond', tone: 'text' },
+  top_seller: { label: 'Gözde Satıcı', icon: 'ribbon-outline', tone: 'warning' },
+  verified: { label: 'Doğrulanmış', icon: 'checkmark-circle-outline', tone: 'info' },
+  fast_shipper: { label: 'Hızlı Kargo', icon: 'rocket-outline', tone: 'success' },
+  new_seller: { label: 'Yeni Satıcı', icon: 'sparkles-outline', tone: 'accent' },
+  partner: { label: 'Seçkin Mağaza', icon: 'diamond-outline', tone: 'text' },
 };
 
 export function BadgeRow({ badges }: { badges: UserBadge[] }) {

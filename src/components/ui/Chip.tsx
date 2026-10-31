@@ -19,7 +19,7 @@ export type ChipProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Seçilebilir hap çip. Seçili = siyah (koyu temada beyaz), değil = gri yüzey. */
+/** Seçilebilir hap çip (tam yuvarlak). Seçili = gece laciverti (koyu temada açık), değil = nötr yüzey. */
 export function Chip({ label, selected, onPress, icon, emoji, count, size = 'md', style }: ChipProps) {
   const { colors } = useTheme();
   return (
@@ -53,7 +53,7 @@ export function Chip({ label, selected, onPress, icon, emoji, count, size = 'md'
 }
 
 const styles = StyleSheet.create({
-  chip: { borderRadius: radius.sm },
+  chip: { borderRadius: radius.pill },
   md: { paddingHorizontal: 12, paddingVertical: 8 },
   sm: { paddingHorizontal: 10, paddingVertical: 5 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },

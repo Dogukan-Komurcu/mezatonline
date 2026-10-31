@@ -19,7 +19,7 @@ import { radius, SCREEN_PADDING, useTheme } from '@/theme';
  */
 export const MODAL_SAFE_TOP = Platform.OS !== 'ios';
 
-/** Tema token rengine saydamlık ekle ("#009E52" + 0.12 → "#009E521F") */
+/** Tema token rengine saydamlık ekle ("#15955A" + 0.12 → "#15955A1F") */
 export function tint(hex: string, alpha: number): string {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
   const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
@@ -68,7 +68,7 @@ export function ProgressBar({ value, color, height = 6, style }: { value: number
   const pct = Math.max(0, Math.min(1, value));
   return (
     <View style={[{ height, borderRadius: height / 2, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }, style]}>
-      <View style={{ width: `${pct * 100}%`, height, borderRadius: height / 2, backgroundColor: color ?? colors.text }} />
+      <View style={{ width: `${pct * 100}%`, height, borderRadius: height / 2, backgroundColor: color ?? colors.primary }} />
     </View>
   );
 }
@@ -79,7 +79,7 @@ export function StepBar({ step, total }: { step: number; total: number }) {
   return (
     <View style={styles.stepBar}>
       {Array.from({ length: total }, (_, i) => (
-        <View key={i} style={[styles.stepSeg, { backgroundColor: i <= step ? colors.text : colors.surfaceAlt }]} />
+        <View key={i} style={[styles.stepSeg, { backgroundColor: i <= step ? colors.primary : colors.surfaceAlt }]} />
       ))}
     </View>
   );
@@ -267,15 +267,15 @@ export function OptionCard({
       }}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      style={[styles.option, { borderColor: selected ? colors.text : colors.border, backgroundColor: selected ? colors.surface : colors.card }, style]}>
+      style={[styles.option, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primarySoft : colors.card }, style]}>
       <View style={styles.optionRow}>
         {emoji ? (
-          <View style={[styles.optionIcon, { backgroundColor: colors.surface }]}>
+          <View style={[styles.optionIcon, { backgroundColor: selected ? colors.card : colors.surface }]}>
             <Text style={{ fontSize: 22, lineHeight: 28 }}>{emoji}</Text>
           </View>
         ) : icon ? (
-          <View style={[styles.optionIcon, { backgroundColor: colors.surface }]}>
-            <Icon name={icon} size={22} />
+          <View style={[styles.optionIcon, { backgroundColor: selected ? colors.card : colors.surface }]}>
+            <Icon name={icon} size={22} color={selected ? colors.accent : colors.text} />
           </View>
         ) : null}
         <View style={{ flex: 1, gap: 2 }}>
@@ -288,8 +288,8 @@ export function OptionCard({
             </Text>
           ) : null}
         </View>
-        <View style={[styles.radio, { borderColor: selected ? colors.text : colors.textTertiary }]}>
-          {selected ? <View style={[styles.radioDot, { backgroundColor: colors.text }]} /> : null}
+        <View style={[styles.radio, { borderColor: selected ? colors.primary : colors.textTertiary }]}>
+          {selected ? <View style={[styles.radioDot, { backgroundColor: colors.primary }]} /> : null}
         </View>
       </View>
       {selected && children ? <View style={{ marginTop: 12, gap: 12 }}>{children}</View> : null}
@@ -311,8 +311,8 @@ export function CheckRow({ checked, onPress, label, linkLabel, onLink, style }: 
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       style={[styles.check, style]}>
-      <View style={[styles.box, { borderColor: checked ? colors.text : colors.textTertiary, backgroundColor: checked ? colors.text : 'transparent' }]}>
-        {checked ? <Icon name="checkmark" size={15} color={colors.bg} /> : null}
+      <View style={[styles.box, { borderColor: checked ? colors.primary : colors.textTertiary, backgroundColor: checked ? colors.primary : 'transparent' }]}>
+        {checked ? <Icon name="checkmark" size={15} color={colors.onPrimary} /> : null}
       </View>
       <Text variant="callout" style={{ flex: 1 }}>
         {label}
@@ -439,7 +439,7 @@ export function Confetti({ onDone, count = 46 }: { onDone?: () => void; count?: 
     const t = setTimeout(() => onDone?.(), 4300);
     return () => clearTimeout(t);
   }, [onDone]);
-  const palette = [colors.primary, colors.live, colors.success, colors.info, colors.accent, colors.warning];
+  const palette = [colors.primary, colors.copper, colors.live, colors.success, colors.accent, colors.warning];
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {pieces.map((piece) => (

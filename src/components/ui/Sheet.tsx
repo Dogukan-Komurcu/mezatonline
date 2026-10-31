@@ -3,7 +3,7 @@ import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { darkColors, ForceScheme, radius, SCREEN_PADDING, useTheme } from '@/theme';
+import { darkColors, ForceScheme, liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 import { IconButton } from './IconButton';
 import { Text } from './Text';
@@ -82,7 +82,7 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
     <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <ForceScheme scheme={scheme}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Kapat" />
         </Animated.View>
         <View style={styles.flex} pointerEvents="box-none" />
@@ -90,7 +90,7 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
           style={[
             styles.panel,
             {
-              backgroundColor: dark ? '#141416' : colors.card,
+              backgroundColor: dark ? liveColors.panel : colors.card,
               maxHeight: maxPanel,
               height: fixedPanel,
               paddingBottom: footer ? 0 : keyboardH > 0 ? 12 : Math.max(insets.bottom, 16),
@@ -127,7 +127,7 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
             {scroll ? children : <View style={[styles.content, styles.flex, contentStyle]}>{children}</View>}
           </Body>
           {footer ? (
-            <View style={[styles.footer, { paddingBottom: keyboardH > 0 ? 12 : Math.max(insets.bottom, 12), borderTopColor: dark ? 'rgba(255,255,255,0.1)' : colors.border }]}>{footer}</View>
+            <View style={[styles.footer, { paddingBottom: keyboardH > 0 ? 12 : Math.max(insets.bottom, 12), borderTopColor: dark ? liveColors.border : colors.border }]}>{footer}</View>
           ) : null}
         </Animated.View>
       </KeyboardAvoidingView>
@@ -138,7 +138,6 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  backdrop: { backgroundColor: 'rgba(0,0,0,0.5)' },
   panel: {
     borderTopLeftRadius: radius.xxl,
     borderTopRightRadius: radius.xxl,

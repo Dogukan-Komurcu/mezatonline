@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, PressableScale, Text, type IconName } from '@/components/ui';
 import { haptic } from '@/lib/haptics';
-import { radius, SCREEN_PADDING, spacing, useTheme } from '@/theme';
+import { SCREEN_PADDING, spacing, useTheme } from '@/theme';
 
 // ─── Klavye ──────────────────────────────────────────────────────────────────
 
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   box: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   option: {
     height: 54,
-    borderRadius: radius.md,
+    borderRadius: 14,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   orLine: { flex: 1, height: StyleSheet.hairlineWidth },
 });
 
-/** Tema renk tokenına saydamlık ekle: withAlpha('#121212', 0.5) → '#12121280' */
+/** Tema renk tokenına saydamlık ekle: withAlpha('#0E1116', 0.5) → '#0E111680' */
 export function withAlpha(hex: string, alpha: number): string {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
   const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)

@@ -1,6 +1,7 @@
 /**
  * Satıcı konsolunun alt kartı: çalışan açık artırma, flaş indirim, sabitlenmiş ürün,
- * son lot sonucu ya da boş durum.
+ * son lot sonucu ya da boş durum. Çalışan lotta kalan süre kartın üst kenarındaki ince
+ * çizgiyle gösterilir (son 5 sn nar kırmızısı); biçim çipi Açık artırma / Uzatmasız (bayrak).
  */
 import { Image } from 'expo-image';
 import { useEffect } from 'react';
@@ -58,21 +59,20 @@ function RunningLot({ lot, now }: { lot: LiveLot; now: number }) {
   const total = Math.max(lot.duration, lot.counterBidTime, 1);
   const pct = Math.min(1, remaining / total);
   return (
-    <Animated.View entering={FadeInDown.springify().damping(18)} style={[styles.card, urgent && styles.cardUrgent]}>
+    <Animated.View entering={FadeInDown.springify().damping(18)} style={[styles.card, styles.cardRunning, urgent && styles.cardUrgent]}>
+      <View style={styles.edgeTrack}>
+        <View style={[styles.progressFill, { width: `${pct * 100}%`, backgroundColor: urgent ? liveColors.live : liveColors.primary }]} />
+      </View>
       <View style={styles.row}>
         <Thumb uri={lot.product.images[0]} id={lot.product.id} />
         <View style={styles.mid}>
           <View style={styles.tagRow}>
-            <View style={[styles.tag, { backgroundColor: liveColors.live }]}>
+            <View style={[styles.tag, styles.formatChip]}>
+              <Icon name={lot.suddenDeath ? 'flag-outline' : 'hammer-outline'} size={11} color={liveColors.text} />
               <Text variant="caption" color={liveColors.text}>
-                AÇIK ARTIRMA
+                {lot.suddenDeath ? 'Uzatmasız' : 'Açık artırma'}
               </Text>
             </View>
-            {lot.suddenDeath ? (
-              <Text variant="caption" color={liveColors.textSecondary}>
-                💀 Ani Bitiş
-              </Text>
-            ) : null}
           </View>
           <Text variant="subhead" weight="700" color={liveColors.text} numberOfLines={2}>
             {lot.product.title}
@@ -85,17 +85,14 @@ function RunningLot({ lot, now }: { lot: LiveLot; now: number }) {
           <Text variant="title2" color={liveColors.text} tabular numberOfLines={1} adjustsFontSizeToFit>
             {formatTRY(lot.currentBid)}
           </Text>
-          <Timer seconds={remaining} urgent={urgent} suddenDeath={lot.suddenDeath} />
+          <Timer seconds={remaining} urgent={urgent} />
         </View>
-      </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${pct * 100}%`, backgroundColor: urgent ? liveColors.live : liveColors.primary }]} />
       </View>
     </Animated.View>
   );
 }
 
-function Timer({ seconds, urgent, suddenDeath }: { seconds: number; urgent: boolean; suddenDeath?: boolean }) {
+function Timer({ seconds, urgent }: { seconds: number; urgent: boolean }) {
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (urgent) pulse.set(withRepeat(withSequence(withTiming(1.12, { duration: 220 }), withTiming(1, { duration: 280 })), -1));
@@ -107,8 +104,8 @@ function Timer({ seconds, urgent, suddenDeath }: { seconds: number; urgent: bool
   const style = useAnimatedStyle(() => ({ transform: [{ scale: pulse.get() }] }));
   return (
     <Animated.View style={[styles.timer, style]}>
-      {suddenDeath ? <Text variant="subhead">💀</Text> : null}
-      <Text variant="headline" weight="800" color={urgent ? liveColors.live : liveColors.primary} tabular>
+      <Icon name="time-outline" size={15} color={urgent ? liveColors.live : liveColors.textSecondary} />
+      <Text variant="headline" weight="800" color={urgent ? liveColors.live : liveColors.text} tabular>
         {formatTimer(seconds)}
       </Text>
     </Animated.View>
@@ -162,8 +159,9 @@ function PinnedCard({ pinned, pinnedRemaining, onStartAuction, onFlash, onUnpin 
         <View style={styles.mid}>
           <View style={styles.tagRow}>
             <View style={[styles.tag, { backgroundColor: liveColors.glassLight }]}>
+              <Icon name="pin-outline" size={11} color={liveColors.text} />
               <Text variant="caption" color={liveColors.text}>
-                📌 SABİTLENDİ
+                Sabitlendi
               </Text>
             </View>
           </View>
@@ -185,9 +183,9 @@ function PinnedCard({ pinned, pinnedRemaining, onStartAuction, onFlash, onUnpin 
       </View>
       <View style={styles.actions}>
         {auction ? (
-          <Button title="Açık Artırmayı Başlat" icon="hammer" size="sm" onPress={() => onStartAuction(pinned)} disabled={soldOut} style={{ flex: 1 }} />
+          <Button title="Açık Artırmayı Başlat" icon="hammer-outline" size="sm" onPress={() => onStartAuction(pinned)} disabled={soldOut} style={{ flex: 1 }} />
         ) : (
-          <Button title="Flaş İndirim" icon="flash" size="sm" onPress={() => onFlash(pinned)} disabled={soldOut} style={{ flex: 1 }} />
+          <Button title="Flaş İndirim" icon="flash-outline" size="sm" onPress={() => onFlash(pinned)} disabled={soldOut} style={{ flex: 1 }} />
         )}
         <Button title="Kaldır" variant="glass" size="sm" onPress={onUnpin} />
       </View>
@@ -216,8 +214,8 @@ function ResultCard({ lot, remainingOf, onStartAuction, onOpenShop, onDismissRes
         <IconButton name="close" variant="glass" size={30} onPress={onDismissResult} accessibilityLabel="Kapat" />
       </View>
       <View style={styles.actions}>
-        <Button title="Sonraki ürün" icon="play-forward" size="sm" onPress={() => onOpenShop('auction')} style={{ flex: 1 }} />
-        {canRerun ? <Button title="Tekrar başlat" icon="refresh" variant="glass" size="sm" onPress={() => onStartAuction(lot.product)} /> : null}
+        <Button title="Sonraki ürün" icon="play-forward-outline" size="sm" onPress={() => onOpenShop('auction')} style={{ flex: 1 }} />
+        {canRerun ? <Button title="Tekrar başlat" icon="refresh-outline" variant="glass" size="sm" onPress={() => onStartAuction(lot.product)} /> : null}
       </View>
     </Animated.View>
   );
@@ -241,7 +239,7 @@ function EmptyCard({ next, onOpenShop, onStartAuction, onPin }: LotCardProps) {
             {auction ? `Açılış ${formatTRY(next.price)}` : `Hemen Al · ${formatTRY(next.price)}`}
           </Text>
         </View>
-        <Button title={auction ? 'Başlat' : 'Sabitle'} icon={auction ? 'hammer' : 'pin'} size="sm" onPress={() => (auction ? onStartAuction(next) : onPin(next))} />
+        <Button title={auction ? 'Başlat' : 'Sabitle'} icon={auction ? 'hammer-outline' : 'pin-outline'} size="sm" onPress={() => (auction ? onStartAuction(next) : onPin(next))} />
       </Animated.View>
     );
   }
@@ -272,6 +270,7 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 8,
   },
+  cardRunning: { overflow: 'hidden', paddingTop: 13 },
   cardUrgent: { borderColor: liveColors.live },
   cardFlash: { borderColor: liveColors.primary },
   cardSold: { borderColor: liveColors.success },
@@ -280,10 +279,11 @@ const styles = StyleSheet.create({
   mid: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', maxWidth: 120, gap: 2 },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tag: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
+  formatChip: { backgroundColor: liveColors.glassLight },
   timer: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   strike: { textDecorationLine: 'line-through' },
-  progressTrack: { height: 3, borderRadius: 2, backgroundColor: liveColors.glassLight, overflow: 'hidden' },
+  edgeTrack: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: liveColors.glassLight },
   progressFill: { height: 3, borderRadius: 2 },
   actions: { flexDirection: 'row', gap: 8 },
   emptyCard: { flexDirection: 'row', alignItems: 'center', gap: 10 },

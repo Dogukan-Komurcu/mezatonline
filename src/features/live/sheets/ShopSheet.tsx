@@ -2,9 +2,10 @@ import { Image } from 'expo-image';
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { Avatar, Button, EmptyState, Icon, PressableScale, Sheet, Text, UnderlineTabs } from '@/components/ui';
+import { Avatar, Button, EmptyState, Icon, PressableScale, Sheet, Text } from '@/components/ui';
 import { CONDITION_LABELS } from '@/components/cards/ProductCard';
 import { formatTRY, timeAgo } from '@/lib/format';
+import { haptic } from '@/lib/haptics';
 import { liveColors, useTheme } from '@/theme';
 import type { Product } from '@/types';
 
@@ -25,7 +26,7 @@ export type ShopSheetProps = {
 
 const VIA_LABEL: Record<SoldItem['via'], string> = { auction: 'Açık artırma', buy_now: 'Hemen Al', giveaway: 'Çekiliş', flash_sale: 'Flaş indirim' };
 
-/** S24: Yayın Mağazası — Açık Artırma · Hemen Al · Çekiliş · Satıldı */
+/** S24: Yayın Mağazası — sekmeler yerine çipler: Sırada · Satın al · (Çekiliş) · Satıldı */
 export function ShopSheet({ visible, onClose, sellerName, state, onProductPress, onBuyNow, onPreBid, onEnterGiveaway }: ShopSheetProps) {
   const { colors } = useTheme();
   const [tab, setTab] = useState<TabKey>('auction');
@@ -46,8 +47,8 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
   const g = state.giveaway;
 
   const tabs = [
-    { key: 'auction' as const, label: 'Açık Artırma', count: openAuctions.length },
-    { key: 'buy_now' as const, label: 'Hemen Al', count: state.shop.length },
+    { key: 'auction' as const, label: 'Sırada', count: openAuctions.length },
+    { key: 'buy_now' as const, label: 'Satın al', count: state.shop.length },
     ...(g ? [{ key: 'giveaway' as const, label: 'Çekiliş', count: 1 }] : []),
     { key: 'sold' as const, label: 'Satıldı', count: state.sold.length },
   ];
@@ -140,7 +141,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
             </Text>
           ) : null}
         </View>
-        <Text variant="caption" weight="600" color={stock > 0 ? (stock <= 2 ? liveColors.primary : 'textSecondary') : liveColors.live}>
+        <Text variant="caption" weight="600" color={stock > 0 ? (stock <= 2 ? liveColors.copper : 'textSecondary') : liveColors.live}>
           {onStage ? 'Şu an mezatta' : stock > 0 ? `Stokta ${stock} adet` : 'Tükendi'}
         </Text>
       </Row>
@@ -168,7 +169,31 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
           </PressableScale>
         ) : null}
       </View>
-      <UnderlineTabs tabs={tabs} value={activeTab} onChange={setTab} dark style={styles.tabs} />
+      <View style={styles.chips} accessibilityRole="tablist">
+        {tabs.map((t) => {
+          const on = t.key === activeTab;
+          return (
+            <PressableScale
+              key={t.key}
+              scaleTo={0.95}
+              onPress={() => {
+                haptic.tap();
+                setTab(t.key);
+              }}
+              style={[styles.chip, { backgroundColor: on ? colors.primary : colors.surface }]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`${t.label}, ${t.count}`}>
+              <Text variant="footnote" weight="700" color={on ? colors.onPrimary : colors.text}>
+                {t.label}
+              </Text>
+              <Text variant="caption" weight="700" color={on ? colors.onPrimary : colors.textSecondary} tabular>
+                {t.count}
+              </Text>
+            </PressableScale>
+          );
+        })}
+      </View>
       {activeTab === 'auction' ? (auctions.length ? auctions.map(renderAuction) : empty('Açık artırma yok', 'Bu yayında henüz sırada ürün yok.')) : null}
       {activeTab === 'buy_now' ? (bins.length ? bins.map(renderBin) : empty('Hemen Al ürünü yok', 'Satıcı bu yayında Hemen Al ürünü eklemedi.')) : null}
       {activeTab === 'giveaway' && g ? (
@@ -176,7 +201,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
           product={g.product}
           onPress={() => undefined}
           right={g.status === 'running' ? <Button title={g.entered ? 'Katıldın ✓' : 'Katıl'} size="sm" disabled={g.entered} onPress={onEnterGiveaway} /> : undefined}>
-          <Text variant="subhead" weight="800" color={liveColors.primary}>
+          <Text variant="subhead" weight="800" color={liveColors.copper}>
             🎁 Ücretsiz · {g.entrants} katılımcı
           </Text>
           <Text variant="caption" color="textSecondary">
@@ -200,7 +225,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
                     </Text>
                   </View>
                 </View>
-                <Text variant="subhead" weight="800" color={s.price > 0 ? 'text' : liveColors.primary}>
+                <Text variant="subhead" weight="800" color={s.price > 0 ? 'text' : liveColors.copper}>
                   {s.price > 0 ? formatTRY(s.price) : 'Ücretsiz'}
                 </Text>
               </View>
@@ -233,7 +258,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, height: 42 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 8 },
-  tabs: { marginTop: 6, marginHorizontal: -16, marginBottom: 4 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, marginBottom: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, borderRadius: 999, paddingHorizontal: 14 },
   row: { flexDirection: 'row', gap: 12, paddingVertical: 10, alignItems: 'flex-start' },
   thumb: { width: 64, height: 64, borderRadius: 10, backgroundColor: liveColors.panelAlt },
   rowBody: { marginTop: 4, gap: 3, alignItems: 'flex-start' },

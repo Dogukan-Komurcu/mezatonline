@@ -123,7 +123,7 @@ export default function WalletScreen() {
                 </Text>
                 <View style={styles.balanceActions}>
                   <Button title="Kod kullan" variant="inverse" size="sm" icon="ticket-outline" onPress={() => setCodeOpen(true)} />
-                  <PressableScale onPress={share} style={[styles.onYellowBtn, { borderColor: colors.onPrimary }]} accessibilityRole="button" accessibilityLabel="Davet et">
+                  <PressableScale onPress={share} style={[styles.onPrimaryBtn, { borderColor: colors.onPrimary }]} accessibilityRole="button" accessibilityLabel="Davet et">
                     <Icon name="share-social-outline" size={16} color={colors.onPrimary} />
                     <Text variant="subhead" weight="700" color={colors.onPrimary}>
                       Davet et
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   balanceCard: { borderRadius: radius.xl, padding: 20, gap: 4, overflow: 'hidden' },
   balanceDeco: { position: 'absolute', right: -24, top: -18, opacity: 0.08, transform: [{ rotate: '-14deg' }] },
   balanceActions: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  onYellowBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 1.5 },
+  onPrimaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 1.5 },
   refCard: { borderRadius: radius.xl, padding: 16, gap: 12 },
   refHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   codeBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10 },

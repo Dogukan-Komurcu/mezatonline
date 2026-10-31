@@ -131,5 +131,5 @@ export function LivePager({ initialId, qa }: { initialId: string; qa?: string })
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: brand.black },
+  root: { flex: 1, backgroundColor: brand.ink },
 });

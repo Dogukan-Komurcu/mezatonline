@@ -40,7 +40,7 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
           multiline && styles.multiline,
           {
             backgroundColor: colors.surface,
-            borderColor: error ? colors.danger : focused ? colors.text : 'transparent',
+            borderColor: error ? colors.danger : focused ? colors.primary : 'transparent',
           },
         ]}>
         {icon ? <Icon name={icon} size={18} color="textSecondary" /> : null}
@@ -52,7 +52,7 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
         <TextInput
           ref={ref}
           placeholderTextColor={colors.textTertiary}
-          selectionColor={colors.text}
+          selectionColor={colors.primary}
           secureTextEntry={password ? hidden : rest.secureTextEntry}
           multiline={multiline}
           {...rest}

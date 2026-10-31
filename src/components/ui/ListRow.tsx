@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Switch, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
-import { SCREEN_PADDING, useTheme } from '@/theme';
+import { brand, SCREEN_PADDING, useTheme } from '@/theme';
 
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './Pressable';
@@ -41,7 +41,7 @@ export function ListRow({ title, subtitle, subtitleLines = 2, icon, iconTint, le
       {icon ? (
         iconTint ? (
           <View style={[styles.iconBox, { backgroundColor: iconTint }]}>
-            <Icon name={icon} size={18} color="#0A0A0A" />
+            <Icon name={icon} size={18} color={brand.white} />
           </View>
         ) : (
           <Icon name={icon} size={22} color={destructive ? 'danger' : 'text'} />
@@ -59,7 +59,7 @@ export function ListRow({ title, subtitle, subtitleLines = 2, icon, iconTint, le
       </View>
       {badge ? (
         <View style={[styles.badge, { backgroundColor: colors.live }]}>
-          <Text variant="caption" color="#FFFFFF">
+          <Text variant="caption" color={brand.white}>
             {badge}
           </Text>
         </View>
@@ -78,7 +78,7 @@ export function ListRow({ title, subtitle, subtitleLines = 2, icon, iconTint, le
             onSwitch(v);
           }}
           trackColor={{ true: colors.primary, false: colors.surfaceAlt }}
-          thumbColor="#FFFFFF"
+          thumbColor={brand.white}
           ios_backgroundColor={colors.surfaceAlt}
         />
       ) : null}

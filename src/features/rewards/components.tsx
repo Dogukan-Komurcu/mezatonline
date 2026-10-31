@@ -1,5 +1,6 @@
 /**
  * Ödüller (Rewards Hub) bileşenleri: puan jetonu, günlük görev kartı, puan mağazası kartları.
+ * Puan jetonu bakır renktedir (kimlikte bakır = müdavimlik ve ödül unsurları).
  */
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -11,7 +12,7 @@ import { getLiveShows, getMarketplaceProducts, getSellers, getUpcomingShows } fr
 import { formatNumber } from '@/lib/format';
 import { useSocialStore } from '@/store/social';
 import type { Challenge, ChallengeKind, ShopItem } from '@/store/rewards';
-import { liveColors, radius, useTheme } from '@/theme';
+import { brand, liveColors, radius, useTheme } from '@/theme';
 
 import { SegmentedProgress } from '@/features/account/ui';
 
@@ -20,8 +21,8 @@ import { SegmentedProgress } from '@/features/account/ui';
 export function Coin({ size = 18 }: { size?: number }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primary, borderColor: colors.warning }]}>
-      <Text style={{ fontSize: size * 0.55, lineHeight: size * 0.7, fontWeight: '900' }} color={colors.onPrimary}>
+    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.copper, borderColor: colors.warning }]}>
+      <Text style={{ fontSize: size * 0.55, lineHeight: size * 0.7, fontWeight: '900' }} color={brand.white}>
         M
       </Text>
     </View>
@@ -115,7 +116,7 @@ export function ChallengeCard({ challenge, done, style }: { challenge: Challenge
       style={[styles.challenge, { backgroundColor: colors.surface }, style]}>
       <PointsChip points={challenge.points} style={styles.challengeChip} />
       <View style={[styles.challengeIcon, { backgroundColor: done ? colors.success : colors.card }]}>
-        <Icon name={done ? 'checkmark' : (challenge.icon as IconName)} size={28} color={done ? '#FFFFFF' : colors.text} />
+        <Icon name={done ? 'checkmark' : (challenge.icon as IconName)} size={28} color={done ? brand.white : colors.text} />
       </View>
       <Text variant="headline" align="center" numberOfLines={2} style={styles.challengeTitle}>
         {challenge.title}
@@ -138,7 +139,7 @@ export function ChallengeCard({ challenge, done, style }: { challenge: Challenge
 
 // ─── Puan mağazası ───────────────────────────────────────────────────────────
 
-/** Hafifçe zıplayan emoji (jumbotron önizlemesi) */
+/** Hafifçe zıplayan emoji (dev tepki önizlemesi) */
 export function BouncyEmoji({ emoji, size = 72 }: { emoji: string; size?: number }) {
   const s = useSharedValue(1);
   useEffect(() => {

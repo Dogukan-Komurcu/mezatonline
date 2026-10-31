@@ -86,8 +86,8 @@ export function LiveVideo({ coverImage, videoUrl, mounted, playing, muted }: Liv
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <KenBurnsCover uri={coverImage} animate={mounted && playing} />
       {mounted && videoUrl ? <VideoLayer uri={videoUrl} playing={playing} muted={muted} /> : null}
-      <LinearGradient colors={[alpha(brand.black, 0.55), alpha(brand.black, 0.18), 'transparent']} locations={[0, 0.55, 1]} style={styles.top} />
-      <LinearGradient colors={['transparent', alpha(brand.black, 0.35), alpha(brand.black, 0.82)]} locations={[0, 0.45, 1]} style={styles.bottom} />
+      <LinearGradient colors={[alpha(brand.ink, 0.55), alpha(brand.ink, 0.18), 'transparent']} locations={[0, 0.55, 1]} style={styles.top} />
+      <LinearGradient colors={['transparent', alpha(brand.ink, 0.35), alpha(brand.ink, 0.82)]} locations={[0, 0.45, 1]} style={styles.bottom} />
     </View>
   );
 }

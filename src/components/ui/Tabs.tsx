@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInstance, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
-import { SCREEN_PADDING, useTheme } from '@/theme';
+import { liveColors, SCREEN_PADDING, useTheme } from '@/theme';
 
 import { PressableScale } from './Pressable';
 import { Text } from './Text';
@@ -38,8 +38,9 @@ export function UnderlineTabs<K extends string>({ tabs, value, onChange, equal, 
     offset.current = x;
     scrollRef.current?.scrollTo({ x, animated: true });
   }, [tx, tw, width, equal]);
-  const active = dark ? '#FFFFFF' : colors.text;
-  const inactive = dark ? 'rgba(255,255,255,0.55)' : colors.textSecondary;
+  const active = dark ? liveColors.text : colors.text;
+  const inactive = dark ? liveColors.textTertiary : colors.textSecondary;
+  const indicator = dark ? liveColors.primaryBright : colors.primary;
   const items = tabs.map((t) => {
     const selected = t.key === value;
     return (
@@ -61,12 +62,12 @@ export function UnderlineTabs<K extends string>({ tabs, value, onChange, equal, 
           {t.label}
           {t.count !== undefined ? ` ${t.count}` : ''}
         </Text>
-        <View style={[styles.indicator, { backgroundColor: selected ? active : 'transparent' }]} />
+        <View style={[styles.indicator, { backgroundColor: selected ? indicator : 'transparent' }]} />
       </PressableScale>
     );
   });
   return (
-    <View style={[styles.wrap, { borderBottomColor: dark ? 'rgba(255,255,255,0.12)' : colors.border }, style]}>
+    <View style={[styles.wrap, { borderBottomColor: dark ? liveColors.border : colors.border }, style]}>
       {equal ? (
         <View style={styles.row}>{items}</View>
       ) : (

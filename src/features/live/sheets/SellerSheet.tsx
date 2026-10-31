@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   head: { alignItems: 'center', paddingTop: 4 },
   name: { marginTop: 10 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 10 },
-  badge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  badge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   stats: { flexDirection: 'row', borderRadius: 14, paddingVertical: 12, marginTop: 16 },
   stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 2 },
   bio: { marginTop: 12, textAlign: 'center' },

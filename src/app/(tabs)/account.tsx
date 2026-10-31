@@ -72,7 +72,7 @@ function GuestAccount() {
 }
 
 function MemberAccount() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const me = useMe();
   const signOut = useAuthStore((s) => s.signOut);
@@ -121,8 +121,8 @@ function MemberAccount() {
       {/* Üst ikonlar */}
       <View style={[styles.topBar, { paddingTop: insets.top + 4, backgroundColor: colors.bg }]}>
         <View style={{ flex: 1 }} />
-        <PressableScale scaleTo={0.9} onPress={() => router.push('/rewards')} accessibilityRole="button" accessibilityLabel="Ödüller" style={[styles.gift, { backgroundColor: isDark ? colors.primary : colors.inverse }]}>
-          <Icon name="gift" size={20} color={isDark ? colors.onPrimary : colors.primary} />
+        <PressableScale scaleTo={0.9} onPress={() => router.push('/rewards')} accessibilityRole="button" accessibilityLabel="Ödüller" style={[styles.gift, { backgroundColor: colors.copperSoft }]}>
+          <Icon name="gift" size={20} color={colors.copper} />
         </PressableScale>
         <IconButton name="chatbubble-ellipses-outline" badge={unreadMessages + supportUnread} onPress={() => router.push('/inbox')} accessibilityLabel="Mesajlar" />
         <IconButton name="notifications-outline" badge={unreadNotifications} onPress={() => router.push('/notifications')} accessibilityLabel="Bildirimler" />

@@ -4,16 +4,25 @@ import { brand, liveColors } from '@/theme';
 
 /** Video üstündeki metinler için okunabilirlik gölgesi */
 export const textShadow = {
-  textShadowColor: alpha(brand.black, 0.6),
+  textShadowColor: alpha(brand.ink, 0.6),
   textShadowOffset: { width: 0, height: 1 },
   textShadowRadius: 3,
 } as const;
+
+/** Video üstü kontrollerin köşe yarıçapları (biçim dili: düğme 14, kapsül / kart 20) */
+export const LIVE_RADIUS = { button: 14, capsule: 20 } as const;
 
 export const liveStyles = StyleSheet.create({
   shadow: textShadow,
   glassCard: {
     backgroundColor: liveColors.glassStrong,
     borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
+  },
+  /** Video üstü cam yüzey: yarı saydam lacivert + ince açık kenarlık */
+  glass: {
+    backgroundColor: liveColors.glass,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: liveColors.border,
   },

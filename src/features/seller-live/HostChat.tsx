@@ -107,7 +107,7 @@ export function HostChat({
           <View style={styles.empty}>
             <Text variant="footnote" color={liveColors.textSecondary}>
               {filter === 'questions'
-                ? 'Henüz soru yok. Soru işareti içeren mesajlar burada sarı görünür.'
+                ? 'Henüz soru yok. Soru işareti içeren mesajlar burada turkuaz renkte görünür.'
                 : filter === 'buyers'
                   ? 'Bu yayında henüz alım yapan olmadı.'
                   : filter === 'mods'
@@ -191,7 +191,7 @@ function ChatRow({ message: m, isMod, isBuyer, opacity, onPress }: { message: Ch
               {isMod && !m.isSeller ? <Badge label="Mod" tone="mod" /> : null}
               {isBuyer && !m.isSeller ? <Badge label="Alıcı" tone="buyer" /> : null}
             </View>
-            <Text variant="callout" weight="600" color={question ? liveColors.primary : liveColors.text} style={styles.shadow}>
+            <Text variant="callout" weight="600" color={question ? liveColors.primaryBright : liveColors.text} style={styles.shadow}>
               {m.text}
             </Text>
           </View>
@@ -229,7 +229,7 @@ function eventMeta(m: ChatMessage): { icon: string; text: string; color: string;
     case 'giveaway_won':
       return { icon: '🎉', text: 'çekilişi kazandı!', color: liveColors.primary, showName: true };
     case 'tip':
-      return { icon: '💛', text: `${amount} bahşiş gönderdi!`, color: liveColors.success, showName: true };
+      return { icon: '❤️', text: `${amount} bahşiş gönderdi!`, color: liveColors.success, showName: true };
     case 'follow':
       return { icon: '➕', text: 'seni takip etti', color: liveColors.textSecondary, nameColor: liveColors.text, showName: true };
     default:

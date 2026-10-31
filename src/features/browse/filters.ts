@@ -4,6 +4,7 @@
  */
 import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard';
 import { getProductsByShow, getShow, getUser } from '@/data';
+import { SUDDEN_DEATH_LABEL } from '@/lib/auction';
 import type { Condition, ListingFormat, Product, Show } from '@/types';
 
 // ─── Yayınlar ────────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ export function showHasOneLira(show: Show): boolean {
 }
 
 export function showHasSuddenDeath(show: Show): boolean {
-  return show.highlights.some((h) => h === 'Sudden Death' || h.startsWith('Ani Bitiş')) || getProductsByShow(show.id).some((p) => p.suddenDeath);
+  return show.highlights.some((h) => h === SUDDEN_DEATH_LABEL || h === 'Sudden Death' || h.startsWith('Ani Bitiş')) || getProductsByShow(show.id).some((p) => p.suddenDeath);
 }
 
 export function showHasFreeShipping(show: Show): boolean {

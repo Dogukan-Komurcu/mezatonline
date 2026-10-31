@@ -3,9 +3,9 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { random } from '@/lib/rng';
-import { brand, liveColors } from '@/theme';
+import { liveColors } from '@/theme';
 
-const COLORS = [liveColors.primary, liveColors.live, liveColors.success, liveColors.accent, brand.blue, brand.purple, liveColors.text];
+const COLORS = [liveColors.primary, liveColors.primaryBright, liveColors.copper, liveColors.live, liveColors.success, liveColors.accent, liveColors.text];
 
 type Piece = { id: number; x: number; drift: number; delay: number; duration: number; w: number; h: number; color: string; spin: number; round: boolean };
 

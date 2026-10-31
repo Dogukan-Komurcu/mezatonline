@@ -255,7 +255,7 @@ export function ScheduleForm() {
       <Screen>
         <Header safeTop={MODAL_SAFE_TOP} back="close" title="Yayın planlandı" />
         <ScrollView contentContainerStyle={styles.success}>
-          <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.successIcon, { backgroundColor: colors.primary }]}>
+          <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.successIcon, { backgroundColor: colors.primarySoft }]}>
             <Text style={{ fontSize: 46, lineHeight: 54 }}>📅</Text>
           </Animated.View>
           <Text variant="title1" align="center">
@@ -425,7 +425,7 @@ export function ScheduleForm() {
               </View>
             ) : null}
             <TextField
-              placeholder="Özel etiket ekle (ör. ani bitiş)"
+              placeholder="Özel etiket ekle (ör. uzatmasız)"
               value={customTag}
               onChangeText={setCustomTag}
               onSubmitEditing={addCustomTag}

@@ -277,7 +277,7 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
           scrollEnabled={!coachVisible}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textSecondary} colors={[colors.text]} progressBackgroundColor={colors.card} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={colors.card} />}
           contentContainerStyle={styles.content}
           initialNumToRender={6}
           maxToRenderPerBatch={6}

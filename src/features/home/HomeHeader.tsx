@@ -30,7 +30,7 @@ function HeaderIcon({ name, badge, onPress, label }: { name: IconName; badge: nu
 }
 
 export function HomeHeader() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const guest = useIsGuest();
   const unreadMessages = useUnreadMessageCount();
   const unreadNotifications = useUnreadNotificationCount();
@@ -48,8 +48,8 @@ export function HomeHeader() {
         }}
         accessibilityRole="button"
         accessibilityLabel="Ödüller"
-        style={[styles.gift, { backgroundColor: isDark ? colors.primary : colors.inverse }]}>
-        <Icon name="gift-outline" size={21} color={isDark ? colors.onPrimary : colors.primary} />
+        style={[styles.gift, { backgroundColor: colors.copperSoft }]}>
+        <Icon name="gift-outline" size={21} color={colors.copper} />
       </PressableScale>
     </View>
   );

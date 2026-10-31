@@ -109,6 +109,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   section: { marginTop: 14, marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 7 },
-  tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  tag: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   more: { marginVertical: 14 },
 });

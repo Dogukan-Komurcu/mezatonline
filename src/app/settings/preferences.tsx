@@ -156,7 +156,7 @@ export default function PreferencesScreen() {
         <MenuGroup title="Gizlilik">
           {guest ? null : (
             <>
-              <SwitchRow icon="ribbon-outline" title="Sadakat Kulübü rozetimi göster" subtitle="Yayın sohbetinde satıcıya özel seviyen görünür" value={showLoyaltyBadge} onChange={(v) => setFlag('showLoyaltyBadge', v)} />
+              <SwitchRow icon="id-card-outline" title="Müdavim Kartı seviyemi göster" subtitle="Yayın sohbetinde adının yanında o satıcıdaki seviyen (Çırak, Kalfa, Usta) görünür" value={showLoyaltyBadge} onChange={(v) => setFlag('showLoyaltyBadge', v)} />
               <SwitchRow icon="people-outline" title="Hesabımı başkalarına öner" subtitle="Rehberinde numaran kayıtlı olanlara önerilirsin" value={suggestAccount} onChange={(v) => setFlag('suggestAccount', v)} />
             </>
           )}

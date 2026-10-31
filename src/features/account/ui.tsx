@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, CountBadge, Icon, PressableScale, Sheet, Text, type IconName } from '@/components/ui';
 import { haptic } from '@/lib/haptics';
-import { radius, SCREEN_PADDING, useTheme, type ColorTokens } from '@/theme';
+import { brand, radius, SCREEN_PADDING, useTheme, type ColorTokens } from '@/theme';
 import type { CardBrand } from '@/types';
 
 type Tone = keyof ColorTokens | (string & {});
@@ -160,9 +160,10 @@ export function Tag({ label, tone = 'neutral', icon, style }: { label: string; t
   const map: Record<TagTone, [string, string]> = {
     neutral: [colors.surface, colors.text],
     primary: [colors.primary, colors.onPrimary],
-    success: [colors.success, '#FFFFFF'],
-    danger: [colors.danger, '#FFFFFF'],
-    warning: [colors.warning, '#0A0A0A'],
+    success: [colors.success, brand.white],
+    danger: [colors.danger, brand.white],
+    // Kehribar zeminde koyu metin daha okunaklı (her iki temada)
+    warning: [colors.warning, brand.ink],
     inverse: [colors.inverse, colors.onInverse],
   };
   const [bg, fg] = map[tone];
@@ -176,13 +177,13 @@ export function Tag({ label, tone = 'neutral', icon, style }: { label: string; t
   );
 }
 
-// ─── İlerleme çubuğu (sarı → turuncu) ────────────────────────────────────────
+// ─── İlerleme çubuğu (turkuaz tonları) ───────────────────────────────────────
 
 export function ProgressBar({ value, height = 6, tone, style }: { value: number; height?: number; tone?: 'brand' | 'success' | 'danger'; style?: StyleProp<ViewStyle> }) {
   const { colors } = useTheme();
   const pct = Math.max(0, Math.min(1, value));
   const fill: readonly [string, string] =
-    tone === 'success' ? [colors.success, colors.success] : tone === 'danger' ? [colors.danger, colors.danger] : [colors.primary, colors.warning];
+    tone === 'success' ? [colors.success, colors.success] : tone === 'danger' ? [colors.danger, colors.danger] : [colors.primary, colors.accent];
   return (
     <View style={[{ height, borderRadius: height / 2, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }, style]}>
       {pct > 0 ? <LinearGradient colors={fill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ width: `${pct * 100}%`, height: '100%', borderRadius: height / 2 }} /> : null}
@@ -197,7 +198,7 @@ export function SegmentedProgress({ total, done, style }: { total: number; done:
     <View style={[styles.segments, style]}>
       {Array.from({ length: total }, (_, i) => (
         <View key={i} style={[styles.segment, { backgroundColor: colors.surfaceAlt }]}>
-          {i < done ? <LinearGradient colors={[colors.primary, colors.warning]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} /> : null}
+          {i < done ? <LinearGradient colors={[colors.primary, colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} /> : null}
         </View>
       ))}
     </View>

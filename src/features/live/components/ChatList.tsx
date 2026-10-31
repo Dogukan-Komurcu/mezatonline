@@ -16,7 +16,7 @@ export type ChatListProps = {
   onUserPress: (msg: ChatMessage) => void;
 };
 
-/** S20-C: sol alttaki ters sıralı sohbet; üstteki satırlar solar, sabitlenmiş mesaj kartı üstte */
+/** S20-C: sol alttaki ters sıralı sohbet; üstteki satırlar solar, üstte turkuaz sol kenarlıklı cam sabit mesaj kutusu */
 export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: ChatListProps) {
   const [topIndex, setTopIndex] = useState(-1);
   const [overflow, setOverflow] = useState(false);
@@ -46,9 +46,9 @@ export function ChatList({ messages, height, pinned, blockedIds, onUserPress }: 
     <View style={[styles.root, { height }]} pointerEvents="box-none">
       {pinned ? (
         <PressableScale scaleTo={0.98} onPress={() => setPinOpen((o) => !o)} style={styles.pinned} accessibilityLabel="Sabitlenmiş mesaj">
-          <Icon name="pin" size={14} color={liveColors.primary} />
+          <Icon name="pin-outline" size={14} color={liveColors.accent} />
           <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={pinOpen ? 4 : 1} style={styles.flex}>
-            <Text variant="footnote" weight="800" color={liveColors.primary}>
+            <Text variant="footnote" weight="800" color={liveColors.accent}>
               {pinned.username}{' '}
             </Text>
             {pinned.text.replace(/^📌\s*/, '')}
@@ -121,9 +121,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 12,
-    backgroundColor: liveColors.glassStrong,
+    backgroundColor: liveColors.glass,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: liveColors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: liveColors.primary,
   },
   newWrap: { position: 'absolute', bottom: 6, left: 0, right: 0, alignItems: 'center' },
   newPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: liveColors.primary, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },

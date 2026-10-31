@@ -40,7 +40,8 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
           const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) navigateToTab(route.key);
         };
-        const color = focused ? colors.text : colors.tabIconInactive;
+        // Seçili sekme vurgu turkuazında (okunaklı ton), diğerleri nötr
+        const color = focused ? colors.accent : colors.tabIconInactive;
         const isSellerHub = route.name === 'sell' && me.isSeller && !guest;
         const label = isSellerHub ? 'Satıcı Paneli' : def.label;
         const icon: IconName = isSellerHub ? (focused ? 'grid' : 'grid-outline') : focused ? def.iconActive : def.icon;
@@ -60,7 +61,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
                 guest ? (
                   <Icon name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />
                 ) : (
-                  <View style={[styles.avatarRing, { borderColor: focused ? colors.text : 'transparent' }]}>
+                  <View style={[styles.avatarRing, { borderColor: focused ? colors.accent : 'transparent' }]}>
                     <Avatar uri={me.avatar} name={me.username} size={24} />
                   </View>
                 )

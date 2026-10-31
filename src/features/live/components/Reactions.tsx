@@ -7,6 +7,9 @@ import { random } from '@/lib/rng';
 
 export type Particle = { id: number; emoji: string; x: number; drift: number; size: number; duration: number; rise: number };
 
+/** Puan Mağazası'ndan özel tepki seçilmemişse gönderilen varsayılan tepki */
+export const DEFAULT_REACTION = '❤️';
+
 let particleSeq = 0;
 const MAX_PARTICLES = 18;
 

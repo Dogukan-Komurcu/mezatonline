@@ -325,8 +325,12 @@ REVIEWS.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 export type PromoBanner = { id: string; title: string; subtitle: string; image: string; href: string; tint: string };
 
+// Banner zeminleri kimlik paletinden (docs/TASARIM-KIMLIGI.md): üstündeki beyaz metin için yeterince koyu tonlar.
+// Turkuaz (birincil basılı) 5,1:1 · koyu bakır 4,8:1 · nar 4,6:1 kontrast. Gece laciverti koyu temada
+// ekran zeminiyle aynı olduğu için kullanılmadı.
+
 export const PROMO_BANNERS: PromoBanner[] = [
-  { id: 'bn1', title: '₺150 hoş geldin kredisi', subtitle: 'İlk alışverişinde otomatik uygulanır', image: BANNERS[0], href: '/wallet', tint: '#FFE414' },
-  { id: 'bn2', title: 'Arkadaşını davet et', subtitle: 'İkiniz de ₺100 kazanın', image: BANNERS[1 % BANNERS.length], href: '/wallet', tint: '#C9F2DD' },
-  { id: 'bn3', title: 'Satıcı ol, bu akşam canlı yayına çık', subtitle: 'İlk ay %0 komisyon', image: BANNERS[2 % BANNERS.length], href: '/seller/apply', tint: '#DCD6FF' },
+  { id: 'bn1', title: '₺150 hoş geldin kredisi', subtitle: 'İlk alışverişinde otomatik uygulanır', image: BANNERS[0], href: '/wallet', tint: '#0B7C72' },
+  { id: 'bn2', title: 'Arkadaşını davet et', subtitle: 'İkiniz de ₺100 kazanın', image: BANNERS[1 % BANNERS.length], href: '/wallet', tint: '#A85F31' },
+  { id: 'bn3', title: 'Satıcı ol, bu akşam canlı yayına çık', subtitle: 'İlk ay %0 komisyon', image: BANNERS[2 % BANNERS.length], href: '/seller/apply', tint: '#E0244F' },
 ];

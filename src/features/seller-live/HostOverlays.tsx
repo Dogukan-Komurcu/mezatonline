@@ -1,6 +1,6 @@
 /**
- * Satıcı konsolu üst katmanları: başlık, anlık istatistikler, yayın notu, sağ ray,
- * çekiliş kartı, sabit mesaj ve uçan kalpler.
+ * Satıcı konsolu üst katmanları: başlık, anlık istatistikler, yayın notu (cam kart), sağ ray,
+ * çekiliş kartı (bakır hediye dairesi), turkuaz kenarlıklı sabit mesaj ve uçan kalpler.
  */
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -10,7 +10,7 @@ import { Avatar, Icon, IconButton, LiveBadge, PressableScale, Text, ViewerCount,
 import type { Giveaway } from '@/features/live/engine';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { brand, liveColors, radius, SCREEN_PADDING } from '@/theme';
+import { liveColors, radius, SCREEN_PADDING } from '@/theme';
 import type { ChatMessage, User } from '@/types';
 
 import { formatElapsed, formatTimer } from './helpers';
@@ -104,14 +104,14 @@ export function StatsStrip({ gross, itemsSold, peakViewers, likes, onPress }: { 
   );
 }
 
-// ─── Yayın notu (sarı yapışkan not) ──────────────────────────────────────────
+// ─── Yayın notu (cam kart; küçültülünce cam çip) ─────────────────────────────
 
 export function NotesSticky({ text, collapsed, onPress, onToggle }: { text: string; collapsed: boolean; onPress: () => void; onToggle: () => void }) {
   if (collapsed) {
     return (
       <PressableScale onPress={onToggle} style={styles.noteCollapsed} accessibilityLabel="Yayın notlarını göster">
-        <Icon name="document-text" size={14} color={brand.black} />
-        <Text variant="caption" color={brand.black}>
+        <Icon name="document-text-outline" size={14} color={liveColors.text} />
+        <Text variant="caption" color={liveColors.text}>
           Notlar
         </Text>
       </PressableScale>
@@ -121,18 +121,20 @@ export function NotesSticky({ text, collapsed, onPress, onToggle }: { text: stri
     <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.note}>
       <PressableScale onPress={onPress} scaleTo={0.97} accessibilityLabel="Yayın notlarını düzenle" style={{ flex: 1 }}>
         <View style={styles.noteHead}>
-          <Text variant="caption" weight="800" color={brand.black}>
-            Yayın Notları
-          </Text>
+          <View style={styles.noteTitle}>
+            <Icon name="document-text-outline" size={13} color={liveColors.primaryBright} />
+            <Text variant="caption" weight="800" color={liveColors.text}>
+              Yayın notları
+            </Text>
+          </View>
           <PressableScale onPress={onToggle} hitSlop={10} accessibilityLabel="Notları küçült">
-            <Icon name="remove-circle-outline" size={15} color={brand.black} />
+            <Icon name="chevron-up" size={15} color={liveColors.textSecondary} />
           </PressableScale>
         </View>
-        <Text variant="caption" weight="500" color={brand.black} numberOfLines={4} style={{ lineHeight: 15 }}>
+        <Text variant="caption" weight="500" color={text ? liveColors.textSecondary : liveColors.textTertiary} numberOfLines={4} style={{ lineHeight: 15 }}>
           {text || 'Not eklemek için dokun'}
         </Text>
       </PressableScale>
-      <View style={styles.noteFold} />
     </Animated.View>
   );
 }
@@ -171,10 +173,10 @@ export function GiveawayBanner({ giveaway, now }: { giveaway: Giveaway; now: num
   return (
     <Animated.View entering={FadeInUp.springify().damping(16)} exiting={FadeOut} style={[styles.giveaway, !running && styles.giveawayDone]}>
       <View style={styles.giftIcon}>
-        <Icon name="gift" size={16} color={liveColors.onPrimary} />
+        <Icon name="gift-outline" size={16} color={liveColors.text} />
       </View>
       <View style={{ flex: 1, gap: 1 }}>
-        <Text variant="caption" weight="800" color={liveColors.primary}>
+        <Text variant="caption" weight="800" color={liveColors.copper}>
           {running ? (giveaway.requiresFollow ? 'ÇEKİLİŞ · TAKİPÇİLERE ÖZEL' : 'ÇEKİLİŞ') : 'ÇEKİLİŞ KAZANANI'}
         </Text>
         {running ? (
@@ -182,9 +184,12 @@ export function GiveawayBanner({ giveaway, now }: { giveaway: Giveaway; now: num
             <Text variant="footnote" weight="700" color={liveColors.text} numberOfLines={1}>
               {giveaway.product.title}
             </Text>
-            <Text variant="caption" color={liveColors.textSecondary} tabular>
-              ⏱ {formatTimer(remaining)} · {formatCompact(giveaway.entrants)} katılımcı
-            </Text>
+            <View style={styles.giveawayMeta}>
+              <Icon name="time-outline" size={11} color={liveColors.textSecondary} />
+              <Text variant="caption" color={liveColors.textSecondary} tabular>
+                {formatTimer(remaining)} · {formatCompact(giveaway.entrants)} katılımcı
+              </Text>
+            </View>
           </>
         ) : (
           <Text variant="subhead" weight="800" color={liveColors.text} numberOfLines={1}>
@@ -201,9 +206,9 @@ export function GiveawayBanner({ giveaway, now }: { giveaway: Giveaway; now: num
 export function PinnedMessage({ message, onHide }: { message: ChatMessage; onHide: () => void }) {
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.pinned}>
-      <Icon name="pin" size={14} color={liveColors.primary} />
+      <Icon name="pin-outline" size={14} color={liveColors.primaryBright} />
       <View style={{ flex: 1 }}>
-        <Text variant="caption" weight="800" color={liveColors.primary} numberOfLines={1}>
+        <Text variant="caption" weight="800" color={liveColors.primaryBright} numberOfLines={1}>
           {message.isSeller ? 'Sabitlenmiş duyuru' : `@${message.username} · Mod`}
         </Text>
         <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={2}>
@@ -225,7 +230,7 @@ export function PinnedMessage({ message, onHide }: { message: ChatMessage; onHid
 
 // ─── Uçan kalpler ────────────────────────────────────────────────────────────
 
-const HEART_COLORS = [liveColors.live, liveColors.primary, liveColors.accent, liveColors.success];
+const HEART_COLORS = [liveColors.live, liveColors.primaryBright, liveColors.copper, liveColors.accent];
 
 export function FloatingHearts({ ids }: { ids: number[] }) {
   return (
@@ -280,37 +285,23 @@ const styles = StyleSheet.create({
   statDivider: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: liveColors.border },
   statValueRow: { flexDirection: 'row', alignItems: 'center', gap: 4, maxWidth: '100%' },
   note: {
-    width: 122,
-    minHeight: 92,
-    backgroundColor: brand.yellowSoft,
-    borderRadius: radius.xs,
-    padding: 8,
-    paddingBottom: 12,
-    transform: [{ rotate: '-1.5deg' }],
-    shadowColor: brand.black,
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    width: 132,
+    minHeight: 84,
+    backgroundColor: liveColors.glassStrong,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
+    padding: 9,
   },
-  noteHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
-  noteFold: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 0,
-    height: 0,
-    borderStyle: 'solid',
-    borderRightWidth: 14,
-    borderTopWidth: 14,
-    borderRightColor: liveColors.glassStrong,
-    borderTopColor: brand.yellow,
-  },
+  noteHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  noteTitle: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   noteCollapsed: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: brand.yellowSoft,
+    backgroundColor: liveColors.glass,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
     borderRadius: radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -326,13 +317,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: liveColors.glassStrong,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: liveColors.primary,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
     padding: 8,
   },
-  giveawayDone: { borderColor: liveColors.success },
-  giftIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
+  giveawayDone: { borderColor: liveColors.success, borderWidth: 1 },
+  giveawayMeta: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  giftIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: liveColors.copper, alignItems: 'center', justifyContent: 'center' },
   pinned: {
     flexDirection: 'row',
     alignItems: 'center',

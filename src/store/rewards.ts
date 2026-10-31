@@ -25,17 +25,17 @@ export const DAILY_CHALLENGES: Challenge[] = [
   { kind: 'purchase', title: 'Bir ürün satın al', points: 150, icon: 'bag-handle' },
 ];
 
-/** Puan Mağazası: tepkiler ve jumbotron kutlamaları */
+/** Puan Mağazası: tepkiler ve dev tepkiler (satın alımda tüm izleyicilere gösterilen kutlama; iç tür adı 'jumbotron') */
 export type ShopItem = { id: ID; kind: 'reaction' | 'jumbotron'; title: string; emoji: string; cost: number };
 
 export const POINTS_SHOP: ShopItem[] = [
   { id: 'r_fire', kind: 'reaction', title: 'Ateş Tepkisi', emoji: '🔥', cost: 100 },
-  { id: 'r_heart', kind: 'reaction', title: 'Kalp Yağmuru', emoji: '💛', cost: 100 },
+  { id: 'r_heart', kind: 'reaction', title: 'Kalp Yağmuru', emoji: '❤️', cost: 100 },
   { id: 'r_crown', kind: 'reaction', title: 'Taç', emoji: '👑', cost: 250 },
   { id: 'r_nazar', kind: 'reaction', title: 'Nazar Boncuğu', emoji: '🧿', cost: 300 },
-  { id: 'j_confetti', kind: 'jumbotron', title: 'Konfeti Jumbotron', emoji: '🎉', cost: 500 },
-  { id: 'j_fireworks', kind: 'jumbotron', title: 'Havai Fişek Jumbotron', emoji: '🎆', cost: 800 },
-  { id: 'j_gold', kind: 'jumbotron', title: 'Altın Kutlama', emoji: '🏆', cost: 1200 },
+  { id: 'j_confetti', kind: 'jumbotron', title: 'Konfeti dev tepkisi', emoji: '🎉', cost: 500 },
+  { id: 'j_fireworks', kind: 'jumbotron', title: 'Havai fişek dev tepkisi', emoji: '🎆', cost: 800 },
+  { id: 'j_gold', kind: 'jumbotron', title: 'Altın kutlama', emoji: '🏆', cost: 1200 },
 ];
 
 type RewardsState = {
@@ -88,7 +88,20 @@ export const useRewardsStore = create<RewardsState>()(
       },
       setActiveReaction: (itemId) => set({ activeReaction: itemId }),
     }),
-    { name: storeKey('rewards'), storage: persistStorage },
+    {
+      name: storeKey('rewards'),
+      storage: persistStorage,
+      version: 1,
+      // v0 → v1: geçmişteki eski ürün adları yeni adlara çevrilir
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as Partial<RewardsState>;
+        if (version < 1 && Array.isArray(s.history)) {
+          const renamed: Record<string, string> = { 'Konfeti Jumbotron': 'Konfeti dev tepkisi', 'Havai Fişek Jumbotron': 'Havai fişek dev tepkisi', 'Altın Kutlama': 'Altın kutlama' };
+          s.history = s.history.map((h) => (renamed[h.label] ? { ...h, label: renamed[h.label] } : h));
+        }
+        return s as RewardsState;
+      },
+    },
   ),
 );
 

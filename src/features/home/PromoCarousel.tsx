@@ -10,13 +10,13 @@ import { Icon, PressableScale, Text } from '@/components/ui';
 import { PROMO_BANNERS, type PromoBanner } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
-import { radius, SCREEN_PADDING, useTheme } from '@/theme';
+import { brand, radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 const GAP = SCREEN_PADDING;
 const HEIGHT = 128;
 
 function Banner({ banner, width }: { banner: PromoBanner; width: number }) {
-  const { colors } = useTheme();
+  // Banner zeminleri koyu marka tonlarıdır (data/mock PROMO_BANNERS): yazı beyaz, düğme beyaz zeminde banner renginde
   return (
     <PressableScale
       scaleTo={0.98}
@@ -32,13 +32,13 @@ function Banner({ banner, width }: { banner: PromoBanner; width: number }) {
       accessibilityLabel={banner.title}
       style={[styles.banner, { width, backgroundColor: banner.tint }]}>
       <View style={styles.texts}>
-        <Text variant="title3" weight="800" color={colors.onPrimary} numberOfLines={2}>
+        <Text variant="title3" weight="800" color={brand.white} numberOfLines={2}>
           {banner.title}
         </Text>
-        <Text variant="footnote" color={colors.onPrimary} numberOfLines={2} style={styles.subtitle}>
+        <Text variant="footnote" color={brand.white} numberOfLines={2} style={styles.subtitle}>
           {banner.subtitle}
         </Text>
-        <View style={[styles.cta, { backgroundColor: colors.onPrimary }]}>
+        <View style={[styles.cta, { backgroundColor: brand.white }]}>
           <Text variant="footnote" weight="700" color={banner.tint}>
             Hemen bak
           </Text>
@@ -98,7 +98,7 @@ export function PromoCarousel() {
       {count > 1 ? (
         <View style={styles.dots}>
           {PROMO_BANNERS.map((b, i) => (
-            <View key={b.id} style={[styles.dot, { backgroundColor: i === index ? colors.text : colors.surfaceAlt, width: i === index ? 16 : 6 }]} />
+            <View key={b.id} style={[styles.dot, { backgroundColor: i === index ? colors.primary : colors.surfaceAlt, width: i === index ? 16 : 6 }]} />
           ))}
         </View>
       ) : null}

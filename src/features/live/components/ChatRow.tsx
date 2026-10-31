@@ -61,7 +61,7 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
           <Text variant="footnote" weight="800" color={liveColors.text} onPress={press} suppressHighlighting>
             {msg.username}
           </Text>{' '}
-          <Text variant="footnote" weight="800" color={liveColors.primary}>
+          <Text variant="footnote" weight="800" color={liveColors.accent}>
             {formatTRY(msg.amount ?? 0)}
           </Text>{' '}
           teklif verdi
@@ -73,11 +73,11 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
   if (msg.type === 'won' || msg.type === 'giveaway_won') {
     const title = msg.text.replace(/^(kazandı:|çekilişi kazandı!)\s*/, '').replace(/^🎁\s*/, '');
     return (
-      <View style={[styles.highlight, msg.isMe && styles.highlightMine, { opacity }]}>
+      <View style={[styles.highlight, msg.type === 'giveaway_won' && styles.highlightGift, msg.isMe && styles.highlightMine, { opacity }]}>
         <Text style={styles.emoji}>{msg.type === 'won' ? '🎉' : '🎁'}</Text>
         <View style={styles.flex}>
           <Text variant="footnote" color={liveColors.text} numberOfLines={1}>
-            <Text variant="footnote" weight="800" color={liveColors.primary} onPress={press} suppressHighlighting>
+            <Text variant="footnote" weight="800" color={msg.type === 'won' ? liveColors.accent : liveColors.copper} onPress={press} suppressHighlighting>
               {msg.username}
             </Text>
             {msg.type === 'won' ? ' kazandı ' : ' çekilişi kazandı!'}
@@ -106,7 +106,7 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
           </Text>{' '}
           satın aldı · {title}
           {msg.amount ? (
-            <Text variant="footnote" weight="800" color={liveColors.primary}>
+            <Text variant="footnote" weight="800" color={liveColors.accent}>
               {' '}
               {formatTRY(msg.amount)}
             </Text>
@@ -120,7 +120,7 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
     const boost = msg.text.includes('öne çıkardı');
     return (
       <View style={[styles.compact, msg.isMe && styles.mine, { opacity }]}>
-        <Text style={styles.emojiSmall}>{boost ? '🚀' : '💛'}</Text>
+        <Text style={styles.emojiSmall}>{boost ? '🚀' : '❤️'}</Text>
         <Text variant="footnote" color={liveColors.text} style={[styles.flex, textShadow]} numberOfLines={1}>
           <Text variant="footnote" weight="800" color={liveColors.text} onPress={press} suppressHighlighting>
             {msg.username}
@@ -151,12 +151,12 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
       <Avatar uri={msg.avatar} name={msg.username} size={28} />
       <View style={styles.flex}>
         <View style={styles.nameRow}>
-          <Username msg={msg} onPress={press} color={msg.isSeller ? liveColors.primary : liveColors.textSecondary} />
+          <Username msg={msg} onPress={press} color={msg.isSeller ? liveColors.accent : liveColors.textSecondary} />
           {msg.isSeller ? <Badge label="Satıcı" tone="seller" /> : null}
           {msg.isMod ? <Badge label="Mod" tone="mod" /> : null}
           {msg.isMe ? <Badge label="Sen" tone="me" /> : null}
         </View>
-        <Text variant="callout" weight="600" color={question ? liveColors.primary : liveColors.text} style={textShadow}>
+        <Text variant="callout" weight="600" color={question ? liveColors.accent : liveColors.text} style={textShadow}>
           {msg.text}
         </Text>
       </View>
@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: alpha(liveColors.primary, 0.35),
   },
+  highlightGift: { backgroundColor: alpha(liveColors.copper, 0.16), borderColor: alpha(liveColors.copper, 0.4) },
   highlightMine: { backgroundColor: alpha(liveColors.primary, 0.3), borderColor: liveColors.primary },
   system: { flexDirection: 'row', alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 10, marginVertical: 2, borderRadius: 10, backgroundColor: liveColors.glass },
   emoji: { fontSize: 18, lineHeight: 22 },
@@ -191,6 +192,6 @@ const styles = StyleSheet.create({
   badge: { borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1 },
   badgeSeller: { backgroundColor: liveColors.primary },
   badgeMod: { backgroundColor: liveColors.glassLight },
-  badgeMe: { backgroundColor: alpha(liveColors.primary, 0.3) },
+  badgeMe: { backgroundColor: alpha(liveColors.primary, 0.32) },
   badgeText: { fontSize: 9, lineHeight: 12 },
 });

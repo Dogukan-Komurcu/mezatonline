@@ -1,7 +1,8 @@
 /**
  * Tek bir canlı yayın sayfası (dikey kaydırıcıdaki bir sayfa).
- * Video + üst bilgi + çekiliş + sohbet + sağ eylem sütunu + sabit ürün kartı + kaydır-teklif-ver
- * ve tüm alt sayfalar (S20–S34).
+ * Video + üst bilgi + "Yayın bilgisi" çipi + çekiliş şeridi + sohbet + sağdaki cam eylem kapsülü +
+ * açık artırma kartı ve teklif paneli + alt çubuk ve tüm alt sayfalar (S20–S34).
+ * Tasarım: docs/TASARIM-KIMLIGI.md (bölüm 4).
  * Ücretli öne çıkarma, bahşiş ve çekiliş giriş noktaları FEATURES bayraklarıyla açılıp kapanır.
  */
 import { router, type Href } from 'expo-router';
@@ -32,7 +33,7 @@ import { liveColors, SCREEN_PADDING } from '@/theme';
 import type { ChatMessage, Product, Show } from '@/types';
 
 import { CROWD_REACTIONS } from './bots';
-import { ActionRail, type RailItem } from './components/ActionRail';
+import { ActionRail, railCapacity, type RailItem } from './components/ActionRail';
 import { ActionRow } from './components/ActionRow';
 import { AuctionCard } from './components/AuctionCard';
 import { BottomBar } from './components/BottomBar';
@@ -44,12 +45,12 @@ import { FlashSaleCard } from './components/FlashSaleCard';
 import { GiveawayCard } from './components/GiveawayCard';
 import { LiveHeader } from './components/LiveHeader';
 import { LiveVideo } from './components/LiveVideo';
-import { ReactionLayer, useReactions } from './components/Reactions';
+import { DEFAULT_REACTION, ReactionLayer, useReactions } from './components/Reactions';
 import { ShowEnded } from './components/ShowEnded';
 import { ShowNotes } from './components/ShowNotes';
-import { textShadow } from './components/styles';
+import { LIVE_RADIUS, liveStyles } from './components/styles';
 import type { LiveEvents, LiveViewer } from './engine';
-import { couponDiscount, useLivePrefs } from './liveStore';
+import { couponDiscount, MUDAVIM_COUPON_CODE, useLivePrefs } from './liveStore';
 import { markPreBid } from './prebids';
 import { hasBundleInShow, purchaseInLive, useShowBundle } from './purchase';
 import { BidIntroSheet } from './sheets/BidIntroSheet';
@@ -133,7 +134,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const coupon = useLivePrefs((s) => s.coupon);
   const orders = useOrdersStore((s) => s.orders);
   const bundled = useShowBundle(show.id, show.sellerId) && !guest;
-  const reactionEmoji = (!guest && POINTS_SHOP.find((i) => i.id === activeReactionId)?.emoji) || '💛';
+  const reactionEmoji = (!guest && POINTS_SHOP.find((i) => i.id === activeReactionId)?.emoji) || DEFAULT_REACTION;
 
   const [sheet, setSheet] = useState<SheetName | null>(null);
   const [sheetProduct, setSheetProduct] = useState<Product | undefined>(undefined);
@@ -147,6 +148,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const [dismissedGiveaway, setDismissedGiveaway] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [middleH, setMiddleH] = useState(0);
+  const [giveawayH, setGiveawayH] = useState(0);
   const [bottomH, setBottomH] = useState(220);
   const [muteHint, setMuteHint] = useState(false);
   const [viewerSample, setViewerSample] = useState<LiveViewer[]>([]);
@@ -157,7 +159,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const lastTapAt = useRef(0);
   const lastChatAt = useRef(0);
   const seenCrowdLikes = useRef(-1);
-  /** İzleme süresi (Sadakat Kulübü ilerlemesi için) */
+  /** İzleme süresi (Müdavim Kartı ilerlemesi için) */
   const [watch, setWatch] = useState({ acc: 0, since: 0 });
 
   const closeAllSheets = () => setSheet(null);
@@ -165,7 +167,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const events: LiveEvents = {
     onOutbid: (lot) => {
       haptic.warning();
-      toast.warning(`Teklifin geçildi! Şu an ${formatTRY(lot.currentBid)}`, 'trending-up');
+      toast.warning(`Teklifin geçildi! Şu an ${formatTRY(lot.currentBid)}`, 'trending-up-outline');
       markPreBid(lot.product.id, 'outbid');
       if (!OUTBID_NOTIFIED.has(lot.id)) {
         OUTBID_NOTIFIED.add(lot.id);
@@ -233,7 +235,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       // Puan hesaba yazılır: misafire verilmez
       if (!isSignedIn()) return;
       const pts = completeChallenge('watch_show');
-      if (pts) toast.success(`+${pts} puan · Bugünün görevi: canlı yayın izle 🎯`, 'trophy');
+      if (pts) toast.success(`+${pts} puan · Bugünün görevi: canlı yayın izle 🎯`, 'trophy-outline');
     }, 30_000);
     return () => {
       clearTimeout(t);
@@ -368,7 +370,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     engine.announceFollow();
     haptic.success();
     const pts = completeChallenge('follow_seller');
-    toast.success(`${seller.username} takip ediliyor${pts ? ` · +${pts} puan` : ''}`, 'person-add');
+    toast.success(`${seller.username} takip ediliyor${pts ? ` · +${pts} puan` : ''}`, 'person-add-outline');
   };
 
   const followSeller = () => withAuth(doFollow, AUTH_REASONS.follow);
@@ -389,7 +391,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           onPress: () => {
             useSocialStore.getState().toggleFollow(seller.id);
             haptic.tap();
-            toast(`${seller.username} artık takip edilmiyor`, 'person-remove');
+            toast(`${seller.username} artık takip edilmiyor`, 'person-remove-outline');
           },
         },
       ]);
@@ -419,7 +421,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const bidFeedback = (text: string) => {
     haptic.medium();
     const pts = completeChallenge('place_bid');
-    toast.success(`${text}${pts ? ` · +${pts} puan` : ''}`, 'hammer');
+    toast.success(`${text}${pts ? ` · +${pts} puan` : ''}`, 'hammer-outline');
   };
 
   const quickBid = (shown: number, immediate: boolean) => {
@@ -429,16 +431,17 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       return;
     }
     if (l.leader?.isMe) {
-      toast('Zaten öndesin 💪', 'checkmark-circle');
+      toast('Zaten öndesin 💪', 'checkmark-circle-outline');
       return;
     }
     const min = nextMinBid(l.currentBid, l.bidCount > 0);
     if (immediate && min > shown) {
       haptic.warning();
-      toast.warning(`Fiyat değişti! Yeni teklif ${formatTRY(min)} · tekrar kaydır`);
+      toast.warning(`Fiyat değişti! Yeni teklif ${formatTRY(min)} · tekrar basılı tut`);
       return;
     }
-    const placed = engine.placeBid(immediate ? shown : min);
+    // Giriş/kurulum sonrası (immediate değil): seçilen tutar korunur, fiyat geçtiyse güncel en düşük teklif verilir
+    const placed = engine.placeBid(immediate ? shown : Math.max(shown, min));
     if (placed == null) {
       haptic.error();
       toast.error('Teklif verilemedi, süre doldu');
@@ -466,7 +469,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       toast.error(`En az ${formatTRY(nextMinBid(l.currentBid, l.bidCount > 0))} teklif vermelisin`);
       return false;
     }
-    if (max) bidFeedback(wasLeader ? `Maks. teklifin ${formatTRY(amount)} olarak güncellendi` : `Maks. teklifin ${formatTRY(amount)} · ${formatTRY(result)} ile öndesin`);
+    if (max) bidFeedback(wasLeader ? `Otomatik teklif üst sınırın ${formatTRY(amount)} oldu` : `Otomatik teklif üst sınırın ${formatTRY(amount)} · ${formatTRY(result)} ile öndesin`);
     else bidFeedback(`Teklifin alındı · ${formatTRY(result)}`);
     return true;
   };
@@ -475,12 +478,12 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     const p = sheetProduct;
     if (!p) return true;
     if (!engine.addPreBid(p.id, amount)) {
-      toast('Bu ürün şu an sahnede, doğrudan teklif verebilirsin', 'hammer');
+      toast('Bu ürün şu an sahnede, doğrudan teklif verebilirsin', 'hammer-outline');
       return true;
     }
     useOrdersStore.getState().placePreBid(p.id, show.id, amount);
     haptic.success();
-    toast.success(`Ön teklifin ${formatTRY(amount)} · Ürün sahneye gelince otomatik devreye girer`, 'lock-closed');
+    toast.success(`Ön teklifin ${formatTRY(amount)} · Ürün sahneye gelince otomatik devreye girer`, 'lock-closed-outline');
     return true;
   };
 
@@ -489,7 +492,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   // Şansa dayalı katılım için görev puanı verilmez
   const giveawayFeedback = () => {
     haptic.success();
-    toast.success('Çekilişe katıldın! Bitene kadar yayında kal 🎁', 'gift');
+    toast.success('Çekilişe katıldın! Bitene kadar yayında kal 🎁', 'gift-outline');
   };
 
   const enterGiveaway = () => {
@@ -536,7 +539,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         () =>
           requireTransactSetup(
             () => {
-              toast.success('Bilgilerin kaydedildi, şimdi satın alabilirsin', 'checkmark-circle');
+              toast.success('Bilgilerin kaydedildi, şimdi satın alabilirsin', 'checkmark-circle-outline');
               setSheet('buy');
             },
             { dark: true },
@@ -594,7 +597,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     engine.sendMessage(text);
     setComposer({ open: false, text: '' });
     const pts = completeChallenge('chat');
-    if (pts) toast.success(`+${pts} puan · Sohbete katıldın 💬`, 'chatbubble');
+    if (pts) toast.success(`+${pts} puan · Sohbete katıldın 💬`, 'chatbubble-outline');
     return true;
   };
 
@@ -646,7 +649,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           setBoost((b) => ({ ...b, raised: Math.min(b.goal, b.raised + amount) }));
           engine.boost(amount);
           haptic.success();
-          toast.success(`${formatTRY(amount)} katkın için teşekkürler! 🚀`, 'rocket');
+          toast.success(`${formatTRY(amount)} katkın için teşekkürler! 🚀`, 'rocket-outline');
         }, 800);
       },
       { reason: AUTH_REASONS.boost },
@@ -661,7 +664,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       setTimeout(() => {
         setClipping(false);
         haptic.success();
-        toast.success('Klip profiline gizli olarak kaydedildi 🎬', 'film');
+        toast.success('Klip profiline gizli olarak kaydedildi 🎬', 'film-outline');
       }, 1800);
     }, AUTH_REASONS.save);
 
@@ -684,7 +687,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
             onPress: () => {
               useSocialStore.getState().block(seller.id);
               haptic.success();
-              toast.success(`${seller.username} engellendi`, 'ban');
+              toast.success(`${seller.username} engellendi`, 'ban-outline');
               onClose();
             },
           },
@@ -698,11 +701,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       const s = useSocialStore.getState();
       if (s.blockedIds.includes(chatUser.id)) {
         s.unblock(chatUser.id);
-        toast(`${chatUser.username} için engel kaldırıldı`, 'checkmark-circle');
+        toast(`${chatUser.username} için engel kaldırıldı`, 'checkmark-circle-outline');
       } else {
         s.block(chatUser.id);
         haptic.success();
-        toast.success(`${chatUser.username} engellendi, mesajlarını görmeyeceksin`, 'ban');
+        toast.success(`${chatUser.username} engellendi, mesajlarını görmeyeceksin`, 'ban-outline');
       }
       setSheet(null);
     }, AUTH_REASONS.block);
@@ -770,22 +773,21 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const leading = !!lot?.leader?.isMe && running;
   const shippingCost = lot ? lot.product.shippingCost : 0;
   const couponOff = lot && running && !guest ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
-  const giveaway = FEATURES.giveaways && state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
   const flash = state.flash;
   const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
   const shopCount = state.queue.filter((p) => !soldAuctionIds.has(p.id)).length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
   const sellerOrders = guest ? [] : orders.filter((o) => o.sellerId === seller.id && o.status !== 'cancelled');
   const sellerSpend = sellerOrders.reduce((sum, o) => sum + o.itemPrice, 0);
   const hasClub = seller.followers > 15000 || seller.badges.includes('top_seller');
-  const tall = height >= 760;
   const muted = !liveSoundOn;
   const shareCount = show.savedCount * 3 + (hashOf(show.id) % 400);
   // Misafirin arkadaş listesi yok
   const friends = guest ? [] : BUYER_USERS.slice(hashOf(show.id) % 20, (hashOf(show.id) % 20) + (hashOf(show.id) % 3));
   const bottomPad = Math.max(insets.bottom, 10) + 2;
-  // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; orta bölgeye sığmazsa küçülür
-  const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 8));
   const ended = state.ended || endedShow;
+  const giveaway = FEATURES.giveaways && state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
+  // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; üstündeki çekiliş şeridiyle birlikte orta bölgeye sığmazsa küçülür
+  const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 8 - (giveaway ? giveawayH + 6 : 0)));
   const mentionables = [
     { username: seller.username, avatar: seller.avatar },
     ...state.messages
@@ -801,20 +803,18 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
   const buy = sheetProduct ? buyInfo(sheetProduct) : undefined;
 
-  // Sağ sütun: ekrana sığdığı kadar öğe (öncelik sırasına göre), küçük ekranda sıkışık görünüm
+  // Sağdaki cam kapsül: Paylaş · Müdavim Kartı · (Destekle) · Diğer · Ses. Ekrana sığdığı kadar öğe
+  // gösterilir (prio küçük olan önce kalır); Cüzdan "Diğer" menüsündedir.
   const railAll: (RailItem & { prio: number })[] = [
-    ...(hasClub ? [{ key: 'club', label: 'Sadakat', crown: true, prio: 4, onPress: openClub }] : []),
-    { key: 'more', label: 'Diğer', icon: 'ellipsis-horizontal' as const, prio: 0, onPress: () => openSheet('more') },
-    ...(supportEnabled ? [{ key: 'boost', label: 'Destekle', icon: 'flash' as const, prio: 3, onPress: openSupport }] : []),
     { key: 'share', label: 'Paylaş', icon: 'share-outline' as const, badge: formatCompact(shareCount), prio: 1, onPress: share },
-    { key: 'wallet', label: 'Cüzdan', icon: 'wallet-outline' as const, prio: 2, onPress: openWallet },
-    ...(tall
-      ? [{ key: 'sound', label: muted ? 'Sesi aç' : 'Ses', icon: muted ? ('volume-mute' as const) : ('volume-high' as const), active: !muted, prio: 5, onPress: toggleMute }]
-      : []),
+    ...(hasClub ? [{ key: 'club', label: 'Müdavim', accessibilityLabel: 'Müdavim Kartı', icon: 'id-card-outline' as const, tint: liveColors.copper, prio: 2, onPress: openClub }] : []),
+    ...(supportEnabled ? [{ key: 'boost', label: 'Destekle', icon: 'flash-outline' as const, prio: 3, onPress: openSupport }] : []),
+    { key: 'more', label: 'Diğer', icon: 'ellipsis-horizontal' as const, prio: 0, onPress: () => openSheet('more') },
+    { key: 'sound', label: muted ? 'Sesi aç' : 'Ses', icon: muted ? ('volume-mute-outline' as const) : ('volume-high-outline' as const), active: !muted, prio: 4, onPress: toggleMute },
   ];
   const railCompact = middleH > 0 && middleH < 330;
-  // middleH, orta bölgenin alt boşluğunu (8) da içerir; öğe: ikon + etiket (kompakt 45 / normal 49) + aralık (8 / 12)
-  const railFit = middleH > 0 ? Math.max(2, Math.floor((middleH - 8 + (railCompact ? 8 : 12)) / (railCompact ? 53 : 61))) : railAll.length;
+  // middleH, orta bölgenin alt boşluğunu (8) da içerir
+  const railFit = middleH > 0 ? railCapacity(middleH - 8, railCompact) : railAll.length;
   const railKeep = new Set(
     railAll
       .slice()
@@ -829,9 +829,10 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       state={running ? 'bidding' : 'waiting'}
       nextBid={nextBid}
       leading={leading}
+      lotId={lot?.id}
       onCustom={() => withGate(() => openSheet('custom'), { intro: true, reason: AUTH_REASONS.bid })}
       onSwipe={onSwipe}
-      onTapHint={() => toast(`Teklif vermek için sağa kaydır → ${formatTRY(nextBid)}`, 'hand-right')}
+      onTapHint={(amount) => toast(`Teklif vermek için düğmeyi basılı tut · ${formatTRY(amount)}`, 'hand-left-outline')}
     />
   );
 
@@ -844,9 +845,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
       {!ended ? (
         /*
-          Tek sütunlu yerleşim (yukarıdan aşağı): üst bilgi → üst bant (çekiliş / yayın notu) →
-          orta bölge [sohbet (sabit yükseklik, sol) | eylem sütunu (sağ)] → sabit ürün kartı
-          (+ Özel / kaydır-teklif-ver) → alt çubuk [Bir şey yaz… | tepki | mağaza] → ev göstergesi boşluğu.
+          Tek sütunlu yerleşim (yukarıdan aşağı): üst bilgi → "Yayın bilgisi" çipi (+ ses ipucu) →
+          orta bölge [çekiliş şeridi + sohbet (sol) | cam eylem kapsülü (sağ)] → açık artırma kartı
+          (+ teklif paneli) → alt çubuk [sohbet kutusu | tepki | Mağaza · N] → ev göstergesi boşluğu.
           Hiçbir katman diğerinin üstüne taşmaz.
         */
         <View style={[StyleSheet.absoluteFill, { paddingBottom: bottomPad }]} pointerEvents="box-none">
@@ -863,21 +864,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           />
 
           <View style={styles.topSlot} pointerEvents="box-none">
-            {giveaway ? (
-              <GiveawayCard
-                key={giveaway.id}
-                giveaway={giveaway}
-                onEnter={enterGiveaway}
-                onDismiss={() => setDismissedGiveaway(giveaway.id)}
-                onInfo={() => openSheet('giveawayInfo')}
-              />
-            ) : show.description || muteHint ? (
+            {show.description || muteHint ? (
               <View style={styles.notesRow} pointerEvents="box-none">
                 {show.description ? <ShowNotes text={show.description} highlights={show.highlights} /> : <View />}
                 {muteHint ? (
                   <Animated.View entering={FadeIn} exiting={FadeOut}>
-                    <PressableScale scaleTo={0.94} onPress={toggleMute} style={styles.muteHint} accessibilityLabel="Sesi aç">
-                      <Icon name="volume-mute" size={15} color={liveColors.text} />
+                    <PressableScale scaleTo={0.94} onPress={toggleMute} style={[liveStyles.glass, styles.muteHint]} accessibilityLabel="Sesi aç">
+                      <Icon name="volume-mute-outline" size={15} color={liveColors.text} />
                       <Text variant="footnote" weight="700" color={liveColors.text}>
                         Sesi açmak için dokun
                       </Text>
@@ -890,6 +883,17 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
           <View style={styles.middle} pointerEvents="box-none" onLayout={(e) => setMiddleH(Math.round(e.nativeEvent.layout.height))}>
             <View style={styles.chatCol} pointerEvents="box-none">
+              {giveaway ? (
+                <View onLayout={(e) => setGiveawayH(Math.round(e.nativeEvent.layout.height))} pointerEvents="box-none">
+                  <GiveawayCard
+                    key={giveaway.id}
+                    giveaway={giveaway}
+                    onEnter={enterGiveaway}
+                    onDismiss={() => setDismissedGiveaway(giveaway.id)}
+                    onInfo={() => openSheet('giveawayInfo')}
+                  />
+                </View>
+              ) : null}
               {!chatHidden && chatH > 56 ? <ChatList messages={state.messages} height={chatH} pinned={state.pinned} blockedIds={blockedIds} onUserPress={onChatUser} /> : null}
             </View>
             <ActionRail items={rail} compact={railCompact} />
@@ -923,7 +927,6 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
             )}
             <BottomBar
               shopCount={shopCount}
-              shopThumb={lot?.product.images[0]}
               reactionEmoji={reactionEmoji}
               guest={guest}
               onCompose={() => withAuth(() => setComposer({ open: true, text: '' }), AUTH_REASONS.chat)}
@@ -954,10 +957,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
       {ended ? (
         <View style={[styles.endedClose, { top: insets.top + 8 }]}>
-          <PressableScale scaleTo={0.9} onPress={onClose} style={styles.closeBtn} accessibilityLabel="Kapat">
-            <Text variant="headline" weight="800" color={liveColors.text} style={textShadow}>
-              ✕
-            </Text>
+          <PressableScale scaleTo={0.9} onPress={onClose} style={[liveStyles.glass, styles.closeBtn]} accessibilityRole="button" accessibilityLabel="Kapat">
+            <Icon name="close" size={20} color={liveColors.text} />
           </PressableScale>
         </View>
       ) : null}
@@ -977,7 +978,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
               onPress={() => {
                 useSocialStore.getState().unblock(seller.id);
                 haptic.success();
-                toast(`${seller.username} için engel kaldırıldı`, 'checkmark-circle');
+                toast(`${seller.username} için engel kaldırıldı`, 'checkmark-circle-outline');
               }}
             />
             <Button title="Kapat" onPress={onClose} />
@@ -1097,6 +1098,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onToggleMute={(m) => setLiveSoundOn(!m)}
         onToggleChat={setChatHidden}
         onReactions={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
+        onWallet={openWallet}
         onBoost={supportEnabled ? openSupport : undefined}
         onClub={hasClub ? openClub : undefined}
         onCaptions={() => {
@@ -1117,13 +1119,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         purchases={sellerOrders.length}
         spend={sellerSpend}
         watchedMinutes={clubMinutes}
-        couponActive={!guest && coupon?.code === 'KULUP5'}
+        couponActive={!guest && coupon?.code === MUDAVIM_COUPON_CODE}
         onRedeem={(code) =>
           withAuth(() => {
             const res = useLivePrefs.getState().applyCoupon(code);
             if (res.ok) {
               haptic.success();
-              toast.success('Kulüp kuponun uygulandı: %5 indirim', 'pricetag');
+              toast.success('Müdavim Kartı indirimin uygulandı: %5 indirim', 'pricetag-outline');
             } else toast(res.error, 'pricetag-outline');
           }, AUTH_REASONS.generic)
         }
@@ -1197,13 +1199,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 const styles = StyleSheet.create({
   page: { overflow: 'hidden', backgroundColor: liveColors.panel },
   topSlot: { minHeight: 6 },
-  notesRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: SCREEN_PADDING - 4, marginTop: 10, gap: 8 },
-  muteHint: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: liveColors.glassStrong, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
-  middle: { flex: 1, minHeight: 0, flexDirection: 'row', alignItems: 'flex-end', paddingLeft: SCREEN_PADDING - 4, paddingRight: 4, paddingBottom: 8, gap: 6, overflow: 'hidden' },
-  chatCol: { flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', maxWidth: '76%' },
+  notesRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: SCREEN_PADDING - 4, marginTop: 8, gap: 8 },
+  muteHint: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 30, borderRadius: 999, paddingHorizontal: 12 },
+  middle: { flex: 1, minHeight: 0, flexDirection: 'row', alignItems: 'flex-end', paddingLeft: SCREEN_PADDING - 4, paddingRight: 6, paddingBottom: 8, gap: 6, overflow: 'hidden' },
+  chatCol: { flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', maxWidth: '78%', gap: 6 },
   dock: { paddingHorizontal: SCREEN_PADDING - 4, gap: 8 },
   endedClose: { position: 'absolute', right: SCREEN_PADDING, zIndex: 60 },
   blocked: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 70, backgroundColor: liveColors.panel, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   blockedButtons: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: liveColors.glass, alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { width: 36, height: 36, borderRadius: LIVE_RADIUS.button, alignItems: 'center', justifyContent: 'center' },
 });

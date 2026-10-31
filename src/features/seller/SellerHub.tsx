@@ -210,7 +210,7 @@ export function SellerHub() {
         <View style={styles.quickRow}>
           <QuickAction icon="calendar-outline" label="Yayın Planla" onPress={() => router.push('/seller/schedule')} />
           <QuickAction icon="pricetag-outline" label="Ürün Oluştur" onPress={() => router.push('/seller/listing')} />
-          <QuickAction icon="videocam" label="Canlıya Geç" primary onPress={() => router.push(liveShow ? `/seller/live/${liveShow.id}` : '/seller/go-live')} />
+          <QuickAction icon="videocam-outline" label="Canlıya Geç" primary onPress={() => router.push(liveShow ? `/seller/live/${liveShow.id}` : '/seller/go-live')} />
         </View>
 
         {toShip.length ? (

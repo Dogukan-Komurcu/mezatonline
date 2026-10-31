@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
-import { liveColors, radius, useTheme } from '@/theme';
+import { brand, liveColors, radius, useTheme } from '@/theme';
 
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './Pressable';
@@ -28,15 +28,21 @@ export type ButtonProps = {
   haptics?: boolean;
   children?: ReactNode;
   testID?: string;
+  /** Köşe biçimi: 'rounded' = yumuşak köşeli dikdörtgen (varsayılan), 'pill' = tam yuvarlak */
+  shape?: 'rounded' | 'pill';
 };
 
 const HEIGHT: Record<ButtonSize, number> = { sm: 34, md: 44, lg: 52 };
 const PAD: Record<ButtonSize, number> = { sm: 14, md: 18, lg: 22 };
 const FONT: Record<ButtonSize, 'subhead' | 'headline'> = { sm: 'subhead', md: 'headline', lg: 'headline' };
+/** Biçim dili: düğmeler yumuşak köşeli dikdörtgendir (14); küçük boyutta oranı korumak için 12 */
+const RADIUS: Record<ButtonSize, number> = { sm: 12, md: 14, lg: 14 };
 
 /**
- * Whatnot tarzı hap (pill) buton.
- * primary = marka sarısı, inverse = siyah/beyaz, secondary = gri yüzey, glass = video üstü yarı saydam
+ * Mezatonline düğmesi: yumuşak köşeli dikdörtgen (köşe yarıçapı 14).
+ * primary = marka turkuazı (beyaz yazı), inverse = gece laciverti / açık, secondary = nötr yüzey,
+ * outline = çerçeveli, glass = video üstü cam yüzey (ince açık kenarlık), danger = hata kırmızısı.
+ * Tam yuvarlak "hap" biçimi yalnızca çip/etiketler içindir; gerekirse shape="pill".
  */
 export function Button({
   title,
@@ -52,6 +58,7 @@ export function Button({
   style,
   haptics = true,
   testID,
+  shape = 'rounded',
 }: ButtonProps) {
   const { colors, isDark } = useTheme();
   const palette: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
@@ -60,12 +67,14 @@ export function Button({
     inverse: { bg: colors.inverse, fg: colors.onInverse },
     outline: { bg: 'transparent', fg: colors.text, border: colors.border },
     ghost: { bg: 'transparent', fg: colors.text },
-    danger: { bg: colors.danger, fg: '#FFFFFF' },
-    glass: { bg: liveColors.glassLight, fg: '#FFFFFF', border: liveColors.border },
+    danger: { bg: colors.danger, fg: brand.white },
+    glass: { bg: liveColors.glassLight, fg: liveColors.text, border: liveColors.border },
   };
   const isDisabled = disabled || loading;
-  // Devre dışı birincil buton: Whatnot'taki açık sarı (koyu temada nötr gri) — saydamlık yerine
-  const disabledPrimary: { bg: string; fg: string; border?: string } = isDark ? { bg: colors.surfaceAlt, fg: colors.textTertiary } : { bg: '#FFF7B9', fg: '#9A9AA0' };
+  // Devre dışı birincil düğme: açık temada soluk turkuaz, koyu temada nötr yüzey — saydamlık yerine
+  const disabledPrimary: { bg: string; fg: string; border?: string } = isDark
+    ? { bg: colors.surfaceAlt, fg: colors.textTertiary }
+    : { bg: colors.primarySoft, fg: colors.textSecondary };
   const p = disabled && !loading && variant === 'primary' ? disabledPrimary : palette[variant];
   return (
     <PressableScale
@@ -81,6 +90,7 @@ export function Button({
         styles.base,
         {
           minHeight: subtitle ? HEIGHT[size] + 10 : HEIGHT[size],
+          borderRadius: shape === 'pill' ? radius.pill : RADIUS[size],
           paddingHorizontal: PAD[size],
           backgroundColor: p.bg,
           borderColor: p.border ?? 'transparent',
@@ -114,7 +124,6 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

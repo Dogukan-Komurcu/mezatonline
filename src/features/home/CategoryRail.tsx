@@ -114,16 +114,14 @@ function TileArt({ item }: { item: RailItem }) {
 
 function RailTile({ item, selected, onSelect }: { item: RailItem; selected: boolean; onSelect: (key: string) => void }) {
   const { colors, isDark } = useTheme();
-  const bg = selected
-    ? colors.primary
-    : item.kind === 'for_you'
-      ? colors.primary
-      : item.kind === 'all'
-        ? colors.card
-        : item.kind === 'category' && !isDark
-          ? item.category.tint
-          : colors.surface;
-  const onYellow = selected || item.kind === 'for_you';
+  // Seçili kutucuk ve "Sana Özel": yumuşak turkuaz zemin; seçili olana turkuaz çerçeve
+  const bg = selected || item.kind === 'for_you'
+    ? colors.primarySoft
+    : item.kind === 'all'
+      ? colors.card
+      : item.kind === 'category' && !isDark
+        ? item.category.tint
+        : colors.surface;
   return (
     <PressableScale
       scaleTo={0.94}
@@ -133,14 +131,11 @@ function RailTile({ item, selected, onSelect }: { item: RailItem; selected: bool
       accessibilityLabel={item.label}
       style={[styles.tile, { backgroundColor: bg }]}>
       {selected ? (
-        <>
-          <View pointerEvents="none" style={[styles.outerRing, { borderColor: colors.text }]} />
-          <View pointerEvents="none" style={[styles.innerRing, { borderColor: colors.bg }]} />
-        </>
+        <View pointerEvents="none" style={[styles.outerRing, { borderColor: colors.primary }]} />
       ) : item.kind === 'all' ? (
         <View pointerEvents="none" style={[styles.outerRing, styles.hairRing, { borderColor: colors.border }]} />
       ) : null}
-      <Text weight="700" color={onYellow ? colors.onPrimary : colors.text} align="center" numberOfLines={2} style={styles.tileLabel}>
+      <Text weight="700" color={selected ? colors.accent : colors.text} align="center" numberOfLines={2} style={styles.tileLabel}>
         {item.label}
       </Text>
       <View style={styles.art}>
@@ -186,7 +181,7 @@ export function CompactRail({ items, selected, onSelect }: { items: RailItem[]; 
               }}
               accessibilityRole="tab"
               accessibilityState={{ selected: isSel }}
-              style={[styles.compactChip, { backgroundColor: bg, borderColor: isSel ? colors.text : 'transparent' }]}>
+              style={[styles.compactChip, { backgroundColor: bg }]}>
               <Text variant="callout" weight="700" color={isSel ? colors.onPrimary : colors.text} numberOfLines={1}>
                 {item.label}
               </Text>
@@ -211,7 +206,6 @@ const styles = StyleSheet.create({
   },
   outerRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderWidth: 2.5, borderRadius: radius.md },
   hairRing: { borderWidth: 1 },
-  innerRing: { position: 'absolute', top: 2.5, left: 2.5, right: 2.5, bottom: 2.5, borderWidth: 2, borderRadius: radius.md - 2.5 },
   tileLabel: { fontSize: 14, lineHeight: 17 },
   art: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 4 },
   avatarRing: { padding: 3, borderRadius: 30 },
@@ -220,5 +214,5 @@ const styles = StyleSheet.create({
   collageImg: { width: 27, height: 25, borderRadius: 6, borderWidth: 1.5 },
   compactWrap: { borderBottomWidth: StyleSheet.hairlineWidth },
   compactRail: { paddingHorizontal: SCREEN_PADDING, gap: RAIL_GAP, paddingVertical: 8 },
-  compactChip: { height: 40, paddingHorizontal: 14, borderRadius: 10, borderWidth: 2, justifyContent: 'center' },
+  compactChip: { height: 40, paddingHorizontal: 16, borderRadius: radius.pill, justifyContent: 'center' },
 });

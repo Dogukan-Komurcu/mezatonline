@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
 import { create } from 'zustand';
 
-import { radius, useTheme } from '@/theme';
+import { brand, darkColors, liveColors, radius, useTheme } from '@/theme';
 
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
@@ -27,8 +27,8 @@ export function EmptyState({ icon, emoji, title, message, actionLabel, onAction,
   const { colors } = useTheme();
   return (
     <View style={[styles.empty, style]}>
-      <View style={[styles.emptyIcon, { backgroundColor: colors.surface }]}>
-        {emoji ? <Text style={{ fontSize: 34, lineHeight: 40 }}>{emoji}</Text> : <Icon name={icon ?? 'sparkles-outline'} size={32} color="textSecondary" />}
+      <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
+        {emoji ? <Text style={{ fontSize: 34, lineHeight: 40 }}>{emoji}</Text> : <Icon name={icon ?? 'sparkles-outline'} size={32} color="accent" />}
       </View>
       <Text variant="title3" align="center">
         {title}
@@ -75,7 +75,7 @@ export function CountBadge({ count, style }: { count: number; style?: StyleProp<
   if (!count) return null;
   return (
     <View style={[styles.count, { backgroundColor: colors.live }, style]}>
-      <Text variant="caption" color="#FFFFFF" style={{ fontSize: 10, lineHeight: 12 }}>
+      <Text variant="caption" color={brand.white} style={{ fontSize: 10, lineHeight: 12 }}>
         {count > 99 ? '99+' : count}
       </Text>
     </View>
@@ -121,12 +121,13 @@ export function ToastHost() {
 
 function renderToast(t: ToastItem, top: number) {
   const icon: IconName = t.icon ?? (t.kind === 'success' ? 'checkmark-circle' : t.kind === 'error' ? 'alert-circle' : t.kind === 'warning' ? 'warning' : 'information-circle');
-  const tint = t.kind === 'success' ? '#2BC062' : t.kind === 'error' ? '#FF5A5F' : t.kind === 'warning' ? '#F5B031' : '#FFE414';
+  // Toast her zaman koyu cam yüzeydir: koyu tema anlamsal renkleri, bilgi = parlak turkuaz
+  const tint = t.kind === 'success' ? darkColors.success : t.kind === 'error' ? darkColors.danger : t.kind === 'warning' ? darkColors.warning : liveColors.primaryBright;
   return (
     <View pointerEvents="none" style={[styles.toastWrap, { top: top + 8 }]}>
       <Animated.View key={t.id} entering={FadeInUp.springify().damping(18)} exiting={FadeOutUp} style={styles.toast}>
         <Icon name={icon} size={20} color={tint} />
-        <Text variant="callout" weight="600" color="#FFFFFF" style={{ flexShrink: 1 }}>
+        <Text variant="callout" weight="600" color={liveColors.text} style={{ flexShrink: 1 }}>
           {t.message}
         </Text>
       </Animated.View>
@@ -143,8 +144,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(20,20,22,0.96)',
-    borderRadius: 999,
+    backgroundColor: 'rgba(17,22,28,0.96)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
+    borderRadius: radius.lg,
     paddingHorizontal: 16,
     paddingVertical: 12,
     maxWidth: 420,

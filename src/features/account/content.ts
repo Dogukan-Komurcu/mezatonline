@@ -29,7 +29,7 @@ export const FAQS: Faq[] = [
     id: 'f1',
     topic: 'bids',
     q: 'Canlı mezatta nasıl teklif veririm?',
-    a: 'Ürün sahneye geldiğinde ekranın altındaki “Teklif ver” düğmesini sağa kaydır. Sıradaki geçerli tutar otomatik hesaplanır. Daha yüksek bir tutar için “Özel” düğmesiyle maks. teklif belirleyebilirsin; sistem, belirlediğin tutara kadar senin adına en düşük adımla teklif verir. Maks. teklifini kimse göremez.',
+    a: 'Ürün sahneye geldiğinde tutarı ekranın altındaki − ve + düğmeleriyle ayarla; tutar, sıradaki geçerli teklifin altına inmez. Ardından turkuaz “Teklif ver” düğmesini düğme dolana kadar (yaklaşık yarım saniye) basılı tut. Farklı bir tutar yazmak için tutarın üzerine dokun; açılan pencerede istersen “Otomatik teklif (en fazla)” seçeneğini açarak bir üst sınır belirleyebilirsin. Bu durumda sistem, belirlediğin sınıra kadar senin adına en düşük adımla teklif verir. Üst sınırını kimse göremez.',
   },
   {
     id: 'f2',
@@ -41,7 +41,7 @@ export const FAQS: Faq[] = [
     id: 'f3',
     topic: 'bids',
     q: 'Son saniyelerde süre neden uzuyor?',
-    a: 'Son 10 saniyede gelen her teklif, süreyi satıcının belirlediği karşı teklif süresine (genellikle 10 saniye) sıfırlar; böylece herkes karşılık verme şansı bulur. “Ani Bitiş 💀” işaretli mezatlarda süre uzamaz, süre dolduğunda en yüksek teklif kazanır.',
+    a: 'Son 10 saniyede gelen her teklif, süreyi satıcının belirlediği karşı teklif süresine (genellikle 10 saniye) sıfırlar; böylece herkes karşılık verme şansı bulur. “Uzatmasız” (bayrak simgeli) mezatlarda süre uzamaz, süre dolduğunda en yüksek teklif kazanır.',
   },
   {
     id: 'f4',

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { qaSignIn } from '@/lib/qa';
+import { darkColors } from '@/theme';
 
 /**
  * Yalnızca geliştirme: demo kullanıcıyla anında giriş (QA ekran görüntüleri için).
@@ -20,8 +21,8 @@ export default function QaLogin() {
     return () => clearTimeout(t);
   }, [next, seller]);
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#121212' }}>
-      <ActivityIndicator color="#FFE414" />
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: darkColors.bg }}>
+      <ActivityIndicator color={darkColors.primary} />
     </View>
   );
 }

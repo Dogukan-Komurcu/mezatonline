@@ -383,10 +383,10 @@ export default function ProductScreen() {
           </Text>
 
           <View style={styles.chips}>
-            <Tag label={FORMAT_LABELS[product.format]} icon={product.format === 'auction' ? 'hammer' : product.format === 'giveaway' ? 'gift' : 'flash'} strong />
+            <Tag label={FORMAT_LABELS[product.format]} icon={product.format === 'auction' ? 'hammer-outline' : product.format === 'giveaway' ? 'gift-outline' : 'flash-outline'} strong />
             <Tag label={CONDITION_LABELS[product.condition]} icon="sparkles-outline" />
             {product.grade ? <Tag label={product.grade} icon="ribbon-outline" /> : null}
-            {product.suddenDeath && product.format === 'auction' ? <Tag label="Ani Bitiş 💀" /> : null}
+            {product.suddenDeath && product.format === 'auction' ? <Tag label="Uzatmasız" icon="flag-outline" /> : null}
             {product.acceptsOffers && product.format === 'buy_now' ? <Tag label="Fiyat önerisine açık" icon="pricetags-outline" /> : null}
           </View>
 

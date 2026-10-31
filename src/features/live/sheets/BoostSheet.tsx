@@ -31,7 +31,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
   const done = raised >= goal;
   return (
     <Sheet visible={visible} onClose={onClose} dark showClose contentStyle={styles.content}>
-      <LinearGradient colors={[liveColors.primary, brand.yellowPressed]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+      <LinearGradient colors={[liveColors.primary, brand.primaryPressed]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
         <Text variant="title1" weight="900" color={liveColors.onPrimary}>
           Satıcıyı Destekle
         </Text>
@@ -42,7 +42,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
 
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         <View style={styles.head}>
-          <Icon name="flash" size={20} color={liveColors.primary} />
+          <Icon name="flash-outline" size={20} color={liveColors.accent} />
           <Text variant="headline" weight="800">
             Yayını Öne Çıkar
           </Text>
@@ -53,10 +53,10 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
             : 'Diğer izleyicilerle birlikte katkı vererek bu yayının Mezatonline genelinde daha çok kişiye ulaşmasını sağla. Katkı verenler sohbette anılır.'}
         </Text>
         <View style={[styles.track, { backgroundColor: colors.surfaceAlt }]}>
-          <LinearGradient colors={[liveColors.primary, brand.live]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.fill, { width: `${Math.round(pct * 100)}%` }]} />
+          <LinearGradient colors={[liveColors.primary, liveColors.copper]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.fill, { width: `${Math.round(pct * 100)}%` }]} />
         </View>
         <View style={styles.trackLabels}>
-          <Text variant="caption" weight="700" color={liveColors.primary}>
+          <Text variant="caption" weight="700" color={liveColors.accent}>
             {formatTRY(raised)} toplandı
           </Text>
           <Text variant="caption" color="textSecondary">
@@ -89,7 +89,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
           <Text variant="footnote" color="textSecondary">
             Satıcına hızlı ve güvenli bir şekilde teşekkür et. Bahşişin tamamı satıcıya gider.
           </Text>
-          <Button title="Bahşiş Gönder" variant="inverse" fullWidth onPress={onTip} icon="heart" />
+          <Button title="Bahşiş Gönder" variant="inverse" fullWidth onPress={onTip} icon="heart-outline" />
         </View>
       ) : null}
     </Sheet>

@@ -1,5 +1,5 @@
 /**
- * İlk açılış ipucu (Whatnot coachmark): ilk yayın kartı sarı çerçeveyle vurgulanır, ekranın geri kalanı
+ * İlk açılış ipucu (Whatnot coachmark): ilk yayın kartı turkuaz çerçeveyle vurgulanır, ekranın geri kalanı
  * karartılır, altında/üstünde işaretçili beyaz balon. Hedefe dokunmak yayını açar, "Anladım" kapatır.
  */
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';

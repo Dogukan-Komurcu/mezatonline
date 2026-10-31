@@ -142,7 +142,7 @@ export function OrderDetailScreen() {
     `Gönderen: ${sender} (${senderCity})`,
     `Alıcı: ${address.fullName}, ${address.neighborhood} ${address.line}, ${address.district}/${address.city} ${address.postalCode}`,
     `Ürün: ${order.productTitle} × ${order.quantity}`,
-    'Bu siparişi tercih ettiğin için teşekkürler! 💛',
+    'Bu siparişi tercih ettiğin için teşekkürler! ❤️',
   ].join('\n');
 
   return (
@@ -301,7 +301,7 @@ export function OrderDetailScreen() {
             style={{ marginTop: 6 }}
           />
           {campaign && bucket !== 'cancelled' && fees.commission > 0 ? (
-            <View style={[styles.campaign, { backgroundColor: tint(colors.primary, 0.25) }]}>
+            <View style={[styles.campaign, { backgroundColor: colors.primarySoft }]}>
               <Text variant="footnote" weight="600">
                 🎉 Yeni satıcı kampanyası: bu siparişin {formatTRY(fees.commission)} komisyonu 30. günün sonunda bakiyene iade edilir.
               </Text>
@@ -516,7 +516,7 @@ function PackingSlip({ number, date, sender, senderCity, to, item, qty, code }: 
         </View>
       </View>
       <Text variant="footnote" color="textSecondary" align="center" style={{ marginTop: 12 }}>
-        Bu siparişi tercih ettiğin için teşekkürler! 💛{'\n'}Sorun olursa uygulamadan bize ulaş.
+        Bu siparişi tercih ettiğin için teşekkürler! ❤️{'\n'}Sorun olursa uygulamadan bize ulaş.
       </Text>
     </View>
   );

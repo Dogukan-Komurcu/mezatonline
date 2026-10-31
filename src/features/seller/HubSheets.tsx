@@ -298,7 +298,7 @@ export function TipsSheet({ visible, onClose }: { visible: boolean; onClose: () 
           ))}
         </>
       ) : (
-        <EmptyState emoji="💛" title="Henüz bahşiş almadın" message="Canlı yayınlarında izleyiciler sana bahşiş gönderebilir. Bahşişler 3 gün içinde çekilebilir bakiyene geçer." />
+        <EmptyState emoji="❤️" title="Henüz bahşiş almadın" message="Canlı yayınlarında izleyiciler sana bahşiş gönderebilir. Bahşişler 3 gün içinde çekilebilir bakiyene geçer." />
       )}
     </Sheet>
   );
@@ -494,7 +494,7 @@ export function RehearsalSheet({ visible, onClose }: { visible: boolean; onClose
         />
       }>
       <View style={{ alignItems: 'center', gap: 10, paddingVertical: 8 }}>
-        <View style={[styles.bigIcon, { backgroundColor: tint(colors.primary, 0.35) }]}>
+        <View style={[styles.bigIcon, { backgroundColor: colors.primarySoft }]}>
           <Text style={{ fontSize: 38, lineHeight: 46 }}>🎬</Text>
         </View>
         <Text variant="title2" align="center">
@@ -507,7 +507,7 @@ export function RehearsalSheet({ visible, onClose }: { visible: boolean; onClose
       <View style={{ gap: 10, marginVertical: 12 }}>
         {[
           ['pin-outline', 'Ürünü sahneye sabitle'],
-          ['hammer-outline', 'Açık artırmayı başlat, süreyi ve Ani Bitiş’i dene'],
+          ['hammer-outline', 'Açık artırmayı başlat, süreyi ve Uzatmasız mezatı dene'],
           ['chatbubbles-outline', 'Sohbet komutlarını ve moderasyonu öğren'],
         ].map(([icon, text]) => (
           <View key={text} style={styles.inline}>

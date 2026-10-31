@@ -61,10 +61,10 @@ export function makeBots(n: number): Bot[] {
 export const GENERIC_CHAT = [
   'selamlar 👋', 'hayırlı yayınlar 🙌', 'bereket versin 🙏', 'W', 'W W W', '🔥🔥🔥', 'kargo ne zaman çıkar?',
   ...giveawayLines(['çekiliş ne zaman?']), 'abi bunu bir daha gösterir misin', 'kaçtan başlıyor?', 'bu orijinal mi?', 'kondisyonu nasıl?',
-  'yakından görebilir miyiz 🙏', 'ilk defa izliyorum, çok güzel yayın', 'takip ettim 💛', 'ses biraz kısık',
+  'yakından görebilir miyiz 🙏', 'ilk defa izliyorum, çok güzel yayın', 'takip ettim ❤️', 'ses biraz kısık',
   'fiyatlar çok iyi', 'bende de var bundan', 'hadi bakalım 👀', 'geçen hafta aldım, çok memnunum', 'kargo birleşiyor mu?',
   "Ankara'dan selamlar", "İzmir'den selam 👋", "Bursa'dan selamlar", 'yayın kaçta bitiyor?', 'pahalı gitti ya 😅',
-  'ucuz kaldı bu', 'tebrikler 👏', 'hayırlı olsun', 'gg', 'sıradaki ne?', 'devam devam', '💛💛', 'efsane',
+  'ucuz kaldı bu', 'tebrikler 👏', 'hayırlı olsun', 'gg', 'sıradaki ne?', 'devam devam', '❤️❤️', 'efsane',
   'beyler sakin 😂', 'kalbim dayanmaz', 'bunu kaçırmam', 'bir tane de bana 😂', 'nasıl teklif veriliyor?',
   'ödeme kartla mı?', 'iade var mı?', 'işte bu!', 'yine geldim 😎', 'sabahtan beri bekliyordum', 'çok iyi paketliyor bu satıcı',
   'geçen ki siparişim 1 günde geldi 👌', 'güven veren satıcı', 'mükemmel', 'abi selam', 'hocam selam',
@@ -109,13 +109,13 @@ export const SELLER_LINES = [
   'Kargolar 24 saat içinde çıkıyor 📦',
   'Bütün ürünler orijinal, gönül rahatlığıyla 💯',
   'Aynı yayında aldıklarınız tek kargoda gelir 👍',
-  'Yeni gelenler hoş geldi, kalpleri bırakın 💛',
+  'Yeni gelenler hoş geldi, kalpleri bırakın ❤️',
   'Bu ürün çok özel, kaçırmayın 🔥',
   'Sorularınızı yazın, cevaplıyorum',
 ];
 
 export const PINNED_LINES = [
-  ...giveawayLines(['📌 Her 15 dakikada bir çekiliş! Takip edenler katılabilir 💛']),
+  ...giveawayLines(['📌 Her 15 dakikada bir çekiliş! Takip edenler katılabilir ❤️']),
   '📌 Aynı yayındaki tüm alımlar tek kargo ücretiyle gönderilir 📦',
   '📌 ₺1 başlangıçlı açık artırmalar — kaçırmayın 🔥',
   '📌 Bütün ürünler orijinal & faturalı ✅',
@@ -130,8 +130,8 @@ export const MOD_LINES = [
   'Aynı yayındaki alımlar tek kargoda gelir 📦',
   ...giveawayLines(['Çekilişe katılmak için takip etmeyi unutmayın 🎁']),
   'Teklifler bağlayıcıdır; kurumsal satıcılarda 14 günlük cayma hakkı saklıdır. ⚖️',
-  'Yeni gelenler hoş geldiniz! Kaydırarak teklif verebilirsiniz 👉',
+  'Yeni gelenler hoş geldiniz! Teklif için tutarı seçip «Teklif ver» düğmesini basılı tutun 👇',
 ];
 
 /** Kalabalık tepkileri (uçan emojiler) */
-export const CROWD_REACTIONS = ['💛', '❤️', '🔥', '😍', '👏', '💛', '💛'];
+export const CROWD_REACTIONS = ['❤️', '🔥', '😍', '👏', '❤️', '💙', '❤️'];

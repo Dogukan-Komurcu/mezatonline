@@ -160,7 +160,7 @@ export const AUTO_REPLIES = [
   'Tabii, bir sonraki yayında gösterebilirim.',
   'Evet, ürün orijinal ve faturalı ✅',
   'Kargo genelde 24 saat içinde çıkıyor 📦',
-  'Teşekkürler, iyi günler! 💛',
+  'Teşekkürler, iyi günler! ❤️',
   'Fotoğrafını atıyorum birazdan.',
   'Bu akşam 21:00’de canlıdayım, bekliyorum!',
 ];

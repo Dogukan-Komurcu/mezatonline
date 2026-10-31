@@ -8,7 +8,7 @@ import { ForceScheme, liveColors, SCREEN_PADDING } from '@/theme';
 
 import { alpha } from './styles';
 
-const QUICK = ['🔥', '💛', 'W', '👏', '😍', '🙌', 'Hayırlı olsun!', 'Selamlar 👋'];
+const QUICK = ['🔥', '❤️', 'W', '👏', '😍', '🙌', 'Hayırlı olsun!', 'Selamlar 👋'];
 
 export type Mentionable = { username: string; avatar?: string };
 
@@ -152,13 +152,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     minHeight: 44,
-    borderRadius: 22,
+    borderRadius: 14,
     paddingHorizontal: 14,
     backgroundColor: alpha(liveColors.text, 0.1),
     borderWidth: 1,
     borderColor: alpha(liveColors.text, 0.2),
   },
   input: { flex: 1, color: liveColors.text, fontSize: 16, paddingVertical: 10 },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
+  send: { width: 44, height: 44, borderRadius: 14, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
   sendDisabled: { backgroundColor: liveColors.panelAlt },
 });

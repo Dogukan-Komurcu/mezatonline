@@ -320,8 +320,8 @@ export function MoreSheet({
       {onEdit ? <ListRow icon="create-outline" title="Yayın bilgilerini düzenle" onPress={onEdit} /> : null}
       <ListRow
         icon="rocket-outline"
-        title="Baskın yap (Raid)"
-        subtitle={rehearsal ? 'Provada baskın yapılamaz' : 'İzleyicilerini başka bir canlı yayına gönder'}
+        title="Yayını devret"
+        subtitle={rehearsal ? 'Provada yayın devredilemez' : 'Yayını bitirirken izleyicilerini başka bir canlı yayına yönlendir'}
         onPress={onRaid}
         disabled={rehearsal}
       />
@@ -511,7 +511,7 @@ export function RaidSheet({
         visible={visible}
         onClose={onClose}
         dark
-        title="Baskını başlat"
+        title="Devri başlat"
         footer={
           <View style={{ gap: 10 }}>
             <Button title="Devam et" icon="rocket" size="lg" fullWidth onPress={() => onRaid(target)} />
@@ -524,7 +524,7 @@ export function RaidSheet({
             @{target.seller.username}
           </Text>
           <Text variant="callout" color="textSecondary" align="center">
-            Bu baskın yayınını bitirecek ve {formatCompact(viewers)} izleyiciyi @{target.seller.username} adlı satıcının yayınına gönderecek.
+            Bu işlem yayınını bitirecek ve {formatCompact(viewers)} izleyiciyi @{target.seller.username} adlı satıcının yayınına gönderecek.
           </Text>
         </View>
       </Sheet>
@@ -538,7 +538,7 @@ export function RaidSheet({
       dark
       height={0.8}
       scroll={false}
-      title="Baskın yap"
+      title="Yayını devret"
       subtitle="İzleyicilerini bir canlı yayına götür; yayının sona erer."
       showClose
       contentStyle={{ paddingHorizontal: 0 }}
@@ -556,7 +556,7 @@ export function RaidSheet({
             }}
             disabled={!all.length}
           />
-          <Button title="Baskın yap" icon="rocket" style={{ flex: 1 }} disabled={!target} onPress={() => setConfirming(true)} />
+          <Button title="Devret" icon="rocket-outline" style={{ flex: 1 }} disabled={!target} onPress={() => setConfirming(true)} />
         </View>
       }>
       <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
@@ -737,7 +737,7 @@ export function NotesSheet({ visible, onClose, text, onSave }: { visible: boolea
       onClose={onClose}
       dark
       title="Yayın notları"
-      subtitle="İzleyiciler yayının sol üstünde sarı not olarak görür"
+      subtitle="İzleyiciler başlığın altındaki “Yayın bilgisi” çipine dokunarak görür"
       showClose
       footer={<Button title="Kaydet" size="lg" fullWidth onPress={() => onSave(draft.trim())} />}>
       <TextField

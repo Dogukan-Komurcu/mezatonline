@@ -23,7 +23,7 @@ type CategoryDef = {
 
 const DEFS: CategoryDef[] = [
   {
-    id: 'tcg', name: 'Kart Oyunları (TCG)', shortName: 'Pokémon & TCG', emoji: '🃏', tint: '#FFE9A8', mediaKey: 'pokemon', viewers: 32700,
+    id: 'tcg', name: 'Kart Oyunları (TCG)', shortName: 'Pokémon & TCG', emoji: '🃏', tint: '#CCF0EC', mediaKey: 'pokemon', viewers: 32700,
     subs: [['pokemon', 'Pokémon'], ['yugioh', 'Yu-Gi-Oh!'], ['magic', 'Magic: The Gathering'], ['onepiece', 'One Piece'], ['lorcana', 'Lorcana'], ['graded', 'Derecelendirilmiş (PSA)']],
   },
   {
@@ -91,7 +91,7 @@ const DEFS: CategoryDef[] = [
     subs: [['marvel', 'Marvel'], ['dc', 'DC'], ['manga', 'Manga'], ['tommiks', 'Tommiks & Teksas'], ['anime_figures', 'Anime Figür']],
   },
   {
-    id: 'sports_memorabilia', name: 'Spor Hatıraları', shortName: 'Forma & Hatıra', emoji: '🏆', tint: '#FFF2C2', mediaKey: 'sports_memorabilia', viewers: 2200,
+    id: 'sports_memorabilia', name: 'Spor Hatıraları', shortName: 'Forma & Hatıra', emoji: '🏆', tint: '#F6E3D6', mediaKey: 'sports_memorabilia', viewers: 2200,
     subs: [['jerseys', 'Forma'], ['signed', 'İmzalı Ürün'], ['scarves', 'Atkı & Bayrak'], ['balls', 'Top & Ekipman']],
   },
   {

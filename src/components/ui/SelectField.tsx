@@ -89,7 +89,7 @@ export function SelectField({ label, placeholder = 'Seç', value, options, onCha
                   </Text>
                 ) : null}
               </View>
-              {item.value === value ? <Icon name="checkmark" size={20} color="text" /> : null}
+              {item.value === value ? <Icon name="checkmark" size={20} color="primary" /> : null}
             </PressableScale>
           )}
         />

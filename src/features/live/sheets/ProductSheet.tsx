@@ -67,16 +67,19 @@ export function ProductSheet({ visible, onClose, product, currentBid, shippingLi
         </View>
         {product.suddenDeath && product.format === 'auction' ? (
           <View style={[styles.tag, { backgroundColor: colors.surfaceAlt }]}>
-            <Text variant="caption" weight="800">
-              💀 Ani Bitiş
-            </Text>
+            <View style={styles.tagRow}>
+              <Icon name="flag-outline" size={11} color="text" />
+              <Text variant="caption" weight="800">
+                Uzatmasız
+              </Text>
+            </View>
           </View>
         ) : null}
       </View>
       <Text variant="title3" weight="800" style={styles.title}>
         {product.title.replace(/^🎁\s*/, '')}
       </Text>
-      <Text variant="title2" weight="900" color={liveColors.primary}>
+      <Text variant="title2" weight="900" color={liveColors.accent}>
         {giveaway ? 'Ücretsiz çekiliş' : currentBid !== undefined ? `Güncel teklif ${formatTRY(currentBid)}` : formatTRY(product.price)}
       </Text>
       {product.compareAtPrice && product.compareAtPrice > product.price && !giveaway ? (
@@ -130,7 +133,8 @@ const styles = StyleSheet.create({
   dots: { position: 'absolute', bottom: 10, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  tag: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  tagRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   title: { marginTop: 8, marginBottom: 2 },
   desc: { marginTop: 8 },
   info: { borderRadius: 14, padding: 12, gap: 8, marginTop: 14 },

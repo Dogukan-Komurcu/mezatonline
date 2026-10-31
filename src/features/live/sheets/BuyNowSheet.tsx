@@ -16,6 +16,7 @@ import { selectDefaultAddress, selectDefaultPayment, useWalletStore } from '@/st
 import { liveColors, useTheme } from '@/theme';
 import type { Product } from '@/types';
 
+import { alpha } from '../components/styles';
 import { couponDiscount, useLivePrefs } from '../liveStore';
 
 const BRAND_LABEL = { visa: 'Visa', mastercard: 'Mastercard', troy: 'Troy', amex: 'Amex' } as const;
@@ -145,15 +146,16 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
             <View style={styles.flex}>
               {flash ? (
                 <View style={styles.flashTag}>
-                  <Text variant="caption" weight="900" color={liveColors.onPrimary}>
-                    ⚡ FLAŞ İNDİRİM
+                  <Icon name="flash-outline" size={11} color={liveColors.copper} />
+                  <Text variant="caption" weight="800" color={liveColors.copper}>
+                    Flaş indirim
                   </Text>
                 </View>
               ) : null}
               <Text variant="title3" weight="800" numberOfLines={3}>
                 {product.title}
               </Text>
-              <Text variant="footnote" color={stock <= 2 ? liveColors.primary : 'textSecondary'} style={styles.stock}>
+              <Text variant="footnote" color={stock <= 2 ? liveColors.copper : 'textSecondary'} style={styles.stock}>
                 • {stock <= 1 ? 'Son 1 adet' : `Stokta ${stock} adet`} · {product.grade ?? CONDITION_LABELS[product.condition]}
               </Text>
               <Text variant="footnote" weight="700" color="accent" onPress={() => setMore((m) => !m)} suppressHighlighting>
@@ -236,7 +238,7 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
             </View>
           </View>
           <View style={styles.protect}>
-            <Icon name="shield-checkmark" size={14} color={liveColors.success} />
+            <Icon name="shield-checkmark-outline" size={14} color={liveColors.success} />
             <Text variant="caption" color="textSecondary" style={styles.flex}>
               Alıcı Koruması: ürün sana ulaşmazsa ya da açıklamayla önemli ölçüde farklıysa paran iade edilir; sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli.
             </Text>
@@ -262,7 +264,7 @@ function Section({ icon, title, value, onPress, edit }: { icon: 'pricetag-outlin
           {value}
         </Text>
       </View>
-      <Icon name={edit ? 'pencil' : 'chevron-forward'} size={16} color="textTertiary" />
+      <Icon name={edit ? 'pencil-outline' : 'chevron-forward'} size={16} color="textTertiary" />
     </PressableScale>
   );
 }
@@ -289,11 +291,23 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   head: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingTop: 4 },
   thumb: { width: 84, height: 84, borderRadius: 12, backgroundColor: liveColors.panelAlt },
-  flashTag: { alignSelf: 'flex-start', backgroundColor: liveColors.primary, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1, marginBottom: 4 },
+  flashTag: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: alpha(liveColors.copper, 0.14),
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: alpha(liveColors.copper, 0.6),
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginBottom: 6,
+  },
   stock: { marginTop: 4, marginBottom: 4 },
   desc: { marginTop: 10 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 },
-  qtyBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  qtyBtn: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   qty: { minWidth: 24 },
   divider: { marginVertical: 10 },
   section: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },

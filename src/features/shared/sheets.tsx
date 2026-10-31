@@ -56,12 +56,12 @@ export function TipSheet({ visible, onClose, seller, dark, onSent }: { visible: 
           onSent?.(amount, note);
           useInboxStore.getState().pushNotification({
             type: 'promo',
-            title: `💛 ${seller.username} adlı satıcıya ${formatTRY(amount)} bahşiş gönderdin`,
+            title: `❤️ ${seller.username} adlı satıcıya ${formatTRY(amount)} bahşiş gönderdin`,
             body: note || 'Desteğin için teşekkürler!',
             image: seller.avatar,
             href: `/user/${seller.username}`,
           });
-          toast.success(`${formatTRY(amount)} bahşiş gönderildi 💛`);
+          toast.success(`${formatTRY(amount)} bahşiş gönderildi ❤️`);
           setNote('');
           onClose();
         }, 700);

@@ -19,7 +19,7 @@ import { useSellerStore } from '@/store/seller';
 import { useSettingsStore } from '@/store/settings';
 import { useSocialStore } from '@/store/social';
 import { useWalletStore } from '@/store/wallet';
-import { darkColors, lightColors, useTheme } from '@/theme';
+import { darkColors, lightColors, liveColors, useTheme } from '@/theme';
 
 export const unstable_settings = { anchor: '(tabs)' };
 
@@ -129,7 +129,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
             {/* Herkese açık: misafir de gezinir, canlı yayın izler */}
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000' } }} />
+            <Stack.Screen name="live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: liveColors.panel } }} />
             <Stack.Screen name="search" options={{ animation: 'fade' }} />
             {/* Kayıt / giriş: giriş gerektiren bir işlemde tam ekran açılır, bitince kullanıcı kaldığı yere döner */}
             <Stack.Screen name="(auth)" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: darkColors.bg } }} />
@@ -160,8 +160,8 @@ export default function RootLayout() {
               <Stack.Screen name="seller/order/[id]" />
               <Stack.Screen name="seller/payouts" />
               <Stack.Screen name="seller/analytics" />
-              <Stack.Screen name="seller/live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureEnabled: false, contentStyle: { backgroundColor: '#000' } }} />
-              <Stack.Screen name="seller/go-live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000' } }} />
+              <Stack.Screen name="seller/live/[id]" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureEnabled: false, contentStyle: { backgroundColor: liveColors.panel } }} />
+              <Stack.Screen name="seller/go-live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: liveColors.panel } }} />
             </Stack.Protected>
           </Stack>
           <TransactSetupHost />

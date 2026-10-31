@@ -95,7 +95,7 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
       <ListRow
         title="Arkadaşını davet et, ₺100 kazan"
         subtitle="Arkadaşın ilk siparişini verince ikiniz de kredi kazanırsınız"
-        left={<IconCircle name="gift" tint={liveColors.primary} />}
+        left={<IconCircle name="gift-outline" tint={liveColors.primary} />}
         onPress={() => onNavigate('/wallet')}
         style={styles.row}
       />

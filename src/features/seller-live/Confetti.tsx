@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { brand, liveColors } from '@/theme';
+import { liveColors } from '@/theme';
 
-const COLORS = [liveColors.primary, liveColors.live, liveColors.success, liveColors.accent, brand.blue, brand.purple, liveColors.text];
+// Kimlik paleti: turkuaz, bakır, nar, açık turkuaz ve beyaz
+const COLORS = [liveColors.primary, liveColors.copper, liveColors.live, liveColors.primaryBright, liveColors.accent, liveColors.success, liveColors.text];
 
 type Piece = { id: number; x: number; delay: number; size: number; color: string; spin: number; drift: number; duration: number };
 

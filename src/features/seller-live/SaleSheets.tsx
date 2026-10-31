@@ -1,6 +1,6 @@
 /**
  * Satış başlatma sheet'leri:
- * - S87 Açık Artırmayı Başlat (açılış fiyatı, süre, karşı teklif süresi, Ani Bitiş 💀)
+ * - S87 Açık Artırmayı Başlat (açılış fiyatı, süre, karşı teklif süresi, Uzatmasız)
  * - Flaş İndirim (% indirim, süre)
  * - Çekiliş Başlat (ödül, süre ≤ 5 dk, Herkes / Takipçilere özel, kurallar ve yasal not)
  */
@@ -115,12 +115,12 @@ export function StartAuctionSheet({
 
       <FieldLabel
         title="Karşı teklif süresi"
-        hint={sudden ? 'Ani Bitiş açıkken süre uzamaz.' : `Son ${EXTEND_THRESHOLD_SEC} saniyede gelen her teklif süreyi bu değere sıfırlar.`}
+        hint={sudden ? 'Uzatmasız açıkken süre uzamaz.' : `Son ${EXTEND_THRESHOLD_SEC} saniyede gelen her teklif süreyi bu değere sıfırlar.`}
       />
       <OptionChips options={COUNTER_BID_OPTIONS.map((d) => ({ value: d as number, label: durationLabel(d) }))} value={counter} onChange={setCounter} disabled={sudden} />
 
       <View style={{ marginTop: 10 }}>
-        <SwitchRow title="Ani Bitiş 💀" subtitle="Süre hiç uzamaz; 00:01'de son teklifi veren kazanır. İzleyiciler sayacın yanında 💀 görür." value={sudden} onChange={setSudden} />
+        <SwitchRow icon="flag-outline" title="Uzatmasız" subtitle="Süre hiç uzamaz; sayaç bittiğinde en yüksek teklifi veren kazanır. İzleyiciler açık artırma kartında bayraklı “Uzatmasız” çipini görür." value={sudden} onChange={setSudden} />
       </View>
     </Sheet>
   );

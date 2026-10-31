@@ -142,7 +142,7 @@ function PhoneScreen() {
     ]);
   };
 
-  const borderColor = error ? colors.danger : focused ? colors.text : colors.border;
+  const borderColor = error ? colors.danger : focused ? colors.primary : colors.border;
 
   return (
     <AuthLayout

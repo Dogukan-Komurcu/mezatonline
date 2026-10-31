@@ -30,7 +30,7 @@ export function FollowEnterSheet({ visible, onClose, seller, onConfirm }: { visi
         <View>
           <Avatar uri={seller.avatar} name={seller.username} size={72} />
           <View style={styles.giftBadge}>
-            <Text style={styles.giftEmoji}>🎁</Text>
+            <Icon name="gift-outline" size={16} color={liveColors.text} />
           </View>
         </View>
         <Text variant="title3" weight="800" align="center">
@@ -75,7 +75,7 @@ export function GiveawayInfoSheet({ visible, onClose, giveaway, onEnter }: { vis
       </View>
       {DEMO_MODE ? (
         <View style={[styles.demo, { backgroundColor: colors.surface }]}>
-          <Icon name="information-circle" size={16} color={liveColors.primary} />
+          <Icon name="information-circle-outline" size={16} color={liveColors.accent} />
           <Text variant="subhead" weight="700" color="text" style={styles.flex}>
             {DEMO_COPY.giveaway}
           </Text>
@@ -137,7 +137,7 @@ export function ReactionSheet({ visible, onClose, onShop }: { visible: boolean; 
               <Text variant="caption" weight="700" numberOfLines={1}>
                 {r.title}
               </Text>
-              <Text variant="caption" color={selected ? liveColors.primary : 'textSecondary'}>
+              <Text variant="caption" color={selected ? liveColors.accent : 'textSecondary'}>
                 {selected ? 'Seçili' : has ? 'Seç' : `🔒 ${r.cost} puan`}
               </Text>
             </PressableScale>
@@ -145,7 +145,7 @@ export function ReactionSheet({ visible, onClose, onShop }: { visible: boolean; 
         })}
       </View>
       <Text variant="subhead" weight="800" color="textSecondary" style={styles.section}>
-        Jumbotron kutlamaları
+        Dev tepkiler
       </Text>
       {jumbotrons.map((j) => (
         <View key={j.id} style={styles.jRow}>
@@ -167,8 +167,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   footer: { gap: 4 },
   center: { alignItems: 'center', gap: 10, paddingVertical: 10 },
-  giftBadge: { position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
-  giftEmoji: { fontSize: 16, lineHeight: 20 },
+  giftBadge: { position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: liveColors.copper, alignItems: 'center', justifyContent: 'center' },
   prize: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 12 },
   prizeImg: { width: 72, height: 72, borderRadius: 12, backgroundColor: liveColors.panelAlt },
   rule: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 5 },

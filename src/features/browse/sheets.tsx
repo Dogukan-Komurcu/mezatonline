@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Divider, Icon, PressableScale, Sheet, Text, TextField } from '@/components/ui';
+import { SUDDEN_DEATH_LABEL } from '@/lib/auction';
 import { formatNumber } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { SCREEN_PADDING, useTheme } from '@/theme';
@@ -128,7 +129,7 @@ export function ShowFilterSheet({
       <CheckRow label="Ücretsiz kargo" subtitle="Kargo ücretsiz ya da belirli tutar üstü bedava" checked={draft.freeShipping} onPress={() => flag('freeShipping')} />
       <CheckRow label="Çekiliş var" subtitle="Yayında ücretsiz çekilişler yapılıyor" checked={draft.giveaway} onPress={() => flag('giveaway')} />
       <CheckRow label="₺1 Başlangıç" subtitle="Açık artırmalar ₺1'den başlıyor" checked={draft.oneLira} onPress={() => flag('oneLira')} />
-      <CheckRow label="Ani Bitiş 💀" subtitle="Son saniye teklifiyle süre uzamaz" checked={draft.suddenDeath} onPress={() => flag('suddenDeath')} />
+      <CheckRow label={SUDDEN_DEATH_LABEL} subtitle="Son saniyede gelen teklif süreyi uzatmaz" checked={draft.suddenDeath} onPress={() => flag('suddenDeath')} />
       <Divider style={styles.divider} />
       <SectionLabel>Satıcı</SectionLabel>
       <CheckRow label="En İyi Satıcılar" subtitle="Satış ve teslimat performansı en yüksekler" checked={draft.topSellers} onPress={() => flag('topSellers')} />

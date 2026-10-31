@@ -12,7 +12,7 @@ import { Button, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Scr
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSellerStore } from '@/store/seller';
-import { radius, SCREEN_PADDING, useTheme } from '@/theme';
+import { brand, radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { ID, Product } from '@/types';
 
 import { assignListingsToShow, deleteListings, duplicateListing } from './actions';
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   sep: { height: StyleSheet.hairlineWidth, marginLeft: SCREEN_PADDING + 76 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   box: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  fab: { position: 'absolute', right: SCREEN_PADDING + 4, width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  fab: { position: 'absolute', right: SCREEN_PADDING + 4, width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', shadowColor: brand.ink, shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   bulk: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: SCREEN_PADDING, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, gap: 10 },
   bulkBtns: { flexDirection: 'row', gap: 8 },
   showRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: radius.md },

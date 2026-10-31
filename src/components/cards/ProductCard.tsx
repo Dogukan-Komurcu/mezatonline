@@ -6,7 +6,7 @@ import { Icon, PressableScale, Text, toast } from '@/components/ui';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
-import { radius, useTheme } from '@/theme';
+import { brand, liveColors, radius, useTheme } from '@/theme';
 import type { Product } from '@/types';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 
@@ -58,25 +58,25 @@ export function ProductCard({ product, width, style, onPress, hideSave }: Produc
               )
             }
             accessibilityLabel="Kaydet">
-            <Icon name={saved ? 'heart' : 'heart-outline'} size={18} color={saved ? colors.live : '#FFFFFF'} />
+            <Icon name={saved ? 'heart' : 'heart-outline'} size={18} color={saved ? liveColors.live : liveColors.text} />
           </PressableScale>
         ) : null}
         {discount > 0 ? (
           <View style={[styles.tag, { backgroundColor: colors.live }]}>
-            <Text variant="caption" color="#FFFFFF">
+            <Text variant="caption" color={brand.white}>
               %{discount}
             </Text>
           </View>
         ) : product.grade ? (
-          <View style={[styles.tag, { backgroundColor: '#0A0A0A' }]}>
-            <Text variant="caption" color="#FFE414">
+          <View style={[styles.tag, { backgroundColor: brand.ink }]}>
+            <Text variant="caption" color={liveColors.primaryBright}>
               {product.grade}
             </Text>
           </View>
         ) : null}
         {soldOut ? (
           <View style={styles.soldOut}>
-            <Text variant="subhead" weight="800" color="#FFFFFF">
+            <Text variant="subhead" weight="800" color={liveColors.text}>
               SATILDI
             </Text>
           </View>
@@ -111,12 +111,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: liveColors.glass,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: liveColors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tag: { position: 'absolute', left: 6, top: 6, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  soldOut: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
+  tag: { position: 'absolute', left: 6, top: 6, borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 2 },
+  soldOut: { ...StyleSheet.absoluteFill, backgroundColor: liveColors.glassStrong, alignItems: 'center', justifyContent: 'center' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 8 },
   strike: { textDecorationLine: 'line-through' },
 });

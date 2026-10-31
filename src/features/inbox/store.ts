@@ -54,7 +54,7 @@ function supportReply(text: string, isFirst: boolean, agent: string): string {
     return `${intro}${BINDING_BID_SHORT} Teknik bir hata nedeniyle istemediğin bir teklif kaydedildiyse yayın adını ve ürünü yaz, satıcıyla birlikte değerlendirelim.`;
   if (/hesap|şifre|giriş|kullanıcı adı|telefon/.test(t))
     return `${intro}Hesap bilgilerini Hesap → Profili düzenle'den güncelleyebilirsin. Telefon numarası değişikliği için güvenlik doğrulaması gerekiyor; kayıtlı e-posta adresini yazar mısın?`;
-  if (/teşekkür|sağ ol|sağol/.test(t)) return 'Rica ederim! Başka bir konuda yardım gerekirse buradayız 💛';
+  if (/teşekkür|sağ ol|sağol/.test(t)) return 'Rica ederim! Başka bir konuda yardım gerekirse buradayız ❤️';
   return `${intro}Mesajın için teşekkürler! Konuyu biraz daha detaylandırabilir misin? Sipariş numaran varsa eklemen işimizi hızlandırır.`;
 }
 

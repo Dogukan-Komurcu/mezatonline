@@ -27,7 +27,7 @@ export function FieldLabel({ title, hint }: { title: string; hint?: string }) {
 
 export type ChoiceOption<T extends string | number> = { value: T; label: string };
 
-/** Yatay kaydırmalı seçim çipleri — seçili = marka sarısı */
+/** Yatay kaydırmalı seçim çipleri — seçili = marka turkuazı, beyaz metin */
 export function OptionChips<T extends string | number>({
   options,
   value,

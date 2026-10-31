@@ -20,12 +20,15 @@ export type Coupon = {
 
 type CouponDef = Omit<Coupon, 'code' | 'expiresAt'> & { days: number };
 
+/** Müdavim Kartı (Kalfa seviyesi) indirim kodu */
+export const MUDAVIM_COUPON_CODE = 'MUDAVIM5';
+
 /** Geçerli kupon kodları (mock) */
 const COUPON_DEFS: Record<string, CouponDef> = {
   MEZAT10: { title: '%10 indirim (en fazla ₺100)', percent: 10, maxDiscount: 100, days: 3 },
   ILKALIM: { title: '₺250 ve üzeri alışverişte ₺50 indirim', amount: 50, minSpend: 250, days: 7 },
   YAYIN15: { title: '₺300 ve üzeri alışverişte %15 indirim (en fazla ₺150)', percent: 15, maxDiscount: 150, minSpend: 300, days: 2 },
-  KULUP5: { title: 'Sadakat Kulübü: %5 indirim (en fazla ₺75)', percent: 5, maxDiscount: 75, days: 5 },
+  [MUDAVIM_COUPON_CODE]: { title: 'Müdavim Kartı: %5 indirim (en fazla ₺75)', percent: 5, maxDiscount: 75, days: 5 },
 };
 
 /** Kuponun bu tutara uygulayacağı indirim (₺, tam sayı) */
@@ -88,6 +91,15 @@ export const useLivePrefs = create<LivePrefsState>()(
     {
       name: storeKey('live-prefs'),
       storage: persistStorage,
+      version: 1,
+      // v0 → v1: eski kulüp kuponu (KULUP5) Müdavim Kartı koduna taşınır
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as Partial<LivePrefsState>;
+        if (version < 1 && s.coupon?.code === 'KULUP5') {
+          s.coupon = { ...s.coupon, code: MUDAVIM_COUPON_CODE, title: COUPON_DEFS[MUDAVIM_COUPON_CODE].title };
+        }
+        return s as LivePrefsState;
+      },
       partialize: (s) => ({ bidIntroAccepted: s.bidIntroAccepted, hiddenShowIds: s.hiddenShowIds, coupon: s.coupon, useCredits: s.useCredits }),
     },
   ),

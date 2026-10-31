@@ -12,7 +12,7 @@ import { FEATURES } from '@/config/demo';
 import type { FlashSale, Giveaway, LiveLot, SoldItem } from '@/features/live/engine';
 import { formatTRY, timeAgo } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { liveColors, radius, useTheme } from '@/theme';
+import { brand, liveColors, radius, useTheme } from '@/theme';
 import type { Product } from '@/types';
 
 import { formatTimer, useNow, VIA_LABELS } from './helpers';
@@ -160,8 +160,8 @@ export function ShopSheet(props: ShopSheetProps) {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={[styles.giveawayHero, { backgroundColor: colors.surface, borderColor: giveaway?.status === 'running' ? colors.primary : colors.border }]}>
-            <View style={[styles.giftCircle, { backgroundColor: colors.primary }]}>
-              <Icon name="gift" size={22} color={colors.onPrimary} />
+            <View style={[styles.giftCircle, { backgroundColor: colors.copper }]}>
+              <Icon name="gift-outline" size={22} color={brand.white} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="headline">{giveaway?.status === 'running' ? 'Çekiliş devam ediyor' : 'Çekiliş başlat'}</Text>

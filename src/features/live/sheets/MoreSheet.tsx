@@ -16,9 +16,11 @@ export type MoreSheetProps = {
   onToggleMute: (muted: boolean) => void;
   onToggleChat: (hidden: boolean) => void;
   onReactions: () => void;
+  /** Teslimat adresi, ödeme yöntemi, kredi ve kupon (cüzdan sayfası); verilmezse satır gizlenir */
+  onWallet?: () => void;
   /** Verilmezse "Satıcıyı destekle" satırı gizlenir (FEATURES.paidBoost / FEATURES.tips) */
   onBoost?: () => void;
-  /** Satıcının Sadakat Kulübü varsa */
+  /** Satıcının Müdavim Kartı programı varsa */
   onClub?: () => void;
   onCaptions: () => void;
   onHideShow: () => void;
@@ -26,7 +28,7 @@ export type MoreSheetProps = {
   onLeave: () => void;
 };
 
-/** S32: Diğer (⋯) — paylaş, klip, ses, sohbet, altyazı, yayın hakkında, gizle, şikayet, ayrıl */
+/** S32: Diğer (⋯) — paylaş, klip, tepkiler, ödeme ve adres, ses, sohbet, altyazı, yayın hakkında, gizle, şikayet, ayrıl */
 export function MoreSheet(p: MoreSheetProps) {
   return (
     <Sheet visible={p.visible} onClose={p.onClose} dark title="Diğer">
@@ -38,9 +40,12 @@ export function MoreSheet(p: MoreSheetProps) {
         onPress={p.clipping ? undefined : p.onClip}
         style={styles.row}
       />
-      <ListRow title="Tepkiler ve Jumbotron" subtitle="Uçan tepkini seç" icon="heart-outline" onPress={p.onReactions} style={styles.row} />
+      <ListRow title="Tepkiler ve dev tepkiler" subtitle="Uçan tepkini seç" icon="heart-outline" onPress={p.onReactions} style={styles.row} />
+      {p.onWallet ? (
+        <ListRow title="Cüzdan" subtitle="Teslimat adresi, kart, Mezat kredisi ve kupon" icon="wallet-outline" onPress={p.onWallet} style={styles.row} />
+      ) : null}
       {p.onBoost ? <ListRow title="Satıcıyı destekle" subtitle={SUPPORT_SUBTITLE} icon="flash-outline" onPress={p.onBoost} style={styles.row} /> : null}
-      {p.onClub ? <ListRow title="Sadakat Kulübü" subtitle="Seviyeni ve ödüllerini gör" icon="ribbon-outline" onPress={p.onClub} style={styles.row} /> : null}
+      {p.onClub ? <ListRow title="Müdavim Kartı" subtitle="Bu satıcıdaki seviyeni ve ayrıcalıklarını gör" icon="id-card-outline" onPress={p.onClub} style={styles.row} /> : null}
       <Divider />
       <ListRow title="Sesi kapat" icon={p.muted ? 'volume-mute' : 'volume-high'} switchValue={p.muted} onSwitch={p.onToggleMute} style={styles.row} />
       <ListRow title="Sohbeti gizle" icon="chatbubbles-outline" switchValue={p.chatHidden} onSwitch={p.onToggleChat} style={styles.row} />

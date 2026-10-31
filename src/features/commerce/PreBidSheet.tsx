@@ -111,8 +111,15 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
           </Text>
           <Text variant="footnote" color="textSecondary">
             Açılış fiyatı <Text variant="footnote" weight="700">{formatTRY(product.price)}</Text>
-            {product.suddenDeath ? ' · 💀 Ani Bitiş' : ''}
           </Text>
+          {product.suddenDeath ? (
+            <View style={styles.flagRow}>
+              <Icon name="flag-outline" size={12} color="textSecondary" />
+              <Text variant="footnote" color="textSecondary">
+                Uzatmasız: son saniye teklifi süreyi uzatmaz
+              </Text>
+            </View>
+          ) : null}
           <Text variant="footnote" color="textSecondary">
             Yayın: {formatShowTime(show.scheduledAt)}
           </Text>
@@ -174,6 +181,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 3 },
   content: { gap: 14, paddingBottom: 12 },
   productRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  flagRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   thumb: { width: 64, height: 64, borderRadius: radius.sm },
   amountBlock: { gap: 8 },
   chips: { gap: 8, paddingVertical: 2 },

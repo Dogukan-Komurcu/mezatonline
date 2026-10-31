@@ -34,15 +34,20 @@ import type { Product, Show } from '@/types';
 
 type TabKey = 'auction' | 'buy_now' | 'giveaway';
 
+const UZATMASIZ = { label: 'Uzatmasız', icon: 'flag-outline' } as const;
+
+/** Yayın öne çıkanları: etiket + çizgi ikon. Eski kayıtlardaki 'Sudden Death' / 'Ani Bitiş 💀' de Uzatmasız gösterilir. */
 const HIGHLIGHT_META: Record<string, { label: string; icon: IconName }> = {
-  '₺1 Başlangıç': { label: '₺1 Başlangıç', icon: 'flash' },
-  Çekiliş: { label: 'Çekiliş', icon: 'gift' },
-  'Ücretsiz Kargo': { label: 'Ücretsiz Kargo', icon: 'car' },
-  'Orijinal Garantili': { label: 'Orijinal Garantili', icon: 'shield-checkmark' },
-  'Hızlı Kargo': { label: 'Hızlı Kargo', icon: 'rocket' },
-  'Sudden Death': { label: 'Ani Bitiş 💀', icon: 'skull' },
-  'Flaş İndirim': { label: 'Flaş İndirim', icon: 'flash-outline' },
-  'Yeni Satıcı': { label: 'Yeni Satıcı', icon: 'sparkles' },
+  '₺1 Başlangıç': { label: '₺1 Başlangıç', icon: 'flash-outline' },
+  Çekiliş: { label: 'Çekiliş', icon: 'gift-outline' },
+  'Ücretsiz Kargo': { label: 'Ücretsiz Kargo', icon: 'car-outline' },
+  'Orijinal Garantili': { label: 'Orijinal Garantili', icon: 'shield-checkmark-outline' },
+  'Hızlı Kargo': { label: 'Hızlı Kargo', icon: 'rocket-outline' },
+  Uzatmasız: UZATMASIZ,
+  'Sudden Death': UZATMASIZ,
+  'Ani Bitiş 💀': UZATMASIZ,
+  'Flaş İndirim': { label: 'Flaş İndirim', icon: 'pricetag-outline' },
+  'Yeni Satıcı': { label: 'Yeni Satıcı', icon: 'sparkles-outline' },
 };
 
 export default function ShowScreen() {
@@ -240,7 +245,7 @@ export default function ShowScreen() {
           {show.highlights.length ? (
             <View style={styles.chips}>
               {show.highlights.map((h) => {
-                const meta = HIGHLIGHT_META[h] ?? { label: h, icon: 'star' as IconName };
+                const meta = HIGHLIGHT_META[h] ?? { label: h, icon: 'star-outline' as IconName };
                 return (
                   <View key={h} style={[styles.chip, { backgroundColor: colors.surface }]}>
                     <Icon name={meta.icon} size={13} color="text" />

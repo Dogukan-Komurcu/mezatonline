@@ -28,7 +28,7 @@ export function ShowSummary({ data, me, onOrders, onHub, onRaidShow }: { data: S
         <Animated.View entering={FadeInUp.duration(400)} style={styles.hero}>
           <Avatar uri={me.avatar} name={me.username} size={72} ring />
           <Text variant="title1" align="center">
-            {data.rehearsal ? 'Prova tamamlandı 🎓' : data.raidTo ? 'Baskın başladı 🚀' : 'Yayın bitti 🎉'}
+            {data.rehearsal ? 'Prova tamamlandı 🎓' : data.raidTo ? 'Yayın devredildi 🚀' : 'Yayın bitti 🎉'}
           </Text>
           <Text variant="callout" color="textSecondary" align="center" numberOfLines={2}>
             {data.title}
@@ -37,7 +37,7 @@ export function ShowSummary({ data, me, onOrders, onHub, onRaidShow }: { data: S
             <View style={[styles.raid, { backgroundColor: colors.surface }]}>
               <Avatar uri={data.raidTo.avatar} name={data.raidTo.username} size={32} live />
               <Text variant="callout" weight="600" style={{ flex: 1 }}>
-                {formatCompact(data.raidTo.viewers)} izleyiciyle @{data.raidTo.username} yayınına baskın yaptın
+                {formatCompact(data.raidTo.viewers)} izleyicini @{data.raidTo.username} yayınına yönlendirdin
               </Text>
             </View>
           ) : null}

@@ -112,7 +112,7 @@ function WelcomeStep({ draft, set, onLegal }: { draft: Draft; set: (p: Partial<D
   const { colors } = useTheme();
   return (
     <View style={{ gap: 18 }}>
-      <View style={[styles.welcomeArt, { backgroundColor: colors.primary }]}>
+      <View style={[styles.welcomeArt, { backgroundColor: colors.primarySoft }]}>
         <Text style={{ fontSize: 46, lineHeight: 54 }}>🛍️</Text>
       </View>
       <View style={{ gap: 6 }}>
@@ -572,7 +572,7 @@ function SuccessView() {
   };
   return (
     <View style={styles.success}>
-      <Animated.View key={approved ? 'a' : 'p'} entering={ZoomIn.springify().damping(14)} style={[styles.successIcon, { backgroundColor: approved ? colors.primary : tint(colors.success, 0.15) }]}>
+      <Animated.View key={approved ? 'a' : 'p'} entering={ZoomIn.springify().damping(14)} style={[styles.successIcon, { backgroundColor: approved ? colors.primarySoft : tint(colors.success, 0.15) }]}>
         <Text style={{ fontSize: 52, lineHeight: 60 }}>{approved ? '🎉' : '📨'}</Text>
       </Animated.View>
       <Text variant="title1" align="center">

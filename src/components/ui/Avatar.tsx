@@ -6,7 +6,8 @@ import { brand, useTheme } from '@/theme';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-const LETTER_COLORS = ['#8B5CF6', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'];
+// Harf avatarı zeminleri: çini ve çarşı tonları (turkuaz, lacivert, bakır, nar, zeytin, safran, erguvan…) — beyaz harfle okunaklı
+const LETTER_COLORS = ['#0D9488', '#1E5AA8', '#C2703D', '#C8264B', '#5F7A2A', '#B7791F', '#8E3B8E', '#15803D', '#B45309', '#0F766E'];
 
 function colorFor(name: string) {
   let h = 0;
@@ -20,7 +21,7 @@ export type AvatarProps = {
   size?: number;
   /** Canlı yayında: kırmızı halka */
   live?: boolean;
-  /** Sarı halka (takip edilen / öne çıkan) */
+  /** Turkuaz halka (takip edilen / öne çıkan) */
   ring?: boolean;
   verified?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -29,7 +30,7 @@ export type AvatarProps = {
 /** Profil fotoğrafı; yoksa Whatnot'taki gibi renkli harf dairesi */
 export function Avatar({ uri, name, size = 36, live, ring, verified, style }: AvatarProps) {
   const { colors } = useTheme();
-  const ringColor = live ? colors.live : ring ? brand.yellow : undefined;
+  const ringColor = live ? colors.live : ring ? colors.primary : undefined;
   const inner = ringColor ? size - 6 : size;
   return (
     <View style={[{ width: size, height: size }, style]}>
@@ -49,7 +50,7 @@ export function Avatar({ uri, name, size = 36, live, ring, verified, style }: Av
           />
         ) : (
           <View style={[styles.letter, { width: inner, height: inner, borderRadius: inner / 2, backgroundColor: colorFor(name) }]}>
-            <Text style={{ fontSize: inner * 0.42, lineHeight: inner * 0.5, fontWeight: '700' }} color="#FFFFFF">
+            <Text style={{ fontSize: inner * 0.42, lineHeight: inner * 0.5, fontWeight: '700' }} color={brand.white}>
               {name.replace(/[^a-zA-ZçğıöşüÇĞİÖŞÜ0-9]/g, '').charAt(0).toLocaleUpperCase('tr-TR') || '?'}
             </Text>
           </View>
@@ -57,7 +58,7 @@ export function Avatar({ uri, name, size = 36, live, ring, verified, style }: Av
       </View>
       {live && size >= 40 ? (
         <View style={[styles.liveTag, { backgroundColor: colors.live, bottom: -4 }]}>
-          <Text variant="caption" color="#FFFFFF" numberOfLines={1} style={{ fontSize: Math.max(7, Math.min(11, size * 0.16)), lineHeight: Math.max(9, Math.min(13, size * 0.2)), letterSpacing: 0.2 }}>
+          <Text variant="caption" color={brand.white} numberOfLines={1} style={{ fontSize: Math.max(7, Math.min(11, size * 0.16)), lineHeight: Math.max(9, Math.min(13, size * 0.2)), letterSpacing: 0.2 }}>
             CANLI
           </Text>
         </View>

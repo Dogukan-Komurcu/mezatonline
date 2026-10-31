@@ -361,14 +361,14 @@ export const SHOW_TITLES: Record<string, string[]> = {
 };
 
 export const SHOW_DESCRIPTIONS = [
-  'Yayın boyunca ₺1 başlangıçlı açık artırmalar, çekilişler ve flaş indirimler! Takip edin, kaçırmayın 💛',
+  'Yayın boyunca ₺1 başlangıçlı açık artırmalar, çekilişler ve flaş indirimler! Takip edin, kaçırmayın ❤️',
   'Bütün ürünler orijinal ve faturalıdır. Aynı yayında aldıklarınız tek kargoda gönderilir 📦',
   'Her 15 dakikada bir takipçilere özel çekiliş 🎁 Kargolar 24 saat içinde çıkar.',
   'Sorularınızı sohbetten yazın, her ürünü yakından gösteriyorum. Keyifli yayınlar!',
-  'Yeni gelen ürünleri ilk sizinle paylaşıyorum. Ani Bitiş 💀 açık artırmaları da var ⚡',
+  'Yeni gelen ürünleri ilk sizinle paylaşıyorum. Uzatmasız açık artırmalar da var ⚡',
 ];
 
-export const HIGHLIGHT_POOL = ['₺1 Başlangıç', 'Çekiliş', 'Ücretsiz Kargo', 'Orijinal Garantili', 'Hızlı Kargo', 'Ani Bitiş 💀', 'Flaş İndirim', 'Yeni Satıcı'];
+export const HIGHLIGHT_POOL = ['₺1 Başlangıç', 'Çekiliş', 'Ücretsiz Kargo', 'Orijinal Garantili', 'Hızlı Kargo', 'Uzatmasız', 'Flaş İndirim', 'Yeni Satıcı'];
 
 export const PRODUCT_DESCRIPTIONS = [
   'Ürün fotoğraflardaki gibidir, detaylı görmek isterseniz yayında yakından gösterebilirim. Özenle paketlenip gönderilir.',
@@ -382,7 +382,7 @@ export const REVIEW_TEXTS = [
   'Ürün açıklamadaki gibi, çok hızlı kargolandı 👌',
   'Paketleme mükemmeldi, kart kılıflı ve sert koruyucu ile geldi.',
   'Satıcı çok ilgili, sorularıma hemen cevap verdi. Tekrar alırım!',
-  'Yayın çok eğlenceliydi, ürün de harika çıktı 💛',
+  'Yayın çok eğlenceliydi, ürün de harika çıktı ❤️',
   'Kargo bir gün gecikti ama ürün beklediğimden de güzel.',
   'Güvenilir satıcı, gönül rahatlığıyla tavsiye ederim.',
   'İkinci alışverişim, yine sorunsuz. Teşekkürler!',

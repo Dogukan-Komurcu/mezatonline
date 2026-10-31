@@ -234,7 +234,7 @@ export default function CategoryScreen() {
                   <FilterChip label="En İyi Satıcılar" selected={showFilters.topSellers} onPress={() => flag('topSellers')} />
                   <FilterChip label="Yeni ve Dikkat Çekenler" selected={showFilters.fresh} onPress={() => flag('fresh')} />
                   <FilterChip label="₺1 Başlangıç" selected={showFilters.oneLira} onPress={() => flag('oneLira')} />
-                  <FilterChip label="Ani Bitiş 💀" selected={showFilters.suddenDeath} onPress={() => flag('suddenDeath')} />
+                  <FilterChip label="Uzatmasız" icon={showFilters.suddenDeath ? 'flag' : 'flag-outline'} selected={showFilters.suddenDeath} onPress={() => flag('suddenDeath')} />
                   <FilterChip label="Ücretsiz Kargo" selected={showFilters.freeShipping} onPress={() => flag('freeShipping')} />
                   <FilterChip label="Çekiliş" selected={showFilters.giveaway} onPress={() => flag('giveaway')} />
                 </>

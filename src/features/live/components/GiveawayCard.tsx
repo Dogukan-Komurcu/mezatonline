@@ -1,29 +1,38 @@
-import { Image } from 'expo-image';
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { cancelAnimation, FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Icon, PressableScale, Text } from '@/components/ui';
 import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { formatCompact } from '@/lib/format';
-import { liveColors, SCREEN_PADDING } from '@/theme';
+import { liveColors } from '@/theme';
 
 import type { Giveaway } from '../engine';
 import { useRemaining } from '../useLiveShow';
-import { alpha, PANEL } from './styles';
+import { alpha, LIVE_RADIUS, liveStyles } from './styles';
 
 export type GiveawayCardProps = {
   giveaway: Giveaway;
   onEnter: () => void;
   onDismiss: () => void;
   onInfo: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
+function clock(sec: number): string {
+  const s = Math.ceil(sec);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+const prizeName = (g: Giveaway) => g.product.title.replace(/^🎁\s*(Çekiliş:\s*)?/, '');
+
 /**
- * S27: ekranın üstünde çekiliş kartı (alıcılar süreyi görmez; son saniyelerde "Kazanan seçiliyor…").
- * Demo sürümde gerçek ödül verilmediği kartta da yazar (DEMO_COPY.giveaway).
+ * S27: sohbet alanının üstünde ince cam çekiliş şeridi — bakır daire içinde hediye ikonu, ödül adı,
+ * geri sayım, takipçilere özel etiketi ve küçük turkuaz "Katıl" düğmesi. Son saniyelerde
+ * "Kazanan seçiliyor…" yazar; bitince turkuaz kenarlıklı "Kazanan: @x" şeridine dönüşür.
+ * Demo sürümde gerçek ödül verilmediği şeritte de yazar (DEMO_COPY.giveaway).
  */
-export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayCardProps) {
+export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo, style }: GiveawayCardProps) {
   const remaining = useRemaining(giveaway.status === 'running' ? giveaway.endsAt : undefined);
   const selecting = giveaway.status === 'running' && remaining > 0 && remaining < 3.2;
   const shimmer = useSharedValue(1);
@@ -39,88 +48,85 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayC
   if (giveaway.status === 'done' && giveaway.winner) {
     const mine = giveaway.winner.isMe;
     return (
-      <Animated.View entering={ZoomIn.springify().damping(16)} exiting={FadeOutUp} style={[styles.card, styles.winnerCard, mine && styles.winnerMine]}>
-        <View style={styles.winnerHead}>
-          <Text variant="headline" weight="800" color={liveColors.text}>
-            {mine ? '🎉 Çekilişi kazandın!' : '🎉 Çekiliş kazananı'}
+      <Animated.View entering={ZoomIn.springify().damping(16)} exiting={FadeOutUp} style={[liveStyles.glass, styles.ribbon, styles.winner, style]}>
+        <Avatar uri={giveaway.winner.avatar} name={giveaway.winner.username} size={28} />
+        <View style={styles.texts}>
+          <Text variant="subhead" weight="800" color={liveColors.text} numberOfLines={1}>
+            Kazanan:{' '}
+            <Text variant="subhead" weight="800" color={liveColors.accent}>
+              {mine ? 'Sen 🎉' : `@${giveaway.winner.username}`}
+            </Text>
           </Text>
-          <PressableScale onPress={onDismiss} hitSlop={10} style={styles.close} accessibilityLabel="Kapat">
-            <Icon name="close" size={16} color={liveColors.text} />
-          </PressableScale>
+          <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
+            {prizeName(giveaway)}
+          </Text>
+          {DEMO_MODE ? (
+            <Text variant="caption" weight="600" color={liveColors.textTertiary} numberOfLines={2} style={styles.demo}>
+              {DEMO_COPY.giveaway}
+            </Text>
+          ) : null}
         </View>
-        <View style={styles.winnerPill}>
-          <Avatar uri={giveaway.winner.avatar} name={giveaway.winner.username} size={22} />
-          <Text variant="headline" weight="800" color={liveColors.primary} numberOfLines={1} style={styles.flexShrink}>
-            {mine ? `Tebrikler @${giveaway.winner.username}!` : `@${giveaway.winner.username} kazandı!`}
-          </Text>
-        </View>
-        <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
-          {giveaway.product.title.replace(/^🎁\s*/, '')}
-        </Text>
-        {DEMO_MODE ? (
-          <Text variant="caption" weight="700" color={liveColors.textSecondary} numberOfLines={1}>
-            {DEMO_COPY.giveaway}
-          </Text>
-        ) : null}
+        <PressableScale onPress={onDismiss} hitSlop={10} style={styles.close} accessibilityRole="button" accessibilityLabel="Kapat">
+          <Icon name="close" size={14} color={liveColors.text} />
+        </PressableScale>
       </Animated.View>
     );
   }
 
   return (
-    <Animated.View entering={FadeInDown.springify().damping(18)} exiting={FadeOutUp} style={styles.card}>
-      <PressableScale scaleTo={0.98} onPress={onInfo} style={styles.row} accessibilityLabel="Çekiliş bilgisi">
-        <View style={styles.thumbWrap}>
-          <Image source={{ uri: giveaway.product.images[0] }} style={styles.thumb} contentFit="cover" cachePolicy="memory-disk" />
-          <View style={styles.giftBadge}>
-            <Text style={styles.giftEmoji}>🎁</Text>
-          </View>
+    <Animated.View entering={FadeInDown.springify().damping(18)} exiting={FadeOutUp} style={[liveStyles.glass, styles.ribbon, style]}>
+      <PressableScale scaleTo={0.98} onPress={onInfo} style={styles.body} accessibilityRole="button" accessibilityLabel={`Çekiliş: ${prizeName(giveaway)}`}>
+        <View style={styles.gift}>
+          <Icon name="gift-outline" size={16} color={liveColors.text} />
         </View>
         <View style={styles.texts}>
-          <View style={styles.titleRow}>
-            <Text variant="caption" weight="800" color={liveColors.primary}>
-              ÇEKİLİŞ
-            </Text>
-            {giveaway.requiresFollow ? (
-              <View style={styles.tag}>
-                <Text variant="caption" color={liveColors.text} style={styles.tagText}>
-                  Takipçilere özel
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <Text variant="subhead" weight="700" color={liveColors.text} numberOfLines={1}>
-            {giveaway.product.title.replace(/^🎁\s*(Çekiliş:\s*)?/, '')}
+          <Text variant="footnote" weight="700" color={liveColors.text} numberOfLines={1}>
+            {prizeName(giveaway)}
           </Text>
           {selecting ? (
-            <Animated.View style={[styles.selecting, shimmerStyle]}>
-              <ActivityIndicator size="small" color={liveColors.primary} />
-              <Text variant="caption" weight="700" color={liveColors.primary}>
+            <Animated.View style={[styles.meta, shimmerStyle]}>
+              <ActivityIndicator size="small" color={liveColors.accent} />
+              <Text variant="caption" weight="700" color={liveColors.accent}>
                 Kazanan seçiliyor…
               </Text>
             </Animated.View>
           ) : (
-            <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
-              {giveaway.entered ? 'Katıldın ✓ · Çekiliş bitene kadar yayında kal' : `${formatCompact(giveaway.entrants)} katılımcı · Ücretsiz`}
-            </Text>
+            <View style={[styles.meta, styles.wrap]}>
+              {giveaway.status === 'running' ? (
+                <>
+                  <Icon name="time-outline" size={11} color={liveColors.copper} />
+                  <Text variant="caption" weight="700" color={liveColors.copper} tabular>
+                    {clock(remaining)}
+                  </Text>
+                </>
+              ) : null}
+              <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
+                {giveaway.entered ? '· Katıldın, yayında kal' : `· ${formatCompact(giveaway.entrants)} kişi`}
+              </Text>
+              {giveaway.requiresFollow ? (
+                <View style={styles.tag}>
+                  <Text variant="caption" weight="600" color={liveColors.text} style={styles.tagText}>
+                    Takipçilere özel
+                  </Text>
+                </View>
+              ) : null}
+            </View>
           )}
           {DEMO_MODE ? (
-            <Text variant="caption" weight="700" color={liveColors.textSecondary} numberOfLines={2}>
+            <Text variant="caption" weight="600" color={liveColors.textTertiary} numberOfLines={2} style={styles.demo}>
               {DEMO_COPY.giveaway}
             </Text>
           ) : null}
         </View>
       </PressableScale>
       {giveaway.entered ? (
-        <View style={[styles.button, styles.buttonDone]}>
-          <Icon name="checkmark" size={15} color={liveColors.success} />
-          <Text variant="footnote" weight="800" color={liveColors.success}>
-            Katıldın
-          </Text>
+        <View style={[styles.join, styles.joined]} accessible accessibilityLabel="Çekilişe katıldın">
+          <Icon name="checkmark" size={14} color={liveColors.success} />
         </View>
       ) : (
-        <PressableScale scaleTo={0.94} onPress={onEnter} style={styles.button} accessibilityRole="button" accessibilityLabel="Çekilişe katıl">
-          <Text variant="footnote" weight="800" color={liveColors.onPrimary} numberOfLines={1}>
-            Çekilişe katıl
+        <PressableScale scaleTo={0.92} onPress={onEnter} style={styles.join} hitSlop={6} accessibilityRole="button" accessibilityLabel="Çekilişe katıl">
+          <Text variant="footnote" weight="800" color={liveColors.onPrimary}>
+            Katıl
           </Text>
         </PressableScale>
       )}
@@ -129,34 +135,27 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayC
 }
 
 const styles = StyleSheet.create({
-  card: {
-    marginHorizontal: SCREEN_PADDING - 4,
-    marginTop: 10,
-    borderRadius: 16,
-    padding: 10,
-    backgroundColor: PANEL,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: liveColors.border,
+  ribbon: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    alignSelf: 'stretch',
+    borderRadius: LIVE_RADIUS.button,
+    paddingVertical: 6,
+    paddingLeft: 6,
+    paddingRight: 6,
+    backgroundColor: liveColors.glassStrong,
   },
-  row: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  thumbWrap: { width: 46, height: 46 },
-  thumb: { width: 46, height: 46, borderRadius: 10, backgroundColor: liveColors.panelAlt },
-  giftBadge: { position: 'absolute', right: -5, bottom: -5, width: 22, height: 22, borderRadius: 11, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
-  giftEmoji: { fontSize: 12, lineHeight: 15 },
+  winner: { borderWidth: 1.5, borderColor: liveColors.primary, paddingLeft: 8 },
+  body: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  gift: { width: 30, height: 30, borderRadius: 15, backgroundColor: liveColors.copper, alignItems: 'center', justifyContent: 'center' },
   texts: { flex: 1, gap: 1 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tag: { backgroundColor: liveColors.glassLight, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  wrap: { flexWrap: 'wrap', rowGap: 2 },
+  tag: { backgroundColor: liveColors.glassLight, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1 },
   tagText: { fontSize: 10, lineHeight: 13 },
-  selecting: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  button: { backgroundColor: liveColors.primary, borderRadius: 999, paddingHorizontal: 14, height: 34, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 },
-  buttonDone: { backgroundColor: alpha(liveColors.success, 0.16) },
-  winnerCard: { flexDirection: 'column', alignItems: 'stretch', gap: 8, paddingVertical: 12, paddingHorizontal: 14 },
-  winnerMine: { borderColor: liveColors.primary, borderWidth: 1.5 },
-  winnerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  close: { width: 26, height: 26, borderRadius: 13, backgroundColor: liveColors.glassLight, alignItems: 'center', justifyContent: 'center' },
-  winnerPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: liveColors.glassStrong, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8 },
-  flexShrink: { flexShrink: 1 },
+  demo: { fontSize: 10, lineHeight: 13 },
+  join: { height: 30, minWidth: 30, paddingHorizontal: 12, borderRadius: 10, backgroundColor: liveColors.primary, alignItems: 'center', justifyContent: 'center' },
+  joined: { paddingHorizontal: 0, width: 30, backgroundColor: alpha(liveColors.success, 0.16) },
+  close: { width: 24, height: 24, borderRadius: 12, backgroundColor: liveColors.glassLight, alignItems: 'center', justifyContent: 'center' },
 });
