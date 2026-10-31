@@ -8,6 +8,12 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
 3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
 
+## Proje kuralları (Mezatonline)
+
+- **Konum:** Proje `~/Projeler/Mezatonline` içinde yaşar (Masaüstü'ndeki `Mezatonline` sadece kısayoldur). Projeyi veya içindeki dosyaları **iCloud'a taşıma** (Masaüstü/Belgeler, iCloud Drive). iCloud dosyaları buluta taşıyıp çakışma kopyaları (`dosya 2.tsx`) oluşturuyor ve Xcode imzalamasını bozuyor. Buluta taşınmış (dataless) dosya görürsen önce indir.
+- **GitHub:** Depo `github.com/Dogukan-Komurcu/mezatonline` (özel). Her anlamlı değişiklikten sonra commit at ve `git push` ile gönder. İşe başlamadan önce `git pull` ile güncel olduğundan emin ol. Gizli anahtar, `.p8`, `.env`, keystore ve derleme çıktılarını (APK/IPA/HTML önizleme) asla commit etme.
+- **Xcode çıktıları:** `-derivedDataPath ~/Library/Developer/Xcode/DerivedData/Mezatonline-*` kullan.
+
 ## Commands
 
 Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
