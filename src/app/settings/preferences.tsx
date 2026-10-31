@@ -8,6 +8,7 @@ import { Button, Header, Icon, PressableScale, Screen, Segmented, Sheet, Text, T
 import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
+import { useIsGuest } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore } from '@/store/auth';
 import { useOrdersStore } from '@/store/orders';
@@ -37,6 +38,7 @@ export default function PreferencesScreen() {
   const personalizedAds = useAccountStore((s) => s.personalizedAds);
   const setFlag = useAccountStore((s) => s.setFlag);
   const signOut = useAuthStore((s) => s.signOut);
+  const guest = useIsGuest();
   const openOrders = useOrdersStore((s) => s.orders.filter((o) => OPEN_STATUSES.includes(o.status)).length);
   const sellerBalance = useSellerStore((s) => s.balance + s.pendingBalance);
 
@@ -110,8 +112,12 @@ export default function PreferencesScreen() {
         </MenuGroup>
 
         <MenuGroup title="Gizlilik">
-          <SwitchRow icon="ribbon-outline" title="Sadakat Kulübü rozetimi göster" subtitle="Yayın sohbetinde satıcıya özel seviyen görünür" value={showLoyaltyBadge} onChange={(v) => setFlag('showLoyaltyBadge', v)} />
-          <SwitchRow icon="people-outline" title="Hesabımı başkalarına öner" subtitle="Rehberinde numaran kayıtlı olanlara önerilirsin" value={suggestAccount} onChange={(v) => setFlag('suggestAccount', v)} />
+          {guest ? null : (
+            <>
+              <SwitchRow icon="ribbon-outline" title="Sadakat Kulübü rozetimi göster" subtitle="Yayın sohbetinde satıcıya özel seviyen görünür" value={showLoyaltyBadge} onChange={(v) => setFlag('showLoyaltyBadge', v)} />
+              <SwitchRow icon="people-outline" title="Hesabımı başkalarına öner" subtitle="Rehberinde numaran kayıtlı olanlara önerilirsin" value={suggestAccount} onChange={(v) => setFlag('suggestAccount', v)} />
+            </>
+          )}
           <SwitchRow icon="megaphone-outline" title="Kişiselleştirilmiş reklamlar" subtitle="İlgi alanlarına göre kampanya gösterilmesine izin ver (açık rıza)" value={personalizedAds} onChange={(v) => setFlag('personalizedAds', v)} />
           <MenuRow icon="document-lock-outline" title="KVKK ve çerez tercihleri" onPress={() => router.push('/settings/legal')} />
         </MenuGroup>
@@ -120,9 +126,11 @@ export default function PreferencesScreen() {
           <MenuRow icon="trash-bin-outline" title="Önbelleği temizle" subtitle="Görsel önbelleğini siler; kayıtlı verilerin etkilenmez" onPress={clearing ? undefined : clearCache} value={clearing ? 'Temizleniyor…' : undefined} />
         </MenuGroup>
 
-        <MenuGroup title="Hesap yönetimi">
-          <MenuRow icon="person-remove-outline" title="Hesabı sil" subtitle="Hesabın ve verilerin kalıcı olarak silinir" destructive onPress={() => setDeleteOpen(true)} />
-        </MenuGroup>
+        {guest ? null : (
+          <MenuGroup title="Hesap yönetimi">
+            <MenuRow icon="person-remove-outline" title="Hesabı sil" subtitle="Hesabın ve verilerin kalıcı olarak silinir" destructive onPress={() => setDeleteOpen(true)} />
+          </MenuGroup>
+        )}
       </ScrollView>
 
       <Sheet visible={languageOpen} onClose={() => setLanguageOpen(false)} title="Uygulama dili" showClose>
@@ -170,6 +178,7 @@ export default function PreferencesScreen() {
           haptic.heavy();
           setTimeout(() => {
             signOut();
+            router.dismissTo('/');
             toast('Hesabın silindi. Seni özleyeceğiz 💛');
           }, 300);
         }}

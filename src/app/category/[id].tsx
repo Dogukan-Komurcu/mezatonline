@@ -27,6 +27,7 @@ import {
   type ShowFilters,
   type ShowSort,
 } from '@/features/browse/filters';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { ProductGridRow, ShowGridRow } from '@/features/browse/grids';
 import { ModeSwitch, type BrowseMode } from '@/features/browse/ModeSwitch';
 import { ChoiceSheet, ProductFilterSheet, ShowFilterSheet } from '@/features/browse/sheets';
@@ -152,9 +153,20 @@ export default function CategoryScreen() {
   };
 
   const onFollow = () => {
-    const on = toggleFollowCategory(category.id);
-    haptic.success();
-    toast.success(on ? `${category.shortName} takip ediliyor. Yeni yayınlardan haberdar olacaksın.` : 'Kategori takipten çıkarıldı', on ? 'heart' : 'heart-dislike-outline');
+    const was = useSocialStore.getState().followedCategoryIds.includes(category.id);
+    requireAuth(
+      () => {
+        // Kayıtta ilgi alanı olarak seçildiyse takibi geri alma
+        if (useSocialStore.getState().followedCategoryIds.includes(category.id) !== was) {
+          if (!was) toast.success(`${category.shortName} takip ediliyor. Yeni yayınlardan haberdar olacaksın.`, 'heart');
+          return;
+        }
+        const on = toggleFollowCategory(category.id);
+        haptic.success();
+        toast.success(on ? `${category.shortName} takip ediliyor. Yeni yayınlardan haberdar olacaksın.` : 'Kategori takipten çıkarıldı', on ? 'heart' : 'heart-dislike-outline');
+      },
+      { reason: AUTH_REASONS.follow },
+    );
   };
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {

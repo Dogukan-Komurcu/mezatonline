@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { CountBadge, Icon, PressableScale, type IconName } from '@/components/ui';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { SearchPill } from '@/features/browse/ui';
 import { haptic } from '@/lib/haptics';
 import { useUnreadMessageCount, useUnreadNotificationCount } from '@/store/inbox';
@@ -30,19 +31,20 @@ function HeaderIcon({ name, badge, onPress, label }: { name: IconName; badge: nu
 
 export function HomeHeader() {
   const { colors, isDark } = useTheme();
+  const guest = useIsGuest();
   const unreadMessages = useUnreadMessageCount();
   const unreadNotifications = useUnreadNotificationCount();
   return (
     <View style={styles.row}>
       <SearchPill placeholder="Mezatonline'da ara" style={styles.search} />
-      <HeaderIcon name="chatbubble-ellipses-outline" label="Gelen Kutusu" badge={unreadMessages} onPress={() => router.push('/inbox')} />
-      <HeaderIcon name="notifications-outline" label="Bildirimler" badge={unreadNotifications} onPress={() => router.push('/notifications')} />
+      <HeaderIcon name="chatbubble-ellipses-outline" label="Gelen Kutusu" badge={guest ? 0 : unreadMessages} onPress={() => requireAuth(() => router.push('/inbox'), { reason: AUTH_REASONS.inbox })} />
+      <HeaderIcon name="notifications-outline" label="Bildirimler" badge={guest ? 0 : unreadNotifications} onPress={() => requireAuth(() => router.push('/notifications'), { reason: AUTH_REASONS.notifications })} />
       <PressableScale
         scaleTo={0.88}
         hitSlop={6}
         onPress={() => {
           haptic.light();
-          router.push('/rewards');
+          requireAuth(() => router.push('/rewards'), { reason: AUTH_REASONS.rewards });
         }}
         accessibilityRole="button"
         accessibilityLabel="Ödüller"

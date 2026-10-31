@@ -17,6 +17,7 @@ import { CONDITION_LABELS, FORMAT_LABELS, ProductCard } from '@/components/cards
 import { FollowButton } from '@/components/cards/UserRow';
 import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, type IconName } from '@/components/ui';
 import { getCategory, getLiveShowOf, getShopProducts, getSimilarProducts, getSubcategory } from '@/data';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { BlockTitle, InfoLine, KeyValueTable, NoticeBox } from '@/features/commerce/components';
 import { useIsBundled, useMyLatestOffer, useMyPreBid, useNow, useProductById, useRemainingStock, useSellerOf, useShowById } from '@/features/commerce/hooks';
 import { ImageViewer } from '@/features/commerce/ImageViewer';
@@ -49,14 +50,16 @@ export default function ProductScreen() {
   const show = useShowById(product?.showId);
   const seller = useSellerOf(product?.sellerId);
   const remaining = useRemainingStock(product);
-  const preBid = useMyPreBid(product?.id);
-  const offer = useMyLatestOffer(product?.id);
-  const bundled = useIsBundled(product?.sellerId, product?.showId);
+  // Misafir hesaba bağlı sipariş/teklif durumlarını görmez
+  const guest = useIsGuest();
+  const preBid = useMyPreBid(guest ? undefined : product?.id);
+  const offer = useMyLatestOffer(guest ? undefined : product?.id);
+  const bundled = useIsBundled(guest ? undefined : product?.sellerId, product?.showId);
   const saved = useSocialStore((s) => !!product && s.savedProductIds.includes(product.id));
   const toggleSave = useSocialStore((s) => s.toggleSaveProduct);
   const reminded = useSocialStore((s) => !!show && s.remindedShowIds.includes(show.id));
   const toggleReminder = useSocialStore((s) => s.toggleReminder);
-  const latestOrder = useOrdersStore((s) => (product ? s.orders.find((o) => o.productId === product.id && o.buyerId === ME_ID) : undefined));
+  const latestOrder = useOrdersStore((s) => (product && !guest ? s.orders.find((o) => o.productId === product.id && o.buyerId === ME_ID) : undefined));
   const now = useNow(30_000);
   const [page, setPage] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -121,38 +124,52 @@ export default function ProductScreen() {
       message: `${product.title} · ${formatTRY(product.price)}${seller ? ` · @${seller.username}` : ''} — Mezatonline'da gör`,
     });
 
-  const onSave = () => {
-    const on = toggleSave(product.id);
-    haptic.light();
-    if (on) toast.success('Kaydedilenlere eklendi', 'heart');
-    else toast('Kaydedilenlerden çıkarıldı', 'heart-dislike-outline');
-  };
+  const onSave = () =>
+    requireAuth(
+      () => {
+        const on = toggleSave(product.id);
+        haptic.light();
+        if (on) toast.success('Kaydedilenlere eklendi', 'heart');
+        else toast('Kaydedilenlerden çıkarıldı', 'heart-dislike-outline');
+      },
+      { reason: AUTH_REASONS.save },
+    );
 
   const onRemind = () => {
     if (!show) return;
-    const on = toggleReminder(show.id);
-    if (on) {
-      haptic.success();
-      const pts = completeChallenge('save_show');
-      toast.success(`Hatırlatıcı kuruldu 🔔${pts ? ` · +${pts} puan` : ''}`, 'notifications');
-    } else {
-      haptic.light();
-      toast('Hatırlatıcı kaldırıldı', 'notifications-off');
-    }
+    requireAuth(
+      () => {
+        const on = toggleReminder(show.id);
+        if (on) {
+          haptic.success();
+          const pts = completeChallenge('save_show');
+          toast.success(`Hatırlatıcı kuruldu 🔔${pts ? ` · +${pts} puan` : ''}`, 'notifications');
+        } else {
+          haptic.light();
+          toast('Hatırlatıcı kaldırıldı', 'notifications-off');
+        }
+      },
+      { reason: AUTH_REASONS.remind },
+    );
   };
 
   const message = () => {
     if (!seller || own) return;
-    const conv = useInboxStore.getState().ensureConversation(seller.id);
-    haptic.tap();
-    router.push(`/inbox/${conv.id}`);
+    requireAuth(
+      () => {
+        const conv = useInboxStore.getState().ensureConversation(seller.id);
+        haptic.tap();
+        router.push(`/inbox/${conv.id}`);
+      },
+      { reason: AUTH_REASONS.message },
+    );
   };
 
   const buyNow = (price?: number, source: 'buy_now' | 'offer' = 'buy_now') => {
     const params: Record<string, string> = { id: product.id, source };
     if (price !== undefined) params.price = String(price);
     if (product.showId) params.showId = product.showId;
-    router.push({ pathname: '/checkout/[id]', params: params as { id: string } });
+    requireAuth(() => router.push({ pathname: '/checkout/[id]', params: params as { id: string } }), { reason: AUTH_REASONS.buy });
   };
 
   // ─── Alt çubuk ─────────────────────────────────────────────────────────────
@@ -174,13 +191,18 @@ export default function ProductScreen() {
             title="Fiyat Öner"
             variant="inverse"
             size="lg"
-            onPress={() => {
-              if (offer?.status === 'pending') {
-                toast('Önerin satıcıda. Yanıt geldiğinde bildirim alacaksın.', 'hourglass-outline');
-                return;
-              }
-              setOfferOpen(true);
-            }}
+            onPress={() =>
+              requireAuth(
+                () => {
+                  if (offer?.status === 'pending') {
+                    toast('Önerin satıcıda. Yanıt geldiğinde bildirim alacaksın.', 'hourglass-outline');
+                    return;
+                  }
+                  setOfferOpen(true);
+                },
+                { reason: AUTH_REASONS.offer },
+              )
+            }
             style={styles.flex}
           />
         ) : null}
@@ -198,7 +220,7 @@ export default function ProductScreen() {
           icon="hammer"
           size="lg"
           fullWidth
-          onPress={() => setPreBidOpen(true)}
+          onPress={() => requireAuth(() => setPreBidOpen(true), { reason: AUTH_REASONS.bid })}
         />
       );
     } else {
@@ -393,7 +415,7 @@ export default function ProductScreen() {
               </Text>
             </NoticeBox>
           ) : null}
-          {offer && !(offer.status === 'accepted' && soldOut) ? <OfferBanner productPrice={product.price} offer={offer} onAccept={(p) => buyNow(p, 'offer')} orderId={latestOrder?.id} onNewOffer={() => setOfferOpen(true)} /> : null}
+          {offer && !(offer.status === 'accepted' && soldOut) ? <OfferBanner productPrice={product.price} offer={offer} onAccept={(p) => buyNow(p, 'offer')} orderId={latestOrder?.id} onNewOffer={() => requireAuth(() => setOfferOpen(true), { reason: AUTH_REASONS.offer })} /> : null}
           {preBid ? (
             <NoticeBox icon="trending-up" tone={preBid.status === 'outbid' ? 'warning' : 'success'} title={`Ön teklifin: ${formatTRY(preBid.maxAmount)} · ${PRE_BID_STATUS_LABELS[preBid.status]}`}>
               Ürün yayında sahneye geldiğinde bu tutara kadar senin adına otomatik teklif verilir.
@@ -511,7 +533,7 @@ export default function ProductScreen() {
         ) : null}
 
         <View style={styles.reportWrap}>
-          <Button title="İlanı şikayet et" icon="flag-outline" variant="ghost" size="sm" onPress={() => setReportOpen(true)} />
+          <Button title="İlanı şikayet et" icon="flag-outline" variant="ghost" size="sm" onPress={() => requireAuth(() => setReportOpen(true), { reason: AUTH_REASONS.report })} />
         </View>
       </ScrollView>
 
@@ -602,7 +624,7 @@ export default function ProductScreen() {
           destructive
           onPress={() => {
             setMoreOpen(false);
-            setTimeout(() => setReportOpen(true), 250);
+            setTimeout(() => requireAuth(() => setReportOpen(true), { reason: AUTH_REASONS.report }), 250);
           }}
           style={styles.sheetRow}
         />

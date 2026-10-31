@@ -10,6 +10,7 @@ import { CategoryTile } from '@/components/cards/CategoryTile';
 import { UserRow } from '@/components/cards/UserRow';
 import { Divider, EmptyState, Icon, PressableScale, Text, toast, type TabItem } from '@/components/ui';
 import { search, TRENDING_SEARCHES } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { ShowRail } from '@/features/home/ShowRail';
 import { formatNumber } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -89,12 +90,17 @@ function ProductsTab({ query, results, bottomInset }: { query: string; results: 
         <PressableScale
           scaleTo={0.94}
           hitSlop={8}
-          onPress={() => {
-            const on = toggleSaved(query, results.products.length);
-            haptic.success();
-            if (on) toast.success('Arama kaydedildi. Yeni sonuçlar çıktığında haber vereceğiz 🔔', 'bookmark');
-            else toast('Kayıtlı arama kaldırıldı', 'bookmark-outline');
-          }}
+          onPress={() =>
+            requireAuth(
+              () => {
+                const on = toggleSaved(query, results.products.length);
+                haptic.success();
+                if (on) toast.success('Arama kaydedildi. Yeni sonuçlar çıktığında haber vereceğiz 🔔', 'bookmark');
+                else toast('Kayıtlı arama kaldırıldı', 'bookmark-outline');
+              },
+              { reason: AUTH_REASONS.save },
+            )
+          }
           style={styles.saveBtn}
           accessibilityRole="button"
           accessibilityState={{ selected: saved }}

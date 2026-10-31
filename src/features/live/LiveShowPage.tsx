@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
+import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { nextMinBid } from '@/lib/auction';
@@ -89,7 +90,7 @@ type SheetName =
 const OUTBID_NOTIFIED = new Set<string>();
 const SHEET_SWAP_MS = 300;
 const CHAT_COOLDOWN_MS = 2500;
-
+/** AUTH_REASONS'ta karşılığı olmayan, yayına özgü giriş gerekçeleri */
 function hashOf(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
@@ -114,6 +115,7 @@ export type LiveShowPageProps = {
 export function LiveShowPage({ show, width, height, visible, focused, nextShow, qa, onClose, onNext }: LiveShowPageProps) {
   const insets = useSafeAreaInsets();
   const me = useMe();
+  const guest = useIsGuest();
   const [seller] = useState(() => getUser(show.sellerId)!);
   const [products] = useState(() => getProductsByShow(show.id));
   const endedShow = show.status === 'ended';
@@ -127,8 +129,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const activeReactionId = useRewardsStore((s) => s.activeReaction);
   const coupon = useLivePrefs((s) => s.coupon);
   const orders = useOrdersStore((s) => s.orders);
-  const bundled = useShowBundle(show.id, show.sellerId);
-  const reactionEmoji = POINTS_SHOP.find((i) => i.id === activeReactionId)?.emoji ?? '💛';
+  const bundled = useShowBundle(show.id, show.sellerId) && !guest;
+  const reactionEmoji = (!guest && POINTS_SHOP.find((i) => i.id === activeReactionId)?.emoji) || '💛';
 
   const [sheet, setSheet] = useState<SheetName | null>(null);
   const [sheetProduct, setSheetProduct] = useState<Product | undefined>(undefined);
@@ -225,6 +227,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     const since = Date.now();
     setWatch((w) => ({ ...w, since }));
     const t = setTimeout(() => {
+      // Puan hesaba yazılır: misafire verilmez
+      if (!isSignedIn()) return;
       const pts = completeChallenge('watch_show');
       if (pts) toast.success(`+${pts} puan · Bugünün görevi: canlı yayın izle 🎯`, 'trophy');
     }, 30_000);
@@ -289,9 +293,28 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     }
   };
 
+  /**
+   * Hesap gerektiren işlem. Giriş yapılmışsa hemen çalışır; misafirse açık alt sayfa / sohbet
+   * kapatılır (iOS'ta RN Modal giriş ekranının açılmasını engeller), sonra giriş istenir.
+   */
+  const withAuth = (action: () => void, reason: string) => {
+    if (isSignedIn()) {
+      action();
+      return;
+    }
+    const go = () => requireAuth(action, { reason });
+    if (sheet || composer.open) {
+      setSheet(null);
+      setComposer({ open: false, text: '' });
+      setTimeout(go, SHEET_SWAP_MS);
+    } else go();
+  };
+
+  const openWallet = () => withAuth(() => openSheet('wallet'), AUTH_REASONS.account);
+
   const navigate = (href: string) => {
     if (href === 'wallet') {
-      openSheet('wallet');
+      openWallet();
       return;
     }
     setSheet(null);
@@ -304,10 +327,15 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
 
   /**
-   * Kart + adres zorunluluğu (requireTransactSetup) ve istenirse ilk teklif tanıtımı.
-   * Her şey hazırsa eylem hemen çalışır; değilse açık sayfa kapatılıp kurulum gösterilir.
+   * Giriş + kart/adres zorunluluğu (requireTransactSetup) ve istenirse ilk teklif tanıtımı.
+   * Her şey hazırsa eylem hemen çalışır; değilse açık sayfa kapatılıp giriş / kurulum gösterilir.
    */
-  const withGate = (action: () => void, opts: { intro?: boolean } = {}) => {
+  const withGate = (action: () => void, opts: { intro?: boolean; reason?: string } = {}) => {
+    // Misafir: önce giriş; tamamlanınca kontrol kaldığı yerden sürer
+    if (!isSignedIn()) {
+      withAuth(() => withGate(action, opts), opts.reason ?? AUTH_REASONS.generic);
+      return;
+    }
     const needIntro = !!opts.intro && !useLivePrefs.getState().bidIntroAccepted;
     if (isReady() && !needIntro) {
       action();
@@ -340,30 +368,37 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     toast.success(`${seller.username} takip ediliyor${pts ? ` · +${pts} puan` : ''}`, 'person-add');
   };
 
+  const followSeller = () => withAuth(doFollow, AUTH_REASONS.follow);
+
   const toggleFollow = () => {
-    if (!useSocialStore.getState().isFollowing(seller.id)) {
-      doFollow();
-      return;
-    }
-    Alert.alert('Takibi bırak', `${seller.username} adlı satıcıyı takip etmeyi bırakmak istediğine emin misin?`, [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Takibi bırak',
-        style: 'destructive',
-        onPress: () => {
-          useSocialStore.getState().toggleFollow(seller.id);
-          haptic.tap();
-          toast(`${seller.username} artık takip edilmiyor`, 'person-remove');
+    // Dokunulduğu andaki durum: giriş sırasında takip edildiyse "takibi bırak" sorusu çıkmasın
+    const was = useSocialStore.getState().isFollowing(seller.id);
+    withAuth(() => {
+      if (!was || !useSocialStore.getState().isFollowing(seller.id)) {
+        doFollow();
+        return;
+      }
+      Alert.alert('Takibi bırak', `${seller.username} adlı satıcıyı takip etmeyi bırakmak istediğine emin misin?`, [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Takibi bırak',
+          style: 'destructive',
+          onPress: () => {
+            useSocialStore.getState().toggleFollow(seller.id);
+            haptic.tap();
+            toast(`${seller.username} artık takip edilmiyor`, 'person-remove');
+          },
         },
-      },
-    ]);
+      ]);
+    }, AUTH_REASONS.follow);
   };
 
-  const sendReaction = () => {
-    reactions.spawn(reactionEmoji, true);
-    setTimeout(() => reactions.spawn(reactionEmoji, true), 120);
-    engine.like();
-  };
+  const sendReaction = () =>
+    withAuth(() => {
+      reactions.spawn(reactionEmoji, true);
+      setTimeout(() => reactions.spawn(reactionEmoji, true), 120);
+      engine.like();
+    }, AUTH_REASONS.react);
 
   const onBackgroundPress = () => {
     const now = Date.now();
@@ -410,8 +445,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
 
   const onSwipe = (shown: number) => {
-    const immediate = isReady() && useLivePrefs.getState().bidIntroAccepted;
-    withGate(() => quickBid(shown, immediate), { intro: true });
+    // Misafir giriş yapana kadar fiyat değişebilir: o durumda güncel en düşük teklif verilir
+    const immediate = isSignedIn() && isReady() && useLivePrefs.getState().bidIntroAccepted;
+    withGate(() => quickBid(shown, immediate), { intro: true, reason: AUTH_REASONS.bid });
   };
 
   const onCustomSubmit = ({ amount, max }: CustomBidSubmit): boolean => {
@@ -454,12 +490,15 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
 
   const enterGiveaway = () => {
-    withGate(() => {
-      const r = engine.enterGiveaway();
-      if (r === 'need_follow') openSheet('followEnter');
-      else if (r === 'entered') giveawayFeedback();
-      else toast('Bu çekilişe artık katılınamıyor', 'time-outline');
-    });
+    withGate(
+      () => {
+        const r = engine.enterGiveaway();
+        if (r === 'need_follow') openSheet('followEnter');
+        else if (r === 'entered') giveawayFeedback();
+        else toast('Bu çekilişe artık katılınamıyor', 'time-outline');
+      },
+      { reason: AUTH_REASONS.giveaway },
+    );
   };
 
   const followAndEnter = () => {
@@ -488,7 +527,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const confirmBuy = (qty: number) => {
     const p = sheetProduct;
     if (!p) return;
-    if (!isReady()) {
+    if (!isSignedIn() || !isReady()) {
       setSheet(null);
       setTimeout(
         () =>
@@ -533,6 +572,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   // ─── Sohbet ────────────────────────────────────────────────────────────────
 
   const onSend = (text: string): boolean => {
+    // Güvenlik ağı: misafir sohbet alanını zaten açamaz
+    if (!isSignedIn()) {
+      withAuth(() => setComposer({ open: true, text }), AUTH_REASONS.chat);
+      return true;
+    }
     const now = Date.now();
     if (now - lastChatAt.current < CHAT_COOLDOWN_MS) {
       haptic.warning();
@@ -561,10 +605,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     openSheet('user');
   };
 
-  const messageUser = (userId: string) => {
-    const conv = useInboxStore.getState().ensureConversation(userId);
-    navigate(`/inbox/${conv.id}`);
-  };
+  const messageUser = (userId: string) =>
+    withAuth(() => {
+      const conv = useInboxStore.getState().ensureConversation(userId);
+      navigate(`/inbox/${conv.id}`);
+    }, AUTH_REASONS.message);
 
   // ─── Diğer ─────────────────────────────────────────────────────────────────
 
@@ -578,29 +623,33 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
 
   const doBoost = (amount: number) => {
-    withGate(() => {
-      setBoosting(true);
-      if (sheet !== 'boost') openSheet('boost');
-      setTimeout(() => {
-        setBoosting(false);
-        setBoost((b) => ({ ...b, raised: Math.min(b.goal, b.raised + amount) }));
-        engine.boost(amount);
-        haptic.success();
-        toast.success(`${formatTRY(amount)} katkın için teşekkürler! 🚀`, 'rocket');
-      }, 800);
-    });
+    withGate(
+      () => {
+        setBoosting(true);
+        if (sheet !== 'boost') openSheet('boost');
+        setTimeout(() => {
+          setBoosting(false);
+          setBoost((b) => ({ ...b, raised: Math.min(b.goal, b.raised + amount) }));
+          engine.boost(amount);
+          haptic.success();
+          toast.success(`${formatTRY(amount)} katkın için teşekkürler! 🚀`, 'rocket');
+        }, 800);
+      },
+      { reason: AUTH_REASONS.boost },
+    );
   };
 
-  const makeClip = () => {
-    setSheet(null);
-    setClipping(true);
-    toast('Klip oluşturuluyor… Son 60 saniye kaydediliyor', 'film-outline');
-    setTimeout(() => {
-      setClipping(false);
-      haptic.success();
-      toast.success('Klip profiline gizli olarak kaydedildi 🎬', 'film');
-    }, 1800);
-  };
+  const makeClip = () =>
+    withAuth(() => {
+      setSheet(null);
+      setClipping(true);
+      toast('Klip oluşturuluyor… Son 60 saniye kaydediliyor', 'film-outline');
+      setTimeout(() => {
+        setClipping(false);
+        haptic.success();
+        toast.success('Klip profiline gizli olarak kaydedildi 🎬', 'film');
+      }, 1800);
+    }, AUTH_REASONS.save);
 
   const hideShow = () => {
     useLivePrefs.getState().hideShow(show.id);
@@ -609,37 +658,40 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     onNext();
   };
 
-  const blockSeller = () => {
-    setSheet(null);
-    setTimeout(() => {
-      Alert.alert(`${seller.username} engellensin mi?`, 'Bu satıcının yayınlarını ve mesajlarını artık görmezsin. İstediğin zaman Ayarlar’dan kaldırabilirsin.', [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Engelle',
-          style: 'destructive',
-          onPress: () => {
-            useSocialStore.getState().block(seller.id);
-            haptic.success();
-            toast.success(`${seller.username} engellendi`, 'ban');
-            onClose();
+  const blockSeller = () =>
+    withAuth(() => {
+      setSheet(null);
+      setTimeout(() => {
+        Alert.alert(`${seller.username} engellensin mi?`, 'Bu satıcının yayınlarını ve mesajlarını artık görmezsin. İstediğin zaman Ayarlar’dan kaldırabilirsin.', [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Engelle',
+            style: 'destructive',
+            onPress: () => {
+              useSocialStore.getState().block(seller.id);
+              haptic.success();
+              toast.success(`${seller.username} engellendi`, 'ban');
+              onClose();
+            },
           },
-        },
-      ]);
-    }, SHEET_SWAP_MS);
-  };
+        ]);
+      }, SHEET_SWAP_MS);
+    }, AUTH_REASONS.block);
 
   const toggleBlockUser = () => {
     if (!chatUser) return;
-    const s = useSocialStore.getState();
-    if (s.blockedIds.includes(chatUser.id)) {
-      s.unblock(chatUser.id);
-      toast(`${chatUser.username} için engel kaldırıldı`, 'checkmark-circle');
-    } else {
-      s.block(chatUser.id);
-      haptic.success();
-      toast.success(`${chatUser.username} engellendi, mesajlarını görmeyeceksin`, 'ban');
-    }
-    setSheet(null);
+    withAuth(() => {
+      const s = useSocialStore.getState();
+      if (s.blockedIds.includes(chatUser.id)) {
+        s.unblock(chatUser.id);
+        toast(`${chatUser.username} için engel kaldırıldı`, 'checkmark-circle');
+      } else {
+        s.block(chatUser.id);
+        haptic.success();
+        toast.success(`${chatUser.username} engellendi, mesajlarını görmeyeceksin`, 'ban');
+      }
+      setSheet(null);
+    }, AUTH_REASONS.block);
   };
 
   const openClub = () => {
@@ -701,18 +753,19 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const nextBid = lot ? nextMinBid(lot.currentBid, lot.bidCount > 0) : 0;
   const leading = !!lot?.leader?.isMe && running;
   const shippingCost = lot ? lot.product.shippingCost : 0;
-  const couponOff = lot && running ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
+  const couponOff = lot && running && !guest ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
   const giveaway = state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
   const flash = state.flash;
   const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
   const shopCount = state.queue.filter((p) => !soldAuctionIds.has(p.id)).length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
-  const sellerOrders = orders.filter((o) => o.sellerId === seller.id && o.status !== 'cancelled');
+  const sellerOrders = guest ? [] : orders.filter((o) => o.sellerId === seller.id && o.status !== 'cancelled');
   const sellerSpend = sellerOrders.reduce((sum, o) => sum + o.itemPrice, 0);
   const hasClub = seller.followers > 15000 || seller.badges.includes('top_seller');
   const tall = height >= 760;
   const muted = !liveSoundOn;
   const shareCount = show.savedCount * 3 + (hashOf(show.id) % 400);
-  const friends = BUYER_USERS.slice(hashOf(show.id) % 20, (hashOf(show.id) % 20) + (hashOf(show.id) % 3));
+  // Misafirin arkadaş listesi yok
+  const friends = guest ? [] : BUYER_USERS.slice(hashOf(show.id) % 20, (hashOf(show.id) % 20) + (hashOf(show.id) % 3));
   const bottomPad = Math.max(insets.bottom, 10) + 2;
   // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; orta bölgeye sığmazsa küçülür
   const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 8));
@@ -727,7 +780,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   ];
   const shippingLine = (p?: Product) => {
     if (!p) return '';
-    const b = bundled || hasBundleInShow(show.id, show.sellerId);
+    const b = !guest && (bundled || hasBundleInShow(show.id, show.sellerId));
     return b ? 'Kargo: +₺0 (aynı pakete eklendi)' : `Kargo: ${formatTRY(p.shippingCost)}`;
   };
   const buy = sheetProduct ? buyInfo(sheetProduct) : undefined;
@@ -738,7 +791,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     { key: 'more', label: 'Diğer', icon: 'ellipsis-horizontal' as const, prio: 0, onPress: () => openSheet('more') },
     { key: 'boost', label: 'Destekle', icon: 'flash' as const, prio: 3, onPress: () => openSheet('boost') },
     { key: 'share', label: 'Paylaş', icon: 'share-outline' as const, badge: formatCompact(shareCount), prio: 1, onPress: share },
-    { key: 'wallet', label: 'Cüzdan', icon: 'wallet-outline' as const, prio: 2, onPress: () => openSheet('wallet') },
+    { key: 'wallet', label: 'Cüzdan', icon: 'wallet-outline' as const, prio: 2, onPress: openWallet },
     ...(tall
       ? [{ key: 'sound', label: muted ? 'Sesi aç' : 'Ses', icon: muted ? ('volume-mute' as const) : ('volume-high' as const), active: !muted, prio: 5, onPress: toggleMute }]
       : []),
@@ -760,7 +813,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       state={running ? 'bidding' : 'waiting'}
       nextBid={nextBid}
       leading={leading}
-      onCustom={() => withGate(() => openSheet('custom'), { intro: true })}
+      onCustom={() => withGate(() => openSheet('custom'), { intro: true, reason: AUTH_REASONS.bid })}
       onSwipe={onSwipe}
       onTapHint={() => toast(`Teklif vermek için sağa kaydır → ${formatTRY(nextBid)}`, 'hand-right')}
     />
@@ -787,7 +840,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
             viewers={state.viewers}
             following={following}
             topInset={insets.top}
-            onFollow={doFollow}
+            onFollow={followSeller}
             onSellerPress={() => openSheet('seller')}
             onViewersPress={openViewers}
             onClose={onClose}
@@ -833,7 +886,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
                 flash={flash}
                 onBuy={() => {
                   const p = state.shop.find((x) => x.id === flash.product.id) ?? flash.product;
-                  withGate(() => openBuy(p));
+                  withGate(() => openBuy(p), { reason: AUTH_REASONS.buy });
                 }}
               />
             ) : null}
@@ -856,9 +909,10 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
               shopCount={shopCount}
               shopThumb={lot?.product.images[0]}
               reactionEmoji={reactionEmoji}
-              onCompose={() => setComposer({ open: true, text: '' })}
+              guest={guest}
+              onCompose={() => withAuth(() => setComposer({ open: true, text: '' }), AUTH_REASONS.chat)}
               onReact={sendReaction}
-              onReactLong={() => openSheet('reactions')}
+              onReactLong={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
               onShop={() => openSheet('shop')}
             />
           </View>
@@ -977,10 +1031,10 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         following={following}
         onToggleFollow={toggleFollow}
         onMessage={() => messageUser(seller.id)}
-        onTip={() => withGate(() => openSheet('tip'))}
+        onTip={() => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip })}
         onBoost={() => openSheet('boost')}
         onProfile={() => navigate(`/user/${seller.username}`)}
-        onReport={() => openSheet('reportSeller')}
+        onReport={() => withAuth(() => openSheet('reportSeller'), AUTH_REASONS.report)}
         onBlock={blockSeller}
       />
       <TipSheet visible={sheet === 'tip'} onClose={closeAllSheets} seller={seller} dark onSent={(amount) => engine.tip(amount)} />
@@ -1003,12 +1057,14 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onClose={closeAllSheets}
         user={chatUser}
         blocked={!!chatUser && blockedIds.includes(chatUser.id)}
-        onMention={() => {
-          const name = chatUser?.username ?? '';
-          setSheet(null);
-          setTimeout(() => setComposer({ open: true, text: `@${name} ` }), SHEET_SWAP_MS);
-        }}
-        onReport={() => openSheet('reportUser')}
+        onMention={() =>
+          withAuth(() => {
+            const name = chatUser?.username ?? '';
+            setSheet(null);
+            setTimeout(() => setComposer({ open: true, text: `@${name} ` }), SHEET_SWAP_MS);
+          }, AUTH_REASONS.chat)
+        }
+        onReport={() => withAuth(() => openSheet('reportUser'), AUTH_REASONS.report)}
         onToggleBlock={toggleBlockUser}
       />
       <MoreSheet
@@ -1024,7 +1080,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onClip={makeClip}
         onToggleMute={(m) => setLiveSoundOn(!m)}
         onToggleChat={setChatHidden}
-        onReactions={() => openSheet('reactions')}
+        onReactions={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
         onBoost={() => openSheet('boost')}
         onClub={hasClub ? openClub : undefined}
         onCaptions={() => {
@@ -1032,7 +1088,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           setTimeout(() => Alert.alert('Altyazılar', 'Canlı altyazıları cihazının Ayarlar › Erişilebilirlik › Altyazılar bölümünden açabilirsin.'), SHEET_SWAP_MS);
         }}
         onHideShow={hideShow}
-        onReport={() => openSheet('reportShow')}
+        onReport={() => withAuth(() => openSheet('reportShow'), AUTH_REASONS.report)}
         onLeave={() => {
           setSheet(null);
           onClose();
@@ -1045,14 +1101,16 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         purchases={sellerOrders.length}
         spend={sellerSpend}
         watchedMinutes={clubMinutes}
-        couponActive={coupon?.code === 'KULUP5'}
-        onRedeem={(code) => {
-          const res = useLivePrefs.getState().applyCoupon(code);
-          if (res.ok) {
-            haptic.success();
-            toast.success('Kulüp kuponun uygulandı: %5 indirim', 'pricetag');
-          } else toast(res.error, 'pricetag-outline');
-        }}
+        couponActive={!guest && coupon?.code === 'KULUP5'}
+        onRedeem={(code) =>
+          withAuth(() => {
+            const res = useLivePrefs.getState().applyCoupon(code);
+            if (res.ok) {
+              haptic.success();
+              toast.success('Kulüp kuponun uygulandı: %5 indirim', 'pricetag');
+            } else toast(res.error, 'pricetag-outline');
+          }, AUTH_REASONS.generic)
+        }
       />
       <WalletSheet visible={sheet === 'wallet'} onClose={closeAllSheets} onNavigate={navigate} />
       <BoostSheet
@@ -1063,7 +1121,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         goal={boost.goal}
         boosting={boosting}
         onBoost={doBoost}
-        onTip={() => withGate(() => openSheet('tip'))}
+        onTip={() => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip })}
       />
       <ShopSheet
         visible={sheet === 'shop'}
@@ -1074,10 +1132,10 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           setSheetProduct(p);
           openSheet('product');
         }}
-        onBuyNow={(p) => withGate(() => openBuy(p))}
+        onBuyNow={(p) => withGate(() => openBuy(p), { reason: AUTH_REASONS.buy })}
         onPreBid={(p) => {
           setSheetProduct(p);
-          withGate(() => openSheet('prebid'), { intro: true });
+          withGate(() => openSheet('prebid'), { intro: true, reason: AUTH_REASONS.bid });
         }}
         onEnterGiveaway={enterGiveaway}
       />
@@ -1101,6 +1159,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         currentBid={sheetProduct && lot && running && lot.product.id === sheetProduct.id ? lot.currentBid : undefined}
         shippingLine={shippingLine(sheetProduct)}
         onOpenPage={(p) => navigate(`/product/${p.id}`)}
+        withAuth={withAuth}
       />
       <FollowEnterSheet visible={sheet === 'followEnter'} onClose={closeAllSheets} seller={seller} onConfirm={followAndEnter} />
       <GiveawayInfoSheet

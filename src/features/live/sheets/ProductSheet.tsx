@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 import { Button, Icon, Sheet, Text, toast } from '@/components/ui';
 import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard';
+import { AUTH_REASONS } from '@/features/auth/gate';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
@@ -19,10 +20,12 @@ export type ProductSheetProps = {
   currentBid?: number;
   shippingLine: string;
   onOpenPage: (p: Product) => void;
+  /** Giriş kapısı: misafirse sayfa kapatılıp giriş istenir, giriş sonrası işlem çalışır */
+  withAuth: (action: () => void, reason: string) => void;
 };
 
 /** Sabit ürün kartına dokununca: fotoğraflar, durum, açıklama, kargo */
-export function ProductSheet({ visible, onClose, product, currentBid, shippingLine, onOpenPage }: ProductSheetProps) {
+export function ProductSheet({ visible, onClose, product, currentBid, shippingLine, onOpenPage, withAuth }: ProductSheetProps) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
@@ -94,11 +97,13 @@ export function ProductSheet({ visible, onClose, product, currentBid, shippingLi
           title={saved ? 'Kaydedildi' : 'Kaydet'}
           icon={saved ? 'heart' : 'heart-outline'}
           variant="secondary"
-          onPress={() => {
-            const on = toggleSave(product.id);
-            haptic.success();
-            toast.success(on ? 'Ürün kaydedildi' : 'Kayıtlardan çıkarıldı', on ? 'heart' : 'heart-dislike');
-          }}
+          onPress={() =>
+            withAuth(() => {
+              const on = toggleSave(product.id);
+              haptic.success();
+              toast.success(on ? 'Ürün kaydedildi' : 'Kayıtlardan çıkarıldı', on ? 'heart' : 'heart-dislike');
+            }, AUTH_REASONS.save)
+          }
           style={styles.flex}
         />
         {!giveaway ? <Button title="Ürün sayfası" iconRight="open-outline" variant="secondary" onPress={() => onOpenPage(product)} style={styles.flex} /> : null}

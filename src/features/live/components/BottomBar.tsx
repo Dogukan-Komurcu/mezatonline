@@ -11,6 +11,8 @@ export type BottomBarProps = {
   shopCount: number;
   shopThumb?: string;
   reactionEmoji: string;
+  /** Misafir: sohbet alanı yerine giriş istemi (dokununca giriş kapısı açılır) */
+  guest?: boolean;
   onCompose: () => void;
   onReact: () => void;
   onReactLong: () => void;
@@ -18,13 +20,14 @@ export type BottomBarProps = {
 };
 
 /** S20-D: "Bir şey yaz…" + tepki (kalp) + Mağaza kutucuğu */
-export function BottomBar({ shopCount, shopThumb, reactionEmoji, onCompose, onReact, onReactLong, onShop }: BottomBarProps) {
+export function BottomBar({ shopCount, shopThumb, reactionEmoji, guest, onCompose, onReact, onReactLong, onShop }: BottomBarProps) {
+  const placeholder = guest ? 'Sohbete katılmak için giriş yap' : 'Bir şey yaz…';
   return (
     <View style={styles.row}>
-      <PressableScale scaleTo={0.98} onPress={onCompose} style={styles.input} accessibilityRole="button" accessibilityLabel="Bir şey yaz">
+      <PressableScale scaleTo={0.98} onPress={onCompose} style={styles.input} accessibilityRole="button" accessibilityLabel={placeholder}>
         <Icon name="chatbubble-ellipses-outline" size={17} color={liveColors.textSecondary} />
         <Text variant="callout" weight="500" color={liveColors.textSecondary} numberOfLines={1} style={styles.flex}>
-          Bir şey yaz…
+          {placeholder}
         </Text>
       </PressableScale>
       <PressableScale

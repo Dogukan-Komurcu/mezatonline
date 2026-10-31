@@ -1,8 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { BackHandler, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,6 +10,7 @@ import { Logo } from '@/components/Logo';
 import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
 import { AuthOptionButton, withAlpha } from '@/features/auth/components';
 import { LegalFooter, useLegalSheet } from '@/features/auth/legal';
+import { cancelAuthGate, useAuthGate } from '@/features/auth/gate';
 import { startSignup } from '@/features/auth/session';
 import type { AuthProvider } from '@/features/auth/store';
 import { WelcomeCollage } from '@/features/auth/WelcomeCollage';
@@ -30,6 +31,18 @@ function WelcomeScreen() {
   const status = useAuthStore((s) => s.status);
   const phone = useAuthStore((s) => s.phone);
   const [pending, setPending] = useState<SocialProvider | null>(null);
+  const reason = useAuthGate((s) => s.reason);
+
+  // Android geri tuşu X ile aynı: yarım kaydı geri al, kullanıcıyı geldiği ekrana bırak
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        cancelAuthGate();
+        return true;
+      });
+      return () => sub.remove();
+    }, []),
+  );
 
   // Sahte OAuth: kısa bir bekleme sonrası hesap açılır ve "Kaydı Tamamla" (telefon) adımına geçilir
   useEffect(() => {
@@ -71,6 +84,17 @@ function WelcomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 14, paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
         <Animated.View entering={FadeIn.duration(500)} style={styles.top}>
+          <PressableScale
+            onPress={() => {
+              haptic.tap();
+              cancelAuthGate();
+            }}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Kapat"
+            style={[styles.close, { top: 0, backgroundColor: withAlpha(colors.bg, 0.7) }]}>
+            <Icon name="close" size={22} color="text" />
+          </PressableScale>
           <Logo size={34} />
           {status === 'signedIn' ? (
             <PressableScale onPress={resume} style={[styles.resume, { backgroundColor: withAlpha(colors.bg, 0.8), borderColor: colors.border }]}>
@@ -93,6 +117,11 @@ function WelcomeScreen() {
             <Text variant="title1" align="center" style={styles.title}>
               Mezatonline’a Kaydol
             </Text>
+            {reason ? (
+              <Text variant="callout" color="textSecondary" align="center">
+                {reason}. Kaydolmak ücretsiz.
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.options}>
@@ -151,6 +180,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: SCREEN_PADDING + 4 },
   top: { alignItems: 'center', gap: 14 },
+  close: { position: 'absolute', left: 0, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
   resume: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, borderWidth: 1 },
   spacer: { flex: 1, minHeight: 140 },
   panel: { gap: 18 },

@@ -7,6 +7,7 @@ import { LEGAL_DOCS, type LegalDoc } from '@/features/account/content';
 import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { SCREEN_PADDING } from '@/theme';
 
@@ -16,6 +17,7 @@ export default function LegalScreen() {
   const personalizedAds = useAccountStore((s) => s.personalizedAds);
   const iysEmail = useAccountStore((s) => s.iysEmail);
   const setFlag = useAccountStore((s) => s.setFlag);
+  const guest = useIsGuest();
   const [doc, setDoc] = useState<LegalDoc | null>(null);
   const [requestOpen, setRequestOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -36,11 +38,13 @@ export default function LegalScreen() {
 
         <MenuGroup title="İzinlerin" footer="Açık rızanı istediğin zaman geri alabilirsin. Geri alma, önceki işlemlerin hukuka uygunluğunu etkilemez.">
           <SwitchRow title="Kişiselleştirilmiş reklam ve çerezler" subtitle="İlgi alanlarına göre kampanya gösterilmesine açık rıza" value={personalizedAds} onChange={(v) => setFlag('personalizedAds', v)} />
-          <SwitchRow title="E-posta ile ticari ileti" subtitle="Kampanya, kupon ve yeni özelliklerden haberdar ol (İYS)" value={iysEmail} onChange={(v) => setFlag('iysEmail', v)} />
+          {guest ? null : (
+            <SwitchRow title="E-posta ile ticari ileti" subtitle="Kampanya, kupon ve yeni özelliklerden haberdar ol (İYS)" value={iysEmail} onChange={(v) => setFlag('iysEmail', v)} />
+          )}
         </MenuGroup>
 
         <MenuGroup title="Veri hakların">
-          <MenuRow icon="download-outline" title="Verilerimin bir kopyasını iste" subtitle="KVKK md. 11 · 30 gün içinde e-posta ile gönderilir" onPress={() => setRequestOpen(true)} />
+          <MenuRow icon="download-outline" title="Verilerimin bir kopyasını iste" subtitle="KVKK md. 11 · 30 gün içinde e-posta ile gönderilir" onPress={() => requireAuth(() => setRequestOpen(true), { reason: AUTH_REASONS.account })} />
         </MenuGroup>
 
         <View style={[styles.pad, { marginTop: 20 }]}>

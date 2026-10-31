@@ -49,6 +49,12 @@ export function useLiveShow(opts: UseLiveShowOptions): { state: LiveSnapshot; en
     });
   }, [engine, events]);
 
+  // Misafir yayındayken kaydolursa motor yeni kullanıcı adını kullansın
+  const { id: meId, username: meName, avatar: meAvatar } = me;
+  useEffect(() => {
+    engine.updateMe({ id: meId, username: meName, avatar: meAvatar });
+  }, [engine, meId, meName, meAvatar]);
+
   useEffect(() => {
     if (active) engine.start();
     else engine.stop();

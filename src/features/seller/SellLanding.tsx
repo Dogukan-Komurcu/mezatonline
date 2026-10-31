@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, type IconName } from '@/components/ui';
 import { getLiveShows, getSellers, getUser } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
@@ -322,7 +323,7 @@ export function SellLanding() {
       </ScrollView>
       {pastHero ? <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)} style={[styles.statusBackdrop, { height: insets.top, backgroundColor: colors.bg }]} /> : null}
       <StickyFooter safeBottom={false}>
-        <Button title="Hemen Başla" size="lg" fullWidth iconRight="arrow-forward" onPress={() => router.push('/seller/apply')} />
+        <Button title="Hemen Başla" size="lg" fullWidth iconRight="arrow-forward" onPress={() => requireAuth(() => router.push('/seller/apply'), { reason: AUTH_REASONS.sell })} />
         <Text variant="footnote" color="textSecondary" align="center">
           Başvuru ücretsiz · Ortalama 5 dakika
         </Text>

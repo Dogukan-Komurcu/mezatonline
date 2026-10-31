@@ -10,6 +10,7 @@ import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
 import { radius, useTheme } from '@/theme';
 import type { Show } from '@/types';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 
 export type ShowCardProps = {
   show: Show;
@@ -66,11 +67,16 @@ export function ShowCard({ show, width, hideSeller, style }: ShowCardProps) {
         {show.status === 'scheduled' ? (
           <PressableScale
             scaleTo={0.85}
-            onPress={() => {
-              const on = toggleReminder(show.id);
-              haptic.success();
-              toast.success(on ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', on ? 'notifications' : 'notifications-off');
-            }}
+            onPress={() =>
+              requireAuth(
+                () => {
+                  const on = toggleReminder(show.id);
+                  haptic.success();
+                  toast.success(on ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', on ? 'notifications' : 'notifications-off');
+                },
+                { reason: AUTH_REASONS.remind },
+              )
+            }
             style={styles.bookmark}
             accessibilityLabel="Hatırlatıcı">
             <Icon name={reminded ? 'bookmark' : 'bookmark-outline'} size={18} color={reminded ? colors.primary : '#FFFFFF'} />

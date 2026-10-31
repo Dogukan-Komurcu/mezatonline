@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, EmptyState, Header, Icon, PressableScale, Screen, Text, TextField, toast } from '@/components/ui';
 import { FAQ_TOPICS, FAQS, type Faq, type FaqTopic } from '@/features/account/content';
 import { MenuGroup, MenuRow } from '@/features/account/ui';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { useQaParams } from '@/features/account/qa';
 import { haptic } from '@/lib/haptics';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
@@ -122,11 +123,11 @@ export default function HelpScreen() {
             ))}
           </View>
         ) : (
-          <EmptyState icon="search" title="Sonuç bulunamadı" message="Farklı bir kelimeyle aramayı dene ya da doğrudan destek ekibimize yaz." actionLabel="Destekle sohbet et" onAction={() => router.push('/inbox/support')} />
+          <EmptyState icon="search" title="Sonuç bulunamadı" message="Farklı bir kelimeyle aramayı dene ya da doğrudan destek ekibimize yaz." actionLabel="Destekle sohbet et" onAction={() => requireAuth(() => router.push('/inbox/support'), { reason: AUTH_REASONS.support })} />
         )}
 
         <MenuGroup title="Hâlâ yardıma mı ihtiyacın var?">
-          <MenuRow icon="chatbubbles-outline" title="Destek ekibiyle sohbet et" subtitle="Her gün 09:00 – 23:00 · ortalama yanıt 5 dk" onPress={() => router.push('/inbox/support')} />
+          <MenuRow icon="chatbubbles-outline" title="Destek ekibiyle sohbet et" subtitle="Her gün 09:00 – 23:00 · ortalama yanıt 5 dk" onPress={() => requireAuth(() => router.push('/inbox/support'), { reason: AUTH_REASONS.support })} />
           <MenuRow
             icon="mail-outline"
             title="E-posta gönder"

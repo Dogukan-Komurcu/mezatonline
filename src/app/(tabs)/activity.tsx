@@ -1,11 +1,14 @@
 /**
- * Aktivite sekmesi (Whatnot S60): Siparişler · Ön Teklifler · Öneriler · Kaydedilenler
+ * Aktivite sekmesi (Whatnot S60): Siparişler · Ön Teklifler · Öneriler · Kaydedilenler.
+ * Misafir giriş istemi görür.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Header, IconButton, Screen, UnderlineTabs } from '@/components/ui';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
+import { GuestPrompt } from '@/features/auth/GuestPrompt';
 import { OffersTab } from '@/features/activity/tabs/OffersTab';
 import { PreBidsTab } from '@/features/activity/tabs/PreBidsTab';
 import { PurchasesTab } from '@/features/activity/tabs/PurchasesTab';
@@ -24,6 +27,35 @@ function parseTab(v: string | string[] | undefined): ActivityTab | undefined {
 }
 
 export default function ActivityScreen() {
+  const guest = useIsGuest();
+  return guest ? <GuestActivity /> : <MemberActivity />;
+}
+
+function GuestActivity() {
+  return (
+    <Screen>
+      <Header
+        large
+        title="Aktivite"
+        back={false}
+        right={
+          <View style={styles.actions}>
+            <IconButton name="gift-outline" variant="surface" size={38} onPress={() => requireAuth(() => router.push('/rewards'), { reason: AUTH_REASONS.rewards })} accessibilityLabel="Ödüller" />
+            <IconButton name="chatbox-ellipses-outline" variant="surface" size={38} onPress={() => requireAuth(() => router.push('/inbox'), { reason: AUTH_REASONS.inbox })} accessibilityLabel="Gelen Kutusu" />
+          </View>
+        }
+      />
+      <GuestPrompt
+        icon="receipt-outline"
+        title="Siparişlerin burada"
+        message="Teklifler, siparişler, kaydedilenler ve mesajlar giriş yaptıktan sonra burada görünür."
+        reason={AUTH_REASONS.activity}
+      />
+    </Screen>
+  );
+}
+
+function MemberActivity() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<ActivityTab>(() => parseTab(params.tab) ?? 'purchases');
   const unread = useUnreadMessageCount();

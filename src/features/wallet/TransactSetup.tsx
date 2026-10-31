@@ -11,6 +11,7 @@ import { View } from 'react-native';
 import { create } from 'zustand';
 
 import { Button, Icon, Sheet, Text, toast } from '@/components/ui';
+import { AUTH_REASONS, isSignedIn, requireAuth } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
 import { useWalletStore } from '@/store/wallet';
@@ -21,7 +22,12 @@ type SetupState = { open: boolean; dark: boolean; onReady?: () => void; reason?:
 
 const useSetupStore = create<SetupState>(() => ({ open: false, dark: false, scopedHosts: 0 }));
 
-export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean; reason?: string } = {}) {
+export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean; reason?: string; authReason?: string } = {}) {
+  // Misafirse önce giriş/kayıt; tamamlanınca bu kontrol kaldığı yerden devam eder
+  if (!isSignedIn()) {
+    requireAuth(() => requireTransactSetup(onReady, opts), { reason: opts.authReason ?? AUTH_REASONS.buy });
+    return;
+  }
   const { addresses, paymentMethods } = useWalletStore.getState();
   if (addresses.length > 0 && paymentMethods.length > 0) {
     onReady();

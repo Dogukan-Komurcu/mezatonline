@@ -8,6 +8,7 @@ import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
 import { radius, useTheme } from '@/theme';
 import type { Product } from '@/types';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 
 export type ProductCardProps = {
   product: Product;
@@ -46,11 +47,16 @@ export function ProductCard({ product, width, style, onPress, hideSave }: Produc
           <PressableScale
             scaleTo={0.85}
             style={styles.heart}
-            onPress={() => {
-              const on = toggleSave(product.id);
-              haptic.light();
-              if (on) toast.success('Kaydedilenlere eklendi', 'heart');
-            }}
+            onPress={() =>
+              requireAuth(
+                () => {
+                  const on = toggleSave(product.id);
+                  haptic.light();
+                  if (on) toast.success('Kaydedilenlere eklendi', 'heart');
+                },
+                { reason: AUTH_REASONS.save },
+              )
+            }
             accessibilityLabel="Kaydet">
             <Icon name={saved ? 'heart' : 'heart-outline'} size={18} color={saved ? colors.live : '#FFFFFF'} />
           </PressableScale>

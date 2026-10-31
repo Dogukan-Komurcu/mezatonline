@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, toast } from '@/components/ui';
 import { getUser } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatRating, formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
@@ -142,11 +143,16 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
                   </View>
                   <PressableScale
                     scaleTo={0.9}
-                    onPress={() => {
-                      const v = toggleReminder(s.id);
-                      haptic.success();
-                      toast.success(v ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', v ? 'notifications' : 'notifications-off');
-                    }}
+                    onPress={() =>
+                      requireAuth(
+                        () => {
+                          const v = toggleReminder(s.id);
+                          haptic.success();
+                          toast.success(v ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', v ? 'notifications' : 'notifications-off');
+                        },
+                        { reason: AUTH_REASONS.remind },
+                      )
+                    }
                     style={[styles.remind, on && styles.remindOn]}
                     accessibilityLabel="Hatırlatıcı">
                     <Icon name={on ? 'notifications' : 'notifications-outline'} size={16} color={on ? liveColors.onPrimary : liveColors.text} />

@@ -15,6 +15,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { ShowCard } from '@/components/cards/ShowCard';
 import { Divider, EmptyState, Header, IconButton, Screen, Text, toast, UnderlineTabs, type TabItem } from '@/components/ui';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
+import { GuestPrompt } from '@/features/auth/GuestPrompt';
 import { APP_URL, ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
 import { getProductsByShow, getShopProducts, getShowsBySeller, getUserByUsername } from '@/data';
 import { haptic } from '@/lib/haptics';
@@ -67,8 +69,11 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
   const { width } = useWindowDimensions();
   const focused = useIsFocused();
   const me = useMe();
-  const isMe = username === 'me' || username.replace(/^@/, '').toLocaleLowerCase('tr-TR') === me.username.toLocaleLowerCase('tr-TR');
-  const other = isMe ? undefined : getUserByUsername(username);
+  const guest = useIsGuest();
+  const meRequested = username === 'me' || username.replace(/^@/, '').toLocaleLowerCase('tr-TR') === me.username.toLocaleLowerCase('tr-TR');
+  // Misafirin profili yok: /user/me ya da varsayılan kullanıcı adı "kendi profilim" sayılmaz
+  const isMe = meRequested && !guest;
+  const other = meRequested ? undefined : getUserByUsername(username);
   const user: User | undefined = isMe ? me : other;
 
   const followingIds = useSocialStore((s) => s.followingIds);
@@ -104,6 +109,19 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
   const barBgStyle = useAnimatedStyle(() => ({ opacity: interpolate(scrollY.get(), [fadeEnd - 44, fadeEnd], [0, 1], Extrapolation.CLAMP) }));
   const floatingTabsStyle = useAnimatedStyle(() => ({ transform: [{ translateY: scrollY.get() >= threshold.get() ? 0 : -3000 }] }));
 
+  if (!user && meRequested) {
+    return (
+      <Screen>
+        <Header title="Profil" />
+        <GuestPrompt
+          icon="person-circle-outline"
+          title="Profilin burada"
+          message="Satıcıları takip etmek, ürün kaydetmek ve kendi profilini oluşturmak için giriş yap."
+          reason={AUTH_REASONS.account}
+        />
+      </Screen>
+    );
+  }
   if (!user) {
     return (
       <Screen>
@@ -119,8 +137,9 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
     );
   }
 
-  const blocked = !isMe && blockedIds.includes(user.id);
-  const following = !isMe && followingIds.includes(user.id);
+  // Misafirin sosyal durumu yok (cihazda önceki hesaptan kalan liste sayılmaz)
+  const blocked = !isMe && !guest && blockedIds.includes(user.id);
+  const following = !isMe && !guest && followingIds.includes(user.id);
   const followers = isMe ? me.followers : user.followers + (following ? 1 : 0);
   const followingCount = isMe ? followingIds.length : user.following;
   const notifyLevel = notifyMap[user.id] ?? 'all';
@@ -259,10 +278,15 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
       toast.error('Kopyalanamadı');
     }
   };
-  const message = () => {
-    const conv = useInboxStore.getState().ensureConversation(user.id);
-    router.push(`/inbox/${conv.id}`);
-  };
+  const message = () =>
+    requireAuth(
+      () => {
+        const conv = useInboxStore.getState().ensureConversation(user.id);
+        router.push(`/inbox/${conv.id}`);
+      },
+      { reason: AUTH_REASONS.message },
+    );
+  const openReport = (kind: 'report' | 'reviewReport') => requireAuth(() => setSheet(kind), { reason: AUTH_REASONS.report });
   const swapTo = (next: SheetKind, after?: () => void) => {
     setSheet('none');
     setTimeout(() => {
@@ -315,7 +339,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         blocked={blocked}
         onRatingPress={showReviews}
         onMessage={message}
-        onTip={() => setSheet('tip')}
+        onTip={() => requireAuth(() => setSheet('tip'), { reason: AUTH_REASONS.tip })}
         onShare={share}
       />
       <View onLayout={onTabsLayout} style={styles.tabsWrap}>
@@ -364,7 +388,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
       case 'review':
         return (
           <View>
-            <ReviewCard review={item.review} onMore={() => setSheet('reviewReport')} />
+            <ReviewCard review={item.review} onMore={() => openReport('reviewReport')} />
             <Divider inset={SCREEN_PADDING} />
           </View>
         );
@@ -376,7 +400,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
             following={followingCount}
             purchases={isMe ? purchasesCount : undefined}
             nextShow={nextShow}
-            onReport={isMe ? undefined : () => setSheet('report')}
+            onReport={isMe ? undefined : () => openReport('report')}
           />
         );
       case 'empty':
@@ -468,9 +492,9 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
             haptic.success();
             toast.success(`@${user.username} engeli kaldırıldı`);
             setSheet('none');
-          } else swapTo('block');
+          } else swapTo('none', () => requireAuth(() => setSheet('block'), { reason: AUTH_REASONS.block }));
         }}
-        onReport={() => swapTo('report')}
+        onReport={() => swapTo('none', () => openReport('report'))}
       />
       {following ? (
         <NotifySheet

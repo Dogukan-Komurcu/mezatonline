@@ -282,6 +282,11 @@ export class LiveEngine {
     this.opts = { ...this.opts, events };
   }
 
+  /** Kullanıcı değişti (ör. misafir yayın sırasında kaydoldu): sonraki mesaj/tekliflerde yeni ad görünür */
+  updateMe(me: Pick<User, 'id' | 'username' | 'avatar'>) {
+    this.me = { ...this.me, id: me.id, username: me.username, avatar: me.avatar };
+  }
+
   /** İzleyici modunda duraklatılan süre kadar tüm zamanlayıcıları ileri kaydır */
   private shiftTime(delta: number) {
     const s = this.state;

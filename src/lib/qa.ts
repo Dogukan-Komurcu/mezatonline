@@ -3,6 +3,7 @@
  *
  * iOS simülatörde uygulamayı başlatma argümanlarıyla açmak:
  *   xcrun simctl launch <udid> com.mezatonline.app -qaLogin 1 -qaRoute /product/p12 [-qaSeller 1] [-qaTheme dark]
+ *   xcrun simctl launch <udid> com.mezatonline.app -qaGuest 1   (oturumu kapatıp misafir olarak açar)
  * Argümanlar NSUserDefaults'a düşer; RN `Settings` modülüyle okunur.
  */
 import { Platform, Settings } from 'react-native';
@@ -12,7 +13,7 @@ import { useSellerStore } from '@/store/seller';
 import { useSettingsStore } from '@/store/settings';
 import { useWalletStore } from '@/store/wallet';
 
-export type QaLaunch = { route?: string; login: boolean; seller: boolean; theme?: 'light' | 'dark' };
+export type QaLaunch = { route?: string; login: boolean; seller: boolean; guest: boolean; theme?: 'light' | 'dark' };
 
 export function readQaLaunch(): QaLaunch | null {
   if (!__DEV__ || Platform.OS !== 'ios') return null;
@@ -20,9 +21,10 @@ export function readQaLaunch(): QaLaunch | null {
     const route = Settings.get('qaRoute') as string | undefined;
     const login = String(Settings.get('qaLogin') ?? '') === '1';
     const seller = String(Settings.get('qaSeller') ?? '') === '1';
+    const guest = String(Settings.get('qaGuest') ?? '') === '1';
     const theme = Settings.get('qaTheme') as 'light' | 'dark' | undefined;
-    if (!route && !login && !seller && !theme) return null;
-    return { route, login, seller, theme: theme === 'dark' || theme === 'light' ? theme : undefined };
+    if (!route && !login && !seller && !guest && !theme) return null;
+    return { route, login, seller, guest, theme: theme === 'dark' || theme === 'light' ? theme : undefined };
   } catch {
     return null;
   }

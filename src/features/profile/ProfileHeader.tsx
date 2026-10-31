@@ -12,6 +12,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import { FollowButton } from '@/components/cards/UserRow';
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, toast } from '@/components/ui';
 import { getCategory } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatMonthYear, formatRating, formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
@@ -228,11 +229,16 @@ export function ProfileHeader({
                 size="sm"
                 variant={reminded ? 'secondary' : 'inverse'}
                 icon={reminded ? 'checkmark' : 'notifications-outline'}
-                onPress={() => {
-                  const on = useSocialStore.getState().toggleReminder(nextShow.id);
-                  haptic.success();
-                  toast.success(on ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', on ? 'notifications' : 'notifications-off');
-                }}
+                onPress={() =>
+                  requireAuth(
+                    () => {
+                      const on = useSocialStore.getState().toggleReminder(nextShow.id);
+                      haptic.success();
+                      toast.success(on ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', on ? 'notifications' : 'notifications-off');
+                    },
+                    { reason: AUTH_REASONS.remind },
+                  )
+                }
               />
             ) : null}
           </PressableScale>

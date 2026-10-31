@@ -2,6 +2,7 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar, CountBadge, Icon, PressableScale, Text, type IconName } from '@/components/ui';
+import { useIsGuest } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
 import { useUnreadMessageCount } from '@/store/inbox';
@@ -24,6 +25,7 @@ const TABS: Record<string, TabDef> = {
 export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const { colors } = useTheme();
   const me = useMe();
+  const guest = useIsGuest();
   const unreadMessages = useUnreadMessageCount();
   const toShip = useSellerStore((s) => s.orders.filter((o) => o.status === 'paid').length);
   return (
@@ -39,10 +41,10 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
           if (!focused && !event.defaultPrevented) navigateToTab(route.key);
         };
         const color = focused ? colors.text : colors.tabIconInactive;
-        const isSellerHub = route.name === 'sell' && me.isSeller;
+        const isSellerHub = route.name === 'sell' && me.isSeller && !guest;
         const label = isSellerHub ? 'Satıcı Paneli' : def.label;
         const icon: IconName = isSellerHub ? (focused ? 'grid' : 'grid-outline') : focused ? def.iconActive : def.icon;
-        const badge = route.name === 'activity' ? unreadMessages : isSellerHub ? toShip : 0;
+        const badge = guest ? 0 : route.name === 'activity' ? unreadMessages : isSellerHub ? toShip : 0;
         return (
           <PressableScale
             key={route.key}
@@ -55,9 +57,13 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
             testID={options?.tabBarButtonTestID}>
             <View>
               {route.name === 'account' ? (
-                <View style={[styles.avatarRing, { borderColor: focused ? colors.text : 'transparent' }]}>
-                  <Avatar uri={me.avatar} name={me.username} size={24} />
-                </View>
+                guest ? (
+                  <Icon name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />
+                ) : (
+                  <View style={[styles.avatarRing, { borderColor: focused ? colors.text : 'transparent' }]}>
+                    <Avatar uri={me.avatar} name={me.username} size={24} />
+                  </View>
+                )
               ) : (
                 <Icon name={icon} size={25} color={color} />
               )}

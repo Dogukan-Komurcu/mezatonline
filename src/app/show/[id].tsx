@@ -16,6 +16,7 @@ import { FollowButton } from '@/components/cards/UserRow';
 import { ShowCard } from '@/components/cards/ShowCard';
 import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, UnderlineTabs, type IconName } from '@/components/ui';
 import { getCategory, getLiveShowOf, getProduct, getShowsBySeller, getSubcategory, getUpcomingShows } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { BuyerProtectionSheet } from '@/features/commerce/infoSheets';
 import { InfoLine } from '@/features/commerce/components';
 import { useNow, useSellerOf, useShowById, useShowProducts } from '@/features/commerce/hooks';
@@ -123,17 +124,23 @@ export default function ShowScreen() {
     if (over !== overHero) setOverHero(over);
   };
 
-  const remind = (target: Show) => {
-    const on = toggleReminder(target.id);
-    if (on) {
-      haptic.success();
-      const pts = completeChallenge('save_show');
-      toast.success(`Hatırlatıcı kuruldu 🔔 Yayın başlayınca haber vereceğiz${pts ? ` · +${pts} puan` : ''}`, 'notifications');
-    } else {
-      haptic.light();
-      toast('Hatırlatıcı kaldırıldı', 'notifications-off');
-    }
-  };
+  const remind = (target: Show) =>
+    requireAuth(
+      () => {
+        const on = toggleReminder(target.id);
+        if (on) {
+          haptic.success();
+          const pts = completeChallenge('save_show');
+          toast.success(`Hatırlatıcı kuruldu 🔔 Yayın başlayınca haber vereceğiz${pts ? ` · +${pts} puan` : ''}`, 'notifications');
+        } else {
+          haptic.light();
+          toast('Hatırlatıcı kaldırıldı', 'notifications-off');
+        }
+      },
+      { reason: AUTH_REASONS.remind },
+    );
+
+  const report = () => requireAuth(() => setReportOpen(true), { reason: AUTH_REASONS.report });
 
   const share = () =>
     shareLink({
@@ -148,8 +155,13 @@ export default function ShowScreen() {
       return;
     }
     haptic.tap();
-    setPreBidFor(p);
-    setPreBidOpen(true);
+    requireAuth(
+      () => {
+        setPreBidFor(p);
+        setPreBidOpen(true);
+      },
+      { reason: AUTH_REASONS.bid },
+    );
   };
 
   return (
@@ -366,7 +378,7 @@ export default function ShowScreen() {
           </View>
         ) : null}
 
-        <Text variant="footnote" color="textTertiary" align="center" style={styles.report} onPress={() => setReportOpen(true)} suppressHighlighting>
+        <Text variant="footnote" color="textTertiary" align="center" style={styles.report} onPress={report} suppressHighlighting>
           Bu yayını şikayet et
         </Text>
       </ScrollView>
@@ -467,7 +479,7 @@ export default function ShowScreen() {
           destructive
           onPress={() => {
             setMoreOpen(false);
-            setTimeout(() => setReportOpen(true), 250);
+            setTimeout(report, 250);
           }}
           style={styles.sheetRow}
         />

@@ -9,6 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard';
 import { Avatar, Icon, PressableScale, Text, toast } from '@/components/ui';
 import { getSubcategory, getUser } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatRating, formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
@@ -36,11 +37,16 @@ export function ProductRow({ product }: { product: Product }) {
         <PressableScale
           scaleTo={0.88}
           hitSlop={6}
-          onPress={() => {
-            const on = toggleSave(product.id);
-            haptic.light();
-            toast.success(on ? 'Kaydedilenlere eklendi' : 'Kaydedilenlerden çıkarıldı', on ? 'bookmark' : 'bookmark-outline');
-          }}
+          onPress={() =>
+            requireAuth(
+              () => {
+                const on = toggleSave(product.id);
+                haptic.light();
+                toast.success(on ? 'Kaydedilenlere eklendi' : 'Kaydedilenlerden çıkarıldı', on ? 'bookmark' : 'bookmark-outline');
+              },
+              { reason: AUTH_REASONS.save },
+            )
+          }
           style={[styles.savePill, { backgroundColor: colors.card }]}
           accessibilityRole="button"
           accessibilityLabel={saved ? 'Kaydedildi' : 'Kaydet'}>

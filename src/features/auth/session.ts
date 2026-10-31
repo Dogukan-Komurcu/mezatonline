@@ -6,6 +6,7 @@ import { useAuthStore, type AuthMethod } from '@/store/auth';
 import { useSocialStore } from '@/store/social';
 import type { ID } from '@/types';
 
+import { completeAuthGate } from './gate';
 import { useAuthFlow, type AuthProvider, type Gender } from './store';
 
 // ─── Kullanıcı adı kuralları ─────────────────────────────────────────────────
@@ -131,19 +132,10 @@ export function suggestedInterests(gender: Gender | undefined): ID[] {
 
 const DEFAULT_INTERESTS: ID[] = CATEGORIES_BY_POPULARITY.slice(0, 4).map((c) => c.id);
 
-function goHomeSoon() {
-  // Kök layout'taki Stack.Protected koruması sekmelere kendiliğinden geçer; yine de ana sayfaya sabitle.
-  setTimeout(() => {
-    try {
-      router.replace('/');
-    } catch {
-      // Koruma zaten yönlendirdi
-    }
-  }, 80);
-}
-
-/** Kayıt akışını tamamla → ana sayfa */
+/** Kayıt akışını tamamla → kullanıcı kaldığı ekrana döner, bekleyen işlem sürer */
 export function finishOnboarding() {
+  // Çift dokunuşta ikinci çağrı kullanıcı adını ezip kullanıcıyı ana sayfaya atmasın
+  if (useAuthStore.getState().onboarded) return;
   const flow = useAuthFlow.getState();
   const auth = useAuthStore.getState();
   const username = flow.username || uniqueUsername(flow.email ?? 'koleksiyoncu');
@@ -155,12 +147,13 @@ export function finishOnboarding() {
   auth.completeOnboarding({ username, displayName: flow.displayName.trim() || undefined, interests });
   flow.reset();
   toast.success(`Hoş geldin @${username}! 🎉`, 'sparkles');
-  goHomeSoon();
+  completeAuthGate();
 }
 
 /** Mevcut hesapla giriş: onboarding atlanır */
 export function loginAndFinish(provider: AuthProvider, identifier?: string, usernameHint?: string) {
   const auth = useAuthStore.getState();
+  if (auth.status === 'signedIn' && auth.onboarded) return;
   auth.signIn(toAuthMethod(provider), identifier);
   const base = usernameHint ?? (provider === 'email' && identifier ? identifier : `koleksiyoncu_${Math.floor(100 + Math.random() * 900)}`);
   const hinted = slugifyUsername(base);
@@ -169,5 +162,5 @@ export function loginAndFinish(provider: AuthProvider, identifier?: string, user
   auth.completeOnboarding({ username, interests });
   useAuthFlow.getState().reset();
   toast.success(`Tekrar hoş geldin @${username}!`, 'hand-right');
-  goHomeSoon();
+  completeAuthGate();
 }

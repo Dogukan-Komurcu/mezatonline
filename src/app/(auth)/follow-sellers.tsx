@@ -57,7 +57,7 @@ function SellerRow({ user }: { user: User }) {
           </View>
         ) : null}
       </View>
-      <FollowButton user={user} />
+      <FollowButton user={user} inAuthFlow />
     </View>
   );
 }

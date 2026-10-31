@@ -10,6 +10,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { Avatar, PressableScale, Text } from '@/components/ui';
 import { CATEGORIES, CATEGORIES_BY_POPULARITY } from '@/data';
+import { useIsGuest } from '@/features/auth/gate';
 import { RevealScrollView, type RevealTarget } from '@/features/browse/ui';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore, useMe } from '@/store/auth';
@@ -30,11 +31,13 @@ export type RailItem =
   | { key: typeof ALL; kind: 'all'; label: string };
 
 const MAX_CATEGORY_TILES = 14;
+const NONE: string[] = [];
 
 /** Sıra: Sana Özel, Takip Ettiklerin, (ilgi alanları + takip edilen kategoriler), popüler kategoriler, Tüm Kategoriler */
 export function useRailItems(): RailItem[] {
-  const interests = useAuthStore((s) => s.interests);
-  const followedCats = useSocialStore((s) => s.followedCategoryIds);
+  const guest = useIsGuest();
+  const interests = useAuthStore((s) => (guest ? NONE : s.interests));
+  const followedCats = useSocialStore((s) => (guest ? NONE : s.followedCategoryIds));
   return useMemo(() => {
     const preferred = Array.from(new Set([...interests, ...followedCats]));
     const ordered = [
@@ -68,8 +71,10 @@ const RAIL_GAP = 8;
 function TileArt({ item }: { item: RailItem }) {
   const { colors } = useTheme();
   const me = useMe();
+  const guest = useIsGuest();
   switch (item.kind) {
     case 'for_you':
+      if (guest) return <Glyph3D name="sparkles" size={54} />;
       return (
         <View style={[styles.avatarRing, { backgroundColor: colors.card }]}>
           <Avatar uri={me.avatar} name={me.username} size={50} />

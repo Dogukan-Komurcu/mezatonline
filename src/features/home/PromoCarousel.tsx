@@ -8,6 +8,7 @@ import { FlatList, StyleSheet, useWindowDimensions, View, type NativeScrollEvent
 
 import { Icon, PressableScale, Text } from '@/components/ui';
 import { PROMO_BANNERS, type PromoBanner } from '@/data';
+import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
@@ -21,7 +22,11 @@ function Banner({ banner, width }: { banner: PromoBanner; width: number }) {
       scaleTo={0.98}
       onPress={() => {
         haptic.light();
-        router.push(banner.href as Href);
+        const go = () => router.push(banner.href as Href);
+        // Kampanyalar hesap ekranlarına gider (cüzdan, satıcı başvurusu): misafire önce giriş
+        const seller = banner.href.startsWith('/seller');
+        if (seller || banner.href === '/wallet') requireAuth(go, { reason: seller ? AUTH_REASONS.sell : AUTH_REASONS.account });
+        else go();
       }}
       accessibilityRole="button"
       accessibilityLabel={banner.title}

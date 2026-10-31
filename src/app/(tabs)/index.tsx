@@ -11,6 +11,7 @@ import { openShow } from '@/components/cards/ShowCard';
 import { UserRow } from '@/components/cards/UserRow';
 import { Button, EmptyState, Icon, PressableScale, Text, toast } from '@/components/ui';
 import { getCategory } from '@/data';
+import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ProductGridRow, ShowGridRow } from '@/features/browse/grids';
 import { Band, SectionTitle, useGridWidth } from '@/features/browse/ui';
 import { CategoryRail, CompactRail, FOLLOWING, FOR_YOU, useRailItems } from '@/features/home/CategoryRail';
@@ -26,6 +27,8 @@ import { useAuthStore } from '@/store/auth';
 import { useSocialStore } from '@/store/social';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
+const NONE: string[] = [];
+
 function CategoryEmpty({ categoryId }: { categoryId: string }) {
   const category = getCategory(categoryId);
   const followed = useSocialStore((s) => s.followedCategoryIds.includes(categoryId));
@@ -38,9 +41,20 @@ function CategoryEmpty({ categoryId }: { categoryId: string }) {
       message="Yaklaşan yayınlara hatırlatıcı kurabilir ya da kategoriyi takip edip yeni yayınlardan haberdar olabilirsin."
       actionLabel={followed ? 'Takip ediliyor ✓' : 'Kategoriyi takip et'}
       onAction={() => {
-        const on = toggle(categoryId);
-        haptic.success();
-        toast.success(on ? `${category.shortName} takip ediliyor` : 'Kategori takipten çıkarıldı', on ? 'heart' : 'heart-dislike-outline');
+        const was = followed;
+        requireAuth(
+          () => {
+            // Kayıtta ilgi alanı olarak seçildiyse takibi geri alma
+            if (useSocialStore.getState().followedCategoryIds.includes(categoryId) !== was) {
+              if (!was) toast.success(`${category.shortName} takip ediliyor`, 'heart');
+              return;
+            }
+            const on = toggle(categoryId);
+            haptic.success();
+            toast.success(on ? `${category.shortName} takip ediliyor` : 'Kategori takipten çıkarıldı', on ? 'heart' : 'heart-dislike-outline');
+          },
+          { reason: AUTH_REASONS.follow },
+        );
       }}
       style={styles.empty}
     />
@@ -52,9 +66,11 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const cardW = useGridWidth(2);
   const railItems = useRailItems();
-  const interests = useAuthStore((s) => s.interests);
-  const followingIds = useSocialStore((s) => s.followingIds);
-  const blockedIds = useSocialStore((s) => s.blockedIds);
+  // Misafirin akışı hesaba bağlı ilgi alanı/takip verisi olmadan kurulur
+  const guest = useIsGuest();
+  const interests = useAuthStore((s) => (guest ? NONE : s.interests));
+  const followingIds = useSocialStore((s) => (guest ? NONE : s.followingIds));
+  const blockedIds = useSocialStore((s) => (guest ? NONE : s.blockedIds));
   const [selection, setSelection] = useState<string>(FOR_YOU);
   const [compact, setCompact] = useState(false);
   const [railH, setRailH] = useState(140);

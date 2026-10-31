@@ -5,11 +5,13 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
-import { Avatar, Button, CountBadge, EmptyState, Icon, IconButton, PressableScale, Sheet, Text, toast, type IconName } from '@/components/ui';
+import { Avatar, Button, CountBadge, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, Text, toast, type IconName } from '@/components/ui';
 import { getUser } from '@/data';
 import { useAccountStore } from '@/features/account/store';
 import { CARD_BRAND_NAMES, ConfirmSheet, IconCircle, MenuGroup, MenuRow, Tag } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
+import { AUTH_REASONS, useIsGuest } from '@/features/auth/gate';
+import { GuestPrompt } from '@/features/auth/GuestPrompt';
 import { useInboxExtras } from '@/features/inbox/store';
 import { shareLink } from '@/features/shared/sheets';
 import { formatCompact, formatNumber, formatTRY } from '@/lib/format';
@@ -30,6 +32,43 @@ const ACTIVE_STATUSES = ['paid', 'preparing', 'shipped', 'out_for_delivery'];
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
 
 export default function AccountScreen() {
+  const guest = useIsGuest();
+  return guest ? <GuestAccount /> : <MemberAccount />;
+}
+
+/** Misafir: giriş istemi + hesap gerektirmeyen ayarlar ve destek */
+function GuestAccount() {
+  const appearance = useSettingsStore((s) => s.appearance);
+  return (
+    <Screen>
+      <Header large title="Hesap" back={false} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        <GuestPrompt
+          icon="person-circle-outline"
+          title="Mezatonline’a katıl"
+          message="Teklif ver, satıcıları takip et; siparişlerini, cüzdanını ve ödüllerini tek yerden yönet."
+          reason={AUTH_REASONS.account}
+          style={styles.guestPrompt}
+        />
+        <MenuGroup title="Uygulama">
+          <MenuRow icon="settings-outline" title="Tercihler" value={`Görünüm: ${APPEARANCE_LABEL[appearance]}`} onPress={() => router.push('/settings/preferences')} />
+        </MenuGroup>
+        <MenuGroup title="Destek">
+          <MenuRow icon="help-circle-outline" title="Yardım Merkezi" subtitle="Sık sorulan sorular ve rehberler" onPress={() => router.push('/settings/help')} />
+          <MenuRow icon="document-text-outline" title="Yasal & KVKK" onPress={() => router.push('/settings/legal')} />
+        </MenuGroup>
+        <View style={styles.footer}>
+          <Logo size={20} />
+          <Text variant="footnote" color="textTertiary">
+            Mezatonline v{APP_VERSION}
+          </Text>
+        </View>
+      </ScrollView>
+    </Screen>
+  );
+}
+
+function MemberAccount() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const me = useMe();
@@ -274,7 +313,7 @@ export default function AccountScreen() {
         icon="log-out-outline"
         destructive
         title="Çıkış yapılsın mı?"
-        message="Tekrar giriş yaptığında siparişlerin, kayıtlıların ve kredilerin seni bekliyor olacak."
+        message="Misafir olarak gezinmeye ve canlı yayın izlemeye devam edebilirsin. Teklif vermek ve satın almak için yeniden giriş yapman gerekir."
         confirmLabel="Çıkış yap"
         onConfirm={() => {
           setLogoutOpen(false);
@@ -322,6 +361,7 @@ function QuickTile({ icon, title, label, value, onPress }: { icon: IconName; tit
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  guestPrompt: { flex: 0, paddingTop: 20, paddingBottom: 8 },
   pad: { paddingHorizontal: SCREEN_PADDING },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingLeft: SCREEN_PADDING, paddingRight: 8, paddingBottom: 2 },
   gift: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginRight: 4 },

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Keyboard, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -105,12 +105,22 @@ function PhoneScreen() {
         ? `Numara ${country.length} haneli olmalı.`
         : undefined;
 
+  // Klavyedeki "Done" ile "Kod Gönder" art arda gelirse doğrulama ekranı iki kez açılmasın
+  const submitted = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      submitted.current = false;
+    }, []),
+  );
+
   const send = () => {
+    if (submitted.current) return;
     if (!valid) {
       setTouched(true);
       haptic.warning();
       return;
     }
+    submitted.current = true;
     Keyboard.dismiss();
     setSending(true);
     setTimeout(() => {

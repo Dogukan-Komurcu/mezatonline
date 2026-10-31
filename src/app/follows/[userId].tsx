@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UserRow } from '@/components/cards/UserRow';
 import { EmptyState, Header, Screen, Text, TextField, UnderlineTabs } from '@/components/ui';
+import { AUTH_REASONS, useIsGuest } from '@/features/auth/gate';
+import { GuestPrompt } from '@/features/auth/GuestPrompt';
 import { shareLink } from '@/features/shared/sheets';
 import { getFollowers, getFollowingOf, getUser } from '@/data';
 import { formatCompact } from '@/lib/format';
@@ -33,14 +35,30 @@ export default function FollowsScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ userId: string; tab?: string }>();
   const me = useMe();
+  const guest = useIsGuest();
   const followingIds = useSocialStore((s) => s.followingIds);
   const blockedIds = useSocialStore((s) => s.blockedIds);
   const [tab, setTab] = useState<FollowTab>(params.tab === 'following' ? 'following' : 'followers');
   const [query, setQuery] = useState('');
 
-  const isMe = params.userId === 'me' || params.userId === ME_ID;
-  const user = isMe ? me : getUser(params.userId);
+  const meRequested = params.userId === 'me' || params.userId === ME_ID;
+  // Misafirin takip listesi yok
+  const isMe = meRequested && !guest;
+  const user = isMe ? me : meRequested ? undefined : getUser(params.userId);
 
+  if (!user && meRequested) {
+    return (
+      <Screen>
+        <Header title="Takip" />
+        <GuestPrompt
+          icon="people-outline"
+          title="Takip ettiklerin burada"
+          message="Satıcıları takip et; canlı yayına başladıklarında ilk sen haberdar ol."
+          reason={AUTH_REASONS.follow}
+        />
+      </Screen>
+    );
+  }
   if (!user) {
     return (
       <Screen>
@@ -50,7 +68,7 @@ export default function FollowsScreen() {
     );
   }
 
-  const iFollowThem = !isMe && followingIds.includes(user.id);
+  const iFollowThem = !isMe && !guest && followingIds.includes(user.id);
   const followerCount = isMe ? me.followers : user.followers + (iFollowThem ? 1 : 0);
   const followingCount = isMe ? followingIds.length : user.following;
 
