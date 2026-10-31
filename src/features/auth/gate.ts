@@ -44,7 +44,7 @@ export const AUTH_REASONS = {
 } as const;
 
 /** Kayıt/giriş ekranlarının yolları (dönüş adresi olarak saklanmaz) */
-const AUTH_PATHS = ['/welcome', '/phone', '/verify', '/email', '/login', '/username', '/gender', '/follow-sellers', '/notify-permission'];
+const AUTH_PATHS = ['/welcome', '/phone', '/verify', '/email', '/login', '/username', '/notify-permission'];
 
 /** Bekleyen işlem en fazla bu kadar süre saklanır */
 const PENDING_TTL_MS = 15 * 60_000;

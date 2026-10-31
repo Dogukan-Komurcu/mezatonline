@@ -7,7 +7,6 @@ import { Avatar, Button, Header, Icon, Text, type IconName } from '@/components/
 import { getLiveShows, getSellers, getUser } from '@/data';
 import { AuthLayout, OnboardingProgress, StepTitle } from '@/features/auth/components';
 import { finishOnboarding, onboardingInterests } from '@/features/auth/session';
-import { useAuthFlow } from '@/features/auth/store';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSettingsStore, type NotificationPrefs } from '@/store/settings';
@@ -98,8 +97,7 @@ const ALL_ON: NotificationPrefs = {
 };
 
 function NotificationsScreen() {
-  const gender = useAuthFlow((s) => s.gender);
-  const [interests] = useState(() => onboardingInterests(gender));
+  const [interests] = useState(() => onboardingInterests());
   const promotions = useSettingsStore((s) => s.notifications.promotions);
   const setPref = useSettingsStore((s) => s.setNotificationPref);
   const [enabling, setEnabling] = useState(false);

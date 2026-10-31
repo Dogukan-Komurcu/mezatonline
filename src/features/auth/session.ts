@@ -6,7 +6,7 @@ import { useAuthStore, type AuthMethod } from '@/store/auth';
 import type { ID } from '@/types';
 
 import { completeAuthGate, useAuthGate } from './gate';
-import { useAuthFlow, type AuthProvider, type Gender } from './store';
+import { useAuthFlow, type AuthProvider } from './store';
 
 // ─── Kullanıcı adı kuralları ─────────────────────────────────────────────────
 
@@ -122,13 +122,6 @@ export function cancelSignup() {
   router.dismissTo('/(auth)/welcome');
 }
 
-/** Cinsiyete göre önerilen ilgi alanları ("Benim için seç") */
-export function suggestedInterests(gender: Gender | undefined): ID[] {
-  if (gender === 'female') return ['womens_fashion', 'beauty', 'jewelry', 'bags'];
-  if (gender === 'male') return ['sneakers', 'sports_cards', 'watches', 'video_games'];
-  return ['tcg', 'toys', 'sneakers', 'coins'];
-}
-
 const MAX_INTERESTS = 4;
 
 /** Kayıt penceresinin açıldığı ekrandaki kategoriler (izlenen yayın, bakılan ürün, kategori, satıcı) */
@@ -144,11 +137,11 @@ function contextCategories(): ID[] {
 }
 
 /**
- * Kayıtta kategori seçtirilmez (teklif vermeye gelen kullanıcıyı bekletmemek için).
- * Sana Özel akışı için ilgi alanları; geldiği yayın/ürün + cinsiyete göre öneriler + popülerler.
+ * Kayıtta kategori sorulmaz (teklif vermeye gelen kullanıcıyı bekletmemek için).
+ * Sana Özel akışı için ilgi alanları: geldiği yayın/ürün/kategori + popülerler.
  */
-export function onboardingInterests(gender: Gender | undefined): ID[] {
-  const ids = [...contextCategories(), ...suggestedInterests(gender), ...CATEGORIES_BY_POPULARITY.map((c) => c.id)];
+export function onboardingInterests(): ID[] {
+  const ids = [...contextCategories(), ...CATEGORIES_BY_POPULARITY.map((c) => c.id)];
   return Array.from(new Set(ids)).slice(0, MAX_INTERESTS);
 }
 
@@ -159,8 +152,8 @@ export function finishOnboarding() {
   const flow = useAuthFlow.getState();
   const auth = useAuthStore.getState();
   const username = flow.username || uniqueUsername(flow.email ?? 'koleksiyoncu');
-  const interests = auth.interests.length ? auth.interests : onboardingInterests(flow.gender);
-  // Cinsiyetten tahmin edilenler yalnızca akış için; profilde yalnızca geldiği içeriğin kategorisi görünür
+  const interests = auth.interests.length ? auth.interests : onboardingInterests();
+  // Popüler kategoriler yalnızca akış için; profilde yalnızca geldiği içeriğin kategorisi görünür
   auth.completeOnboarding({ username, displayName: flow.displayName.trim() || undefined, interests, categoryIds: contextCategories() });
   flow.reset();
   toast.success(`Hoş geldin @${username}! 🎉`, 'sparkles');
@@ -175,7 +168,7 @@ export function loginAndFinish(provider: AuthProvider, identifier?: string, user
   const base = usernameHint ?? (provider === 'email' && identifier ? identifier : `koleksiyoncu_${Math.floor(100 + Math.random() * 900)}`);
   const hinted = slugifyUsername(base);
   const username = hinted.length >= USERNAME_MIN && !usernameFormatError(hinted) && isUsernameAvailable(hinted) ? hinted : uniqueUsername(base);
-  const interests = auth.interests.length ? auth.interests : onboardingInterests(undefined);
+  const interests = auth.interests.length ? auth.interests : onboardingInterests();
   auth.completeOnboarding({ username, interests, categoryIds: contextCategories() });
   useAuthFlow.getState().reset();
   toast.success(`Tekrar hoş geldin @${username}!`, 'hand-right');

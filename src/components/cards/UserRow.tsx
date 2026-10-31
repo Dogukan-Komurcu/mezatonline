@@ -11,20 +11,8 @@ import { SCREEN_PADDING } from '@/theme';
 import type { User } from '@/types';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 
-/** Takip Et / Takip Ediliyor butonu (inAuthFlow: kayıt adımlarında giriş kapısı olmadan çalışır) */
-export function FollowButton({
-  user,
-  size = 'sm',
-  style,
-  variant,
-  inAuthFlow,
-}: {
-  user: User;
-  size?: 'sm' | 'md';
-  style?: StyleProp<ViewStyle>;
-  variant?: 'primary' | 'glass';
-  inAuthFlow?: boolean;
-}) {
+/** Takip Et / Takip Ediliyor butonu */
+export function FollowButton({ user, size = 'sm', style, variant }: { user: User; size?: 'sm' | 'md'; style?: StyleProp<ViewStyle>; variant?: 'primary' | 'glass' }) {
   const following = useSocialStore((s) => s.followingIds.includes(user.id));
   const toggle = useSocialStore((s) => s.toggleFollow);
   if (user.id === ME_ID) return null;
@@ -38,7 +26,7 @@ export function FollowButton({
       onPress={() => {
         const was = following;
         const run = () => {
-          // Giriş sırasında (ör. "Tümünü takip et") zaten takip edildiyse geri alma
+          // Giriş sırasında zaten takip edildiyse geri alma
           if (useSocialStore.getState().followingIds.includes(user.id) !== was) {
             if (!was) toast.success(`${user.username} takip ediliyor`, 'person-add');
             return;
@@ -47,8 +35,7 @@ export function FollowButton({
           haptic.success();
           if (on) toast.success(`${user.username} takip ediliyor`, 'person-add');
         };
-        if (inAuthFlow) run();
-        else requireAuth(run, { reason: AUTH_REASONS.follow });
+        requireAuth(run, { reason: AUTH_REASONS.follow });
       }}
     />
   );

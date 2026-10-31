@@ -65,7 +65,7 @@ function UsernameScreen() {
     Keyboard.dismiss();
     haptic.success();
     flow.setUsername(value, displayName.trim());
-    router.push('/(auth)/gender');
+    router.push('/(auth)/notify-permission');
   };
 
   const onBack = () => {
