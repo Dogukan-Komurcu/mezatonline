@@ -23,7 +23,7 @@ function GenderScreen() {
 
   const next = (value: Gender | undefined) => {
     setGender(value);
-    router.push('/(auth)/interests');
+    router.push('/(auth)/follow-sellers');
   };
 
   return (

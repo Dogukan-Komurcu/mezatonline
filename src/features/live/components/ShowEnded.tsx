@@ -150,7 +150,7 @@ export function ShowEnded({ seller, following, soldCount, nextShow, upcoming, ac
                           haptic.success();
                           toast.success(v ? 'Hatırlatıcı kuruldu 🔔' : 'Hatırlatıcı kaldırıldı', v ? 'notifications' : 'notifications-off');
                         },
-                        { reason: AUTH_REASONS.remind },
+                        { reason: AUTH_REASONS.remind, categoryIds: [s.categoryId] },
                       )
                     }
                     style={[styles.remind, on && styles.remindOn]}

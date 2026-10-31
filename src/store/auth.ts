@@ -20,7 +20,7 @@ type AuthState = {
   interests: ID[];
   /** Hesap oluşturma / giriş: sahte doğrulama sonrası çağrılır */
   signIn: (method: AuthMethod, identifier?: string) => void;
-  completeOnboarding: (data: { username: string; displayName?: string; interests: ID[] }) => void;
+  completeOnboarding: (data: { username: string; displayName?: string; interests: ID[]; categoryIds?: ID[] }) => void;
   setInterests: (ids: ID[]) => void;
   updateProfile: (patch: Partial<Pick<User, 'username' | 'displayName' | 'bio' | 'avatar' | 'city' | 'cover'>>) => void;
   /** Satıcı başvurusu onaylanınca */
@@ -62,11 +62,11 @@ export const useAuthStore = create<AuthState>()(
           email: method === 'email' ? identifier : s.email,
           me: { ...s.me, joinedAt: s.status === 'signedOut' ? new Date().toISOString() : s.me.joinedAt },
         })),
-      completeOnboarding: ({ username, displayName, interests }) =>
+      completeOnboarding: ({ username, displayName, interests, categoryIds }) =>
         set((s) => ({
           onboarded: true,
           interests,
-          me: { ...s.me, username, displayName: displayName || username, categoryIds: interests },
+          me: { ...s.me, username, displayName: displayName || username, categoryIds: categoryIds ?? interests },
         })),
       setInterests: (interests) => set((s) => ({ interests, me: { ...s.me, categoryIds: interests } })),
       updateProfile: (patch) => set((s) => ({ me: { ...s.me, ...patch } })),

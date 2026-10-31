@@ -6,7 +6,7 @@ import { Logo } from '@/components/Logo';
 import { Avatar, Button, Header, Icon, Text, type IconName } from '@/components/ui';
 import { getLiveShows, getSellers, getUser } from '@/data';
 import { AuthLayout, OnboardingProgress, StepTitle } from '@/features/auth/components';
-import { finishOnboarding } from '@/features/auth/session';
+import { finishOnboarding, onboardingInterests } from '@/features/auth/session';
 import { useAuthFlow } from '@/features/auth/store';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -98,7 +98,8 @@ const ALL_ON: NotificationPrefs = {
 };
 
 function NotificationsScreen() {
-  const interests = useAuthFlow((s) => s.interests);
+  const gender = useAuthFlow((s) => s.gender);
+  const [interests] = useState(() => onboardingInterests(gender));
   const promotions = useSettingsStore((s) => s.notifications.promotions);
   const setPref = useSettingsStore((s) => s.setNotificationPref);
   const [enabling, setEnabling] = useState(false);

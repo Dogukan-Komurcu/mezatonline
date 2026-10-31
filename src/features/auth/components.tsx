@@ -109,7 +109,7 @@ export function SkipLink({ label = 'Şimdilik geç', onPress }: { label?: string
 
 // ─── İlerleme çubuğu ─────────────────────────────────────────────────────────
 
-export const ONBOARDING_STEPS = ['username', 'gender', 'interests', 'follow', 'notifications'] as const;
+export const ONBOARDING_STEPS = ['username', 'gender', 'follow', 'notifications'] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 function Segment({ state }: { state: 'done' | 'active' | 'todo' }) {

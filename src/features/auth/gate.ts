@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { create } from 'zustand';
 
 import { useAuthStore } from '@/store/auth';
+import type { ID } from '@/types';
 
 import { resetAccountData } from './reset';
 
@@ -43,7 +44,7 @@ export const AUTH_REASONS = {
 } as const;
 
 /** Kayıt/giriş ekranlarının yolları (dönüş adresi olarak saklanmaz) */
-const AUTH_PATHS = ['/welcome', '/phone', '/verify', '/email', '/login', '/username', '/gender', '/interests', '/follow-sellers', '/notify-permission'];
+const AUTH_PATHS = ['/welcome', '/phone', '/verify', '/email', '/login', '/username', '/gender', '/follow-sellers', '/notify-permission'];
 
 /** Bekleyen işlem en fazla bu kadar süre saklanır */
 const PENDING_TTL_MS = 15 * 60_000;
@@ -56,6 +57,8 @@ type GateState = {
   reason?: string;
   /** Kayıt bitince dönülecek ekran */
   returnTo?: string;
+  /** İşlemin yapıldığı içeriğin kategorileri (canlı yayında kaydırılan yayın yol değiştirmez) */
+  contextCategoryIds?: ID[];
   /** Kullanıcının şu an bulunduğu (kayıt ekranı olmayan) yol */
   currentPath: string;
   /** Kayıt/giriş ekranlarından biri açık mı */
@@ -97,21 +100,27 @@ export function trackPath(pathname: string) {
  * Giriş gerektiren işlem. Giriş yapılmışsa `onReady` hemen çalışır ve true döner.
  * Misafirse kayıt/giriş ekranı açılır, false döner.
  */
-export function requireAuth(onReady?: () => void, opts: { reason?: string } = {}): boolean {
+export function requireAuth(onReady?: () => void, opts: { reason?: string; categoryIds?: ID[] } = {}): boolean {
   if (isSignedIn()) {
     onReady?.();
     return true;
   }
-  const { currentPath, onAuthScreen, openedAt, returnTo } = useAuthGate.getState();
+  const { currentPath, onAuthScreen, openedAt, returnTo, contextCategoryIds } = useAuthGate.getState();
   // Kayıt akışının içinden gelen çağrı, kullanıcının asıl bekleyen işlemini ezmesin
   if (onAuthScreen) return false;
   const now = Date.now();
   // Kayıt penceresi az önce açıldı (çift dokunuş): ikinci bir pencere açma, yalnızca bekleyen işlemi güncelle
   if (openedAt && now - openedAt < 1500) {
-    useAuthGate.setState({ pending: onReady, pendingAt: now, reason: opts.reason ?? AUTH_REASONS.generic, returnTo: returnTo ?? currentPath });
+    useAuthGate.setState({
+      pending: onReady,
+      pendingAt: now,
+      reason: opts.reason ?? AUTH_REASONS.generic,
+      returnTo: returnTo ?? currentPath,
+      contextCategoryIds: opts.categoryIds ?? contextCategoryIds,
+    });
     return false;
   }
-  useAuthGate.setState({ pending: onReady, pendingAt: now, reason: opts.reason ?? AUTH_REASONS.generic, returnTo: currentPath, openedAt: now });
+  useAuthGate.setState({ pending: onReady, pendingAt: now, reason: opts.reason ?? AUTH_REASONS.generic, returnTo: currentPath, contextCategoryIds: opts.categoryIds, openedAt: now });
   router.push('/(auth)/welcome');
   return false;
 }
@@ -119,7 +128,7 @@ export function requireAuth(onReady?: () => void, opts: { reason?: string } = {}
 /** Kayıt/giriş tamamlandı: kullanıcıyı kaldığı ekrana döndür, bekleyen işlemi sürdür */
 export function completeAuthGate() {
   const { pending, pendingAt, returnTo, currentPath } = useAuthGate.getState();
-  useAuthGate.setState({ pending: undefined, pendingAt: undefined, reason: undefined, returnTo: undefined, openedAt: undefined });
+  useAuthGate.setState({ pending: undefined, pendingAt: undefined, reason: undefined, returnTo: undefined, contextCategoryIds: undefined, openedAt: undefined });
   // Tekrar çağrılırsa (returnTo temizlenmiş) kullanıcının bulunduğu ekranda kal
   const target = returnTo ?? currentPath;
   setTimeout(() => {
@@ -139,7 +148,7 @@ export function cancelAuthGate() {
   const auth = useAuthStore.getState();
   if (auth.status === 'signedIn' && !auth.onboarded) auth.signOut();
   const { returnTo, currentPath } = useAuthGate.getState();
-  useAuthGate.setState({ pending: undefined, pendingAt: undefined, reason: undefined, returnTo: undefined, openedAt: undefined });
+  useAuthGate.setState({ pending: undefined, pendingAt: undefined, reason: undefined, returnTo: undefined, contextCategoryIds: undefined, openedAt: undefined });
   try {
     router.dismissTo((returnTo ?? currentPath) as never);
   } catch {

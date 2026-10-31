@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 
-import type { ID } from '@/types';
-
 /** Giriş / kayıt yöntemleri (Facebook dahil — auth store'daki AuthMethod'dan geniş) */
 export type AuthProvider = 'google' | 'apple' | 'facebook' | 'email' | 'phone';
 
@@ -20,12 +18,10 @@ type AuthFlowState = {
   username: string;
   displayName: string;
   gender?: Gender;
-  interests: ID[];
   setProvider: (provider: AuthProvider, email?: string) => void;
   setPhone: (phone: string) => void;
   setUsername: (username: string, displayName: string) => void;
   setGender: (gender: Gender | undefined) => void;
-  setInterests: (ids: ID[]) => void;
   reset: () => void;
 };
 
@@ -36,7 +32,6 @@ const INITIAL = {
   username: '',
   displayName: '',
   gender: undefined,
-  interests: [] as ID[],
 };
 
 /**
@@ -49,6 +44,5 @@ export const useAuthFlow = create<AuthFlowState>()((set) => ({
   setPhone: (phone) => set({ phone }),
   setUsername: (username, displayName) => set({ username, displayName }),
   setGender: (gender) => set({ gender }),
-  setInterests: (interests) => set({ interests }),
-  reset: () => set({ ...INITIAL, interests: [] }),
+  reset: () => set(INITIAL),
 }));

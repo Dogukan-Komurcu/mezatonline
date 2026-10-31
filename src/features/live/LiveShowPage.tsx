@@ -302,7 +302,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       action();
       return;
     }
-    const go = () => requireAuth(action, { reason });
+    const go = () => requireAuth(action, { reason, categoryIds: [show.categoryId] });
     if (sheet || composer.open) {
       setSheet(null);
       setComposer({ open: false, text: '' });

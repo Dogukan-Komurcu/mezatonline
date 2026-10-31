@@ -7,6 +7,7 @@ import { FollowButton } from '@/components/cards/UserRow';
 import { Avatar, Button, Chip, EmptyState, Header, Icon, Text, toast } from '@/components/ui';
 import { getCategory, getLiveShowOf, getSellers } from '@/data';
 import { AuthLayout, OnboardingProgress, SkipLink, StepTitle } from '@/features/auth/components';
+import { onboardingInterests } from '@/features/auth/session';
 import { useAuthFlow } from '@/features/auth/store';
 import { formatCompact, formatRating } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -63,7 +64,8 @@ function SellerRow({ user }: { user: User }) {
 }
 
 function FollowSellersScreen() {
-  const interests = useAuthFlow((s) => s.interests);
+  const gender = useAuthFlow((s) => s.gender);
+  const [interests] = useState(() => onboardingInterests(gender));
   const followingIds = useSocialStore((s) => s.followingIds);
   const toggleFollow = useSocialStore((s) => s.toggleFollow);
   const [filter, setFilter] = useState<string>('all');
@@ -87,7 +89,7 @@ function FollowSellersScreen() {
   const header = (
     <View>
       <View style={styles.titlePad}>
-        <StepTitle title="Satıcıları takip et" subtitle="Seçtiğin kategorilerde en sevilen satıcılar. Canlı yayına geçtiklerinde ilk sen haberdar ol." style={styles.title} />
+        <StepTitle title="Satıcıları takip et" subtitle="Senin için önerdiğimiz satıcılar. Canlı yayına geçtiklerinde ilk sen haberdar ol." style={styles.title} />
       </View>
       {chipIds.length > 1 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>

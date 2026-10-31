@@ -1,12 +1,11 @@
 import { router } from 'expo-router';
 
 import { toast } from '@/components/ui';
-import { CATEGORIES_BY_POPULARITY, getUserByUsername } from '@/data';
+import { CATEGORIES_BY_POPULARITY, getCategory, getProduct, getShow, getUserByUsername } from '@/data';
 import { useAuthStore, type AuthMethod } from '@/store/auth';
-import { useSocialStore } from '@/store/social';
 import type { ID } from '@/types';
 
-import { completeAuthGate } from './gate';
+import { completeAuthGate, useAuthGate } from './gate';
 import { useAuthFlow, type AuthProvider, type Gender } from './store';
 
 // ─── Kullanıcı adı kuralları ─────────────────────────────────────────────────
@@ -130,7 +129,28 @@ export function suggestedInterests(gender: Gender | undefined): ID[] {
   return ['tcg', 'toys', 'sneakers', 'coins'];
 }
 
-const DEFAULT_INTERESTS: ID[] = CATEGORIES_BY_POPULARITY.slice(0, 4).map((c) => c.id);
+const MAX_INTERESTS = 4;
+
+/** Kayıt penceresinin açıldığı ekrandaki kategoriler (izlenen yayın, bakılan ürün, kategori, satıcı) */
+function contextCategories(): ID[] {
+  const { returnTo, currentPath, contextCategoryIds } = useAuthGate.getState();
+  if (contextCategoryIds?.length) return contextCategoryIds;
+  const [, kind, id] = (returnTo ?? currentPath).split('/');
+  if (kind === 'live' || kind === 'show') return [getShow(id)?.categoryId].filter(Boolean) as ID[];
+  if (kind === 'product') return [getProduct(id)?.categoryId].filter(Boolean) as ID[];
+  if (kind === 'category') return getCategory(id) ? [id] : [];
+  if (kind === 'user') return getUserByUsername(id)?.categoryIds.slice(0, 2) ?? [];
+  return [];
+}
+
+/**
+ * Kayıtta kategori seçtirilmez (teklif vermeye gelen kullanıcıyı bekletmemek için).
+ * Sana Özel akışı için ilgi alanları; geldiği yayın/ürün + cinsiyete göre öneriler + popülerler.
+ */
+export function onboardingInterests(gender: Gender | undefined): ID[] {
+  const ids = [...contextCategories(), ...suggestedInterests(gender), ...CATEGORIES_BY_POPULARITY.map((c) => c.id)];
+  return Array.from(new Set(ids)).slice(0, MAX_INTERESTS);
+}
 
 /** Kayıt akışını tamamla → kullanıcı kaldığı ekrana döner, bekleyen işlem sürer */
 export function finishOnboarding() {
@@ -139,12 +159,9 @@ export function finishOnboarding() {
   const flow = useAuthFlow.getState();
   const auth = useAuthStore.getState();
   const username = flow.username || uniqueUsername(flow.email ?? 'koleksiyoncu');
-  const interests = flow.interests.length ? flow.interests : auth.interests.length ? auth.interests : DEFAULT_INTERESTS;
-  const social = useSocialStore.getState();
-  flow.interests.forEach((id) => {
-    if (!social.followedCategoryIds.includes(id)) social.toggleFollowCategory(id);
-  });
-  auth.completeOnboarding({ username, displayName: flow.displayName.trim() || undefined, interests });
+  const interests = auth.interests.length ? auth.interests : onboardingInterests(flow.gender);
+  // Cinsiyetten tahmin edilenler yalnızca akış için; profilde yalnızca geldiği içeriğin kategorisi görünür
+  auth.completeOnboarding({ username, displayName: flow.displayName.trim() || undefined, interests, categoryIds: contextCategories() });
   flow.reset();
   toast.success(`Hoş geldin @${username}! 🎉`, 'sparkles');
   completeAuthGate();
@@ -158,8 +175,8 @@ export function loginAndFinish(provider: AuthProvider, identifier?: string, user
   const base = usernameHint ?? (provider === 'email' && identifier ? identifier : `koleksiyoncu_${Math.floor(100 + Math.random() * 900)}`);
   const hinted = slugifyUsername(base);
   const username = hinted.length >= USERNAME_MIN && !usernameFormatError(hinted) && isUsernameAvailable(hinted) ? hinted : uniqueUsername(base);
-  const interests = auth.interests.length ? auth.interests : DEFAULT_INTERESTS;
-  auth.completeOnboarding({ username, interests });
+  const interests = auth.interests.length ? auth.interests : onboardingInterests(undefined);
+  auth.completeOnboarding({ username, interests, categoryIds: contextCategories() });
   useAuthFlow.getState().reset();
   toast.success(`Tekrar hoş geldin @${username}!`, 'hand-right');
   completeAuthGate();
