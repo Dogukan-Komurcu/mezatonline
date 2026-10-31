@@ -20,7 +20,12 @@
         "NSCameraUsageDescription": "Canlı yayın açmak ve ürün fotoğrafı çekmek için kameranı kullanıyoruz.",
         "NSMicrophoneUsageDescription": "Canlı yayında sesinin izleyicilere ulaşması için mikrofonunu kullanıyoruz.",
         "NSPhotoLibraryUsageDescription": "Ürün ve profil fotoğrafı seçebilmen için fotoğraf arşivine erişiyoruz.",
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -31,7 +36,10 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -74,6 +82,20 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "a1c3e9f3-f7b6-4d69-8aad-90ec33fdcd00"
+      }
+    },
+    "owner": "dogukan.komurcu",
+    "updates": {
+      "url": "https://u.expo.dev/a1c3e9f3-f7b6-4d69-8aad-90ec33fdcd00"
     }
   }
 }

@@ -94,6 +94,8 @@ export function AddressForm({ value, onChange, errors = {} }: { value: AddressDr
 
 // ─── Kart ────────────────────────────────────────────────────────────────────
 
+const SHARE_PREVIEW = process.env.EXPO_PUBLIC_SHARE_PREVIEW === '1';
+
 export type CardDraft = { number: string; holder: string; expiry: string; cvc: string };
 
 export const emptyCard = (): CardDraft => ({ number: '', holder: '', expiry: '', cvc: '' });
@@ -116,11 +118,11 @@ function luhn(num: string): boolean {
 export function validateCard(c: CardDraft): Partial<Record<keyof CardDraft, string>> {
   const e: Partial<Record<keyof CardDraft, string>> = {};
   const digits = c.number.replace(/\D/g, '');
-  if (digits.length < 15 || !luhn(digits)) e.number = 'Geçerli bir kart numarası gir';
+  if (digits.length < 15 || (!SHARE_PREVIEW && !luhn(digits))) e.number = 'Geçerli bir kart numarası gir';
   if (c.holder.trim().length < 3) e.holder = 'Kart üzerindeki ismi gir';
   const m = c.expiry.match(/^(\d{2})\/(\d{2})$/);
   if (!m || +m[1] < 1 || +m[1] > 12) e.expiry = 'AA/YY';
-  else {
+  else if (!SHARE_PREVIEW) {
     const exp = new Date(2000 + +m[2], +m[1], 1);
     if (exp.getTime() < Date.now()) e.expiry = 'Kartın süresi dolmuş';
   }

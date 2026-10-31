@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastHost } from '@/components/ui';
 import { TransactSetupHost } from '@/features/wallet/TransactSetup';
+import { useHomeStore } from '@/features/home/store';
 import { applyQaTheme, qaSignIn, readQaLaunch } from '@/lib/qa';
 import { useAuthStore } from '@/store/auth';
 import { useInboxStore } from '@/store/inbox';
@@ -24,6 +25,7 @@ export const unstable_settings = { anchor: '(tabs)' };
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const PERSISTED = [useAuthStore, useSettingsStore, useSocialStore, useWalletStore, useOrdersStore, useInboxStore, useSellerStore, useRewardsStore];
+const SHARE_PREVIEW = process.env.EXPO_PUBLIC_SHARE_PREVIEW === '1';
 
 /** Tüm kalıcı store'lar AsyncStorage'dan yüklendi mi */
 function useHydrated() {
@@ -42,10 +44,32 @@ function useHydrated() {
 
 export default function RootLayout() {
   const hydrated = useHydrated();
+  const [previewReady, setPreviewReady] = useState(!SHARE_PREVIEW);
   const { isDark, colors } = useTheme();
   const status = useAuthStore((s) => s.status);
   const onboarded = useAuthStore((s) => s.onboarded);
   const signedIn = status === 'signedIn' && onboarded;
+
+  useEffect(() => {
+    if (!SHARE_PREVIEW || !hydrated) return;
+    const prepare = () => {
+      setPreviewReady(true);
+    };
+    const unsubscribe = useHomeStore.persist.onFinishHydration(prepare);
+    if (useHomeStore.persist.hasHydrated()) prepare();
+    const previewWindow = window as typeof window & {
+      __mezatPreviewReset?: () => void;
+    };
+    previewWindow.__mezatPreviewReset = () => {
+      try {
+        Object.keys(localStorage).filter((key) => key.startsWith('mezat:')).forEach((key) => localStorage.removeItem(key));
+      } catch { /* Private browsing may disable persistent storage. */ }
+    };
+    return () => {
+      unsubscribe();
+      delete previewWindow.__mezatPreviewReset;
+    };
+  }, [hydrated]);
 
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {});
@@ -79,7 +103,7 @@ export default function RootLayout() {
     };
   }, [hydrated]);
 
-  if (!hydrated) return null;
+  if (!hydrated || !previewReady) return null;
 
   const navTheme = isDark
     ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: darkColors.bg, card: darkColors.bg, primary: darkColors.primary, text: darkColors.text, border: darkColors.border } }

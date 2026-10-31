@@ -1,0 +1,8 @@
+name: Mezatonline iPhone Device Registration
+
+jobs:
+  register_iphone:
+    name: Register friend's iPhone for direct installation
+    type: apple-device-registration-request
+    params:
+      apple_team_identifier: "4N6B7MPCY3"

@@ -1,0 +1,11 @@
+name: Mezatonline TestFlight Review
+
+jobs:
+  distribute_to_testflight:
+    name: Submit existing iPhone build for external review
+    type: testflight
+    params:
+      asc_build_id: "5ef5cdd6-dc28-407a-b289-d3ca076090bc"
+      external_groups:
+        - Mezatonline Dış Test
+      submit_beta_review: true
