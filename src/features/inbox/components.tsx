@@ -182,7 +182,8 @@ function useKeyboardVisible() {
 
 // ─── Mesaj kutusu ────────────────────────────────────────────────────────────
 
-export function Composer({ onSend, placeholder = 'Mesaj yaz…', quickReplies }: { onSend: (text: string, image?: string) => void; placeholder?: string; quickReplies?: string[] }) {
+/** `onSend` false dönerse (ör. içerik filtresine takıldıysa) yazılan metin silinmez */
+export function Composer({ onSend, placeholder = 'Mesaj yaz…', quickReplies }: { onSend: (text: string, image?: string) => boolean | void; placeholder?: string; quickReplies?: string[] }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardVisible();
@@ -193,7 +194,7 @@ export function Composer({ onSend, placeholder = 'Mesaj yaz…', quickReplies }:
     const t = text.trim();
     if (!t) return;
     haptic.light();
-    onSend(t);
+    if (onSend(t) === false) return;
     setText('');
   };
 
@@ -201,7 +202,7 @@ export function Composer({ onSend, placeholder = 'Mesaj yaz…', quickReplies }:
     const asset = await pickImage(source, { allowsEditing: source === 'camera' });
     if (!asset) return;
     haptic.light();
-    onSend(text.trim(), asset.uri);
+    if (onSend(text.trim(), asset.uri) === false) return;
     setText('');
   };
 

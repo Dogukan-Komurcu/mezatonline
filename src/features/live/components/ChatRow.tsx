@@ -137,7 +137,7 @@ function ChatRowInner({ msg, fade, onUserPress }: ChatRowProps) {
   if (msg.type === 'system') {
     return (
       <View style={[styles.system, { opacity }]}>
-        <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={2} style={styles.flex}>
+        <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={4} style={styles.flex}>
           {msg.text}
         </Text>
       </View>

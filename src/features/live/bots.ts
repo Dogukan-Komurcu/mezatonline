@@ -1,7 +1,12 @@
 /**
  * Canlı yayın simülasyonu için sahte izleyiciler ve Türkçe sohbet havuzu.
+ * Gerçek kişi adları kullanılmaz; kapalı özelliklere (çekiliş vb.) atıf yapan satırlar bayrakla süzülür.
  */
+import { FEATURES } from '@/config/demo';
 import { random } from '@/lib/rng';
+
+/** Çekiliş kapalıysa çekilişten bahseden satırları çıkar */
+const giveawayLines = (lines: string[]) => (FEATURES.giveaways ? lines : []);
 
 export type Bot = {
   id: string;
@@ -55,7 +60,7 @@ export function makeBots(n: number): Bot[] {
 
 export const GENERIC_CHAT = [
   'selamlar 👋', 'hayırlı yayınlar 🙌', 'bereket versin 🙏', 'W', 'W W W', '🔥🔥🔥', 'kargo ne zaman çıkar?',
-  'çekiliş ne zaman?', 'abi bunu bir daha gösterir misin', 'kaçtan başlıyor?', 'bu orijinal mi?', 'kondisyonu nasıl?',
+  ...giveawayLines(['çekiliş ne zaman?']), 'abi bunu bir daha gösterir misin', 'kaçtan başlıyor?', 'bu orijinal mi?', 'kondisyonu nasıl?',
   'yakından görebilir miyiz 🙏', 'ilk defa izliyorum, çok güzel yayın', 'takip ettim 💛', 'ses biraz kısık',
   'fiyatlar çok iyi', 'bende de var bundan', 'hadi bakalım 👀', 'geçen hafta aldım, çok memnunum', 'kargo birleşiyor mu?',
   "Ankara'dan selamlar", "İzmir'den selam 👋", "Bursa'dan selamlar", 'yayın kaçta bitiyor?', 'pahalı gitti ya 😅',
@@ -70,8 +75,8 @@ export const BIDDING_CHAT = ['hadi hadi', 'bırakmam 😤', 'bu benim', 'son tek
 export const SOLD_CHAT = ['hayırlı olsun 🎉', 'tebrikler!', 'güle güle kullan', 'kaçırdım ya 😩', 'bir dahakine', 'ucuz kaldı', 'GG', 'iyi kapattın'];
 
 export const CATEGORY_CHAT: Record<string, string[]> = {
-  tcg: ['Charizard çıksın 🙏', '151 paketi var mı?', 'japonca mı ingilizce mi?', 'alt art gelsin', 'PSA 10 mu?', 'sleeve içinde mi gönderiyorsunuz?', 'booster box ne kadar?'],
-  sports_cards: ['Arda Güler kartı var mı?', 'Kenan Yıldız rookie?', 'Panini mi?', 'imzalı mı bu?', 'numaralı mı?'],
+  tcg: ['Charizard var mı? 🙏', '151 paketi var mı?', 'japonca mı ingilizce mi?', 'alt art var mı?', 'PSA 10 mu?', 'sleeve içinde mi gönderiyorsunuz?', 'booster box ne kadar?'],
+  sports_cards: ['genç yıldız rookie kartı var mı?', 'milli takım kartı var mı?', 'Panini mi?', 'imzalı mı bu?', 'numaralı mı?'],
   sneakers: ['numarası kaç?', '43 var mı?', 'faturası var mı?', 'kutusu orijinal mi?', '44.5 olsa alırdım', 'giyilmiş mi?'],
   womens_fashion: ['bedeni ne?', 'S beden var mı?', 'kumaşı ne?', 'rengi çok güzel', 'boyu kaç cm?'],
   mens_fashion: ['bedeni ne?', 'L var mı?', 'vintage mi bu?', 'kalıbı dar mı?'],
@@ -100,7 +105,7 @@ export const CATEGORY_CHAT: Record<string, string[]> = {
 export const SELLER_LINES = [
   'Hoş geldiniz arkadaşlar! 🙌',
   'Sıradaki ürüne geçiyoruz 👇',
-  'Takip etmeyi unutmayın, çekiliş geliyor 🎁',
+  ...giveawayLines(['Takip etmeyi unutmayın, çekiliş geliyor 🎁']),
   'Kargolar 24 saat içinde çıkıyor 📦',
   'Bütün ürünler orijinal, gönül rahatlığıyla 💯',
   'Aynı yayında aldıklarınız tek kargoda gelir 👍',
@@ -110,7 +115,7 @@ export const SELLER_LINES = [
 ];
 
 export const PINNED_LINES = [
-  '📌 Her 15 dakikada bir çekiliş! Takip edenler katılabilir 💛',
+  ...giveawayLines(['📌 Her 15 dakikada bir çekiliş! Takip edenler katılabilir 💛']),
   '📌 Aynı yayındaki tüm alımlar tek kargo ücretiyle gönderilir 📦',
   '📌 ₺1 başlangıçlı açık artırmalar — kaçırmayın 🔥',
   '📌 Bütün ürünler orijinal & faturalı ✅',
@@ -123,8 +128,8 @@ export const MOD_LINES = [
   'Lütfen birbirimize saygılı olalım 🙏',
   'Sorularınızı yazın, satıcımıza iletiyorum 💬',
   'Aynı yayındaki alımlar tek kargoda gelir 📦',
-  'Çekilişe katılmak için takip etmeyi unutmayın 🎁',
-  'Teklifler bağlayıcıdır, lütfen dikkatli teklif verin ⚖️',
+  ...giveawayLines(['Çekilişe katılmak için takip etmeyi unutmayın 🎁']),
+  'Teklifler bağlayıcıdır; kurumsal satıcılarda 14 günlük cayma hakkı saklıdır. ⚖️',
   'Yeni gelenler hoş geldiniz! Kaydırarak teklif verebilirsiniz 👉',
 ];
 

@@ -64,7 +64,6 @@ export const CHALLENGE_CTA: Record<ChallengeKind, string> = {
   follow_seller: 'Satıcı keşfet',
   chat: 'Sohbete katıl',
   place_bid: 'Mezata katıl',
-  enter_giveaway: 'Çekilişe git',
   purchase: 'Alışverişe başla',
 };
 
@@ -76,12 +75,6 @@ export function goToChallenge(kind: ChallengeKind) {
     case 'chat':
     case 'place_bid': {
       const show = live[0];
-      if (show) router.push(`/live/${show.id}`);
-      else router.navigate('/');
-      return;
-    }
-    case 'enter_giveaway': {
-      const show = live.find((s) => s.giveawayCount > 0) ?? live[0];
       if (show) router.push(`/live/${show.id}`);
       else router.navigate('/');
       return;

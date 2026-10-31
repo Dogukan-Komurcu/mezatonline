@@ -22,7 +22,7 @@ export type CreateOrderInput = {
 
 export type PreBidStatus = 'upcoming' | 'winning' | 'outbid' | 'won' | 'lost' | 'expired';
 
-/** Yayın öncesi verilen ön teklif (maks. teklif gibi çalışır, iptal edilemez) */
+/** Yayın öncesi verilen ön teklif (maks. teklif gibi çalışır; geri çekilemez, kurumsal satıcıda yasal cayma hakkı saklıdır) */
 export type PreBid = {
   id: ID;
   productId: ID;

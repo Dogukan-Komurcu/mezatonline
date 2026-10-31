@@ -191,7 +191,7 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
             </View>
           </View>
           <NoticeBox icon="shield-checkmark-outline" title="Satıcı kabul etmedikçe ücret alınmaz">
-            Önerin bağlayıcıdır: kabul edilirse kayıtlı kartından otomatik ödeme alınır ve siparişin oluşturulur. Satıcı karşı teklif verirse 24 saat içinde yanıtlayabilirsin. Yanıtlanmayan öneriler 30 gün sonra sona erer.
+            Önerin bağlayıcıdır: satıcı kabul ederse kayıtlı kartından otomatik ödeme alınır ve siparişin oluşturulur. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Satıcı karşı teklif verirse 24 saat içinde yanıtlayabilirsin. Yanıtlanmayan öneriler 30 gün sonra sona erer.
           </NoticeBox>
         </>
       )}

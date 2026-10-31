@@ -36,7 +36,8 @@ export type ProfileHeaderProps = {
   blocked?: boolean;
   onRatingPress: () => void;
   onMessage: () => void;
-  onTip: () => void;
+  /** Verilmezse "Bahşiş" butonu gizlenir (FEATURES.tips) */
+  onTip?: () => void;
   onShare: () => void;
 };
 
@@ -192,7 +193,7 @@ export function ProfileHeader({
           <View style={styles.buttons}>
             <FollowButton user={user} style={styles.btnFlex} />
             <Button title="Mesaj" size="sm" variant="secondary" icon="chatbubble-outline" style={styles.btn} onPress={onMessage} />
-            {user.isSeller ? <Button title="Bahşiş" size="sm" variant="secondary" icon="cash-outline" onPress={onTip} style={styles.btn} /> : null}
+            {user.isSeller && onTip ? <Button title="Bahşiş" size="sm" variant="secondary" icon="cash-outline" onPress={onTip} style={styles.btn} /> : null}
           </View>
         )}
 

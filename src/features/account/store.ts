@@ -7,6 +7,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { LEGAL_VERSION } from '@/store/auth';
+import { useSettingsStore } from '@/store/settings';
 import { persistStorage, storeKey } from '@/store/storage';
 
 export type ControlKind = 'watch' | 'spend';
@@ -17,6 +19,13 @@ export type ControlType = 'reminder' | 'limit';
 export type ControlValues = Record<ControlPeriod, { reminder?: number; limit?: number }>;
 
 export type DeliveryPreference = 'door' | 'branch';
+
+/** Açık rızaya dayanan izinler */
+export type ConsentKey = 'iysSms' | 'iysEmail' | 'iysCall' | 'personalizedAds';
+/** Rıza kaydı: verildi/geri alındı, zaman, metin sürümü */
+export type ConsentRecord = { granted: boolean; at: string; version: string };
+
+const CONSENT_KEYS: readonly string[] = ['iysSms', 'iysEmail', 'iysCall', 'personalizedAds'] satisfies ConsentKey[];
 
 type AccountState = {
   // ── Hesap Kontrolleri
@@ -42,6 +51,7 @@ type AccountState = {
   iysSms: boolean;
   iysEmail: boolean;
   iysCall: boolean;
+  consents: Partial<Record<ConsentKey, ConsentRecord>>;
   // ── Diğer
   redeemedCodes: string[];
   usernameChangedAt?: string;
@@ -87,8 +97,9 @@ export const useAccountStore = create<AccountState>()(
       personalizedAds: false,
       quietHours: false,
       iysSms: false,
-      iysEmail: true,
+      iysEmail: false,
       iysCall: false,
+      consents: {},
       redeemedCodes: [],
       setPin: (pin) => set({ pin }),
       setControl: (kind, period, type, value) =>
@@ -96,15 +107,38 @@ export const useAccountStore = create<AccountState>()(
           const next: ControlValues = { ...s[kind], [period]: { ...s[kind][period], [type]: value } };
           return kind === 'watch' ? { watch: next } : { spend: next };
         }),
-      setFlag: (key, value) => set({ [key]: value } as Partial<AccountState>),
+      setFlag: (key, value) =>
+        set((s) =>
+          (CONSENT_KEYS.includes(key)
+            ? { [key]: value, consents: { ...s.consents, [key]: { granted: value, at: new Date().toISOString(), version: LEGAL_VERSION } } }
+            : { [key]: value }) as Partial<AccountState>,
+        ),
       setDeliveryPreference: (deliveryPreference) => set({ deliveryPreference }),
       markVerified: (last4) => set({ verified: true, verifiedAt: new Date().toISOString(), verifiedCardLast4: last4 }),
       redeemCode: (code) => set((s) => ({ redeemedCodes: s.redeemedCodes.includes(code) ? s.redeemedCodes : [...s.redeemedCodes, code] })),
       markUsernameChanged: () => set({ usernameChangedAt: new Date().toISOString() }),
     }),
-    { name: storeKey('account'), storage: persistStorage },
+    {
+      name: storeKey('account'),
+      storage: persistStorage,
+      version: 1,
+      // v0'da e-posta ticari ileti izni varsayılan olarak açıktı; rıza alınmadığı için kapatılır
+      migrate: (persisted, version) => {
+        const s = persisted as AccountState;
+        return version < 1 && s ? { ...s, iysEmail: false } : s;
+      },
+    },
   ),
 );
+
+/**
+ * Ticari elektronik ileti açık rızası (tek kaynak): e-posta izni (İYS alanı) ve
+ * kampanya bildirimleri birlikte açılır / kapanır; rıza zamanı ve metin sürümü kaydedilir.
+ */
+export function setMarketingConsent(granted: boolean) {
+  useAccountStore.getState().setFlag('iysEmail', granted);
+  useSettingsStore.getState().setNotificationPref('promotions', granted);
+}
 
 // ─── Dönem hesapları (Hafta: Pazartesi 00:00 – Pazar 23:59, Türkiye saati) ─────
 

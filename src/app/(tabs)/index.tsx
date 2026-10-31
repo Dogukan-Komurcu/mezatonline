@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { openShow } from '@/components/cards/ShowCard';
 import { UserRow } from '@/components/cards/UserRow';
 import { Button, EmptyState, Icon, PressableScale, Text, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { getCategory } from '@/data';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ProductGridRow, ShowGridRow } from '@/features/browse/grids';
@@ -24,10 +25,47 @@ import { ShowRail } from '@/features/home/ShowRail';
 import { useHomeStore } from '@/features/home/store';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore } from '@/store/auth';
+import { useSettingsStore } from '@/store/settings';
 import { useSocialStore } from '@/store/social';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 const NONE: string[] = [];
+
+/** İnce demo bilgilendirme şeridi; kapatılınca bu cihazda bir daha gösterilmez */
+function DemoBanner() {
+  const { colors } = useTheme();
+  const dismissed = useSettingsStore((s) => s.demoBannerDismissed);
+  const dismiss = useSettingsStore((s) => s.dismissDemoBanner);
+  if (!DEMO_MODE || dismissed) return null;
+  return (
+    <View style={[styles.demo, { backgroundColor: colors.surface }]}>
+      <Icon name="flask-outline" size={16} color="textSecondary" />
+      <Text variant="footnote" color="textSecondary" style={styles.demoText}>
+        {DEMO_COPY.banner}{' '}
+        <Text
+          variant="footnote"
+          weight="700"
+          color="text"
+          style={styles.underline}
+          accessibilityRole="link"
+          onPress={() => router.push({ pathname: '/settings/legal', params: { doc: 'demo' } })}
+          suppressHighlighting>
+          Ayrıntılar
+        </Text>
+      </Text>
+      <PressableScale
+        hitSlop={10}
+        onPress={() => {
+          haptic.tap();
+          dismiss();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Demo bilgilendirmesini kapat">
+        <Icon name="close" size={16} color="textSecondary" />
+      </PressableScale>
+    </View>
+  );
+}
 
 function CategoryEmpty({ categoryId }: { categoryId: string }) {
   const category = getCategory(categoryId);
@@ -231,6 +269,7 @@ export default function HomeScreen() {
           renderItem={renderRow}
           ListHeaderComponent={
             <View onLayout={(e) => setRailH(e.nativeEvent.layout.height)}>
+              <DemoBanner />
               <CategoryRail items={railItems} selected={selection} onSelect={onSelect} />
             </View>
           }
@@ -271,6 +310,9 @@ const styles = StyleSheet.create({
   compact: { position: 'absolute', top: 0, left: 0, right: 0 },
   afterBand: { paddingTop: 18 },
   empty: { paddingVertical: 36 },
+  demo: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: SCREEN_PADDING, marginTop: 4, marginBottom: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.md },
+  demoText: { flex: 1 },
+  underline: { textDecorationLine: 'underline' },
   link: {
     marginHorizontal: SCREEN_PADDING,
     marginBottom: 18,

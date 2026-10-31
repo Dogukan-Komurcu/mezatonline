@@ -8,6 +8,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, Text } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { User } from '@/types';
@@ -58,7 +59,11 @@ export function ShowSummary({ data, me, onOrders, onHub, onRaidShow }: { data: S
           </View>
           <View style={styles.gridRow}>
             <StatTile label="Yeni takipçi" value={`+${formatCompact(data.newFollowers)}`} icon="person-add-outline" />
-            <StatTile label="Bahşiş" value={formatTRY(data.tips)} icon="heart-outline" />
+            {FEATURES.tips ? (
+              <StatTile label="Bahşiş" value={formatTRY(data.tips)} icon="heart-outline" />
+            ) : (
+              <StatTile label="Sipariş" value={formatCompact(data.orders)} icon="receipt-outline" />
+            )}
           </View>
           <View style={styles.gridRow}>
             <StatTile label="Ortalama sepet" value={formatTRY(Math.round(avg))} icon="basket-outline" />

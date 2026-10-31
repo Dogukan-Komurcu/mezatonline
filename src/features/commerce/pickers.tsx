@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, PressableScale, Sheet, Text, toast } from '@/components/ui';
+import { DEMO_COPY } from '@/config/demo';
 import { AddressForm, CardForm, emptyAddress, emptyCard, TestCardHint, validateAddress, validateCard, type AddressDraft, type CardDraft } from '@/features/wallet/forms';
 import { formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -205,8 +206,8 @@ export function PaymentPickerSheet({ visible, onClose, selectedId, onSelect, sta
           })}
           <View style={styles.secureRow}>
             <Icon name="lock-closed" size={13} color="textTertiary" />
-            <Text variant="caption" color="textTertiary" weight="500">
-              Kart bilgilerin iyzico altyapısında şifrelenerek saklanır.
+            <Text variant="caption" color="textTertiary" weight="500" style={styles.secureText}>
+              Gerçek sürümde kart bilgilerin lisanslı bir ödeme kuruluşu tarafından şifrelenerek saklanır. {DEMO_COPY.payment}
             </Text>
           </View>
         </View>
@@ -229,6 +230,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tag: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   footerRow: { flexDirection: 'row', gap: 10 },
-  secureRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 4 },
+  secureRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 6, marginTop: 4 },
+  secureText: { flexShrink: 1 },
   formGap: { gap: 6 },
 });

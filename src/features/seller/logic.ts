@@ -607,7 +607,7 @@ export type Analytics = {
 type SaleLike = { at: number; amount: number; qty: number; net: number; productId: string; title: string; image?: string };
 type SessionLike = { id: string; title: string; at: number; gross: number; items: number; viewers: number; durationMin: number };
 
-const DEMO_SHOW_TITLES = ["🔥 ₺1'den Başlayan Gece Mezatı", 'Pazar Akşamı Koleksiyon Saati', 'Yeni Gelenler Özel ⚡', 'Hafta Sonu Fırsatları 🎁', 'Kutu Açılışı & Çekiliş 🎉'];
+const DEMO_SHOW_TITLES = ["🔥 ₺1'den Başlayan Gece Mezatı", 'Pazar Akşamı Koleksiyon Saati', 'Yeni Gelenler Özel ⚡', 'Hafta Sonu Fırsatları 🎁', 'Kapalı Kutu Ürünler Gecesi 🎉'];
 
 function demoData(now: number): { sales: SaleLike[]; sessions: SessionLike[] } {
   const rng = createRng(4242);

@@ -131,7 +131,7 @@ export default function WalletScreen() {
                   </PressableScale>
                 </View>
               </View>
-              <InfoNote style={{ marginTop: 10 }}>Krediler yalnızca ürün tutarına uygulanır (kargo ve hizmet bedeline değil) ve 90 gün geçerlidir.</InfoNote>
+              <InfoNote style={{ marginTop: 10 }}>Krediler yalnızca ürün tutarına uygulanır (kargo ve hizmet bedeline değil); satın alınamaz ve nakde çevrilemez. Demo: krediler örnektir, gerçek bir değer taşımaz.</InfoNote>
             </View>
 
             <View style={[styles.pad, { marginTop: 24 }]}>

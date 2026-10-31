@@ -16,10 +16,14 @@ export type BoostSheetProps = {
   goal: number;
   boosting: boolean;
   onBoost: (amount: number) => void;
-  onTip: () => void;
+  /** Verilmezse bahşiş bölümü gizlenir (FEATURES.tips) */
+  onTip?: () => void;
 };
 
-/** S30: Satıcıyı Destekle — Yayını Öne Çıkar (topluluk desteği) + Bahşiş Gönder */
+/**
+ * S30: Satıcıyı Destekle — Yayını Öne Çıkar (topluluk desteği) + Bahşiş Gönder.
+ * Yalnızca FEATURES.paidBoost açıkken açılır (ücretli öne çıkarma IAP gerektirir).
+ */
 export function BoostSheet({ visible, onClose, sellerName, raised, goal, boosting, onBoost, onTip }: BoostSheetProps) {
   const { colors } = useTheme();
   const [amount, setAmount] = useState<number>(PRESETS[1]);
@@ -32,7 +36,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
           Satıcıyı Destekle
         </Text>
         <Text variant="subhead" weight="600" color={liveColors.onPrimary} style={styles.heroText}>
-          {sellerName} adlı satıcıya teşekkür etmek için yayını öne çıkarabilir ya da bahşiş gönderebilirsin.
+          {sellerName} adlı satıcıya teşekkür etmek için yayını öne çıkarabilir{onTip ? ' ya da bahşiş gönderebilirsin' : 'sin'}.
         </Text>
       </LinearGradient>
 
@@ -74,18 +78,20 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
         ) : null}
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <View style={styles.head}>
-          <Icon name="cash-outline" size={20} color={liveColors.success} />
-          <Text variant="headline" weight="800">
-            Bahşiş Gönder
+      {onTip ? (
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <View style={styles.head}>
+            <Icon name="cash-outline" size={20} color={liveColors.success} />
+            <Text variant="headline" weight="800">
+              Bahşiş Gönder
+            </Text>
+          </View>
+          <Text variant="footnote" color="textSecondary">
+            Satıcına hızlı ve güvenli bir şekilde teşekkür et. Bahşişin tamamı satıcıya gider.
           </Text>
+          <Button title="Bahşiş Gönder" variant="inverse" fullWidth onPress={onTip} icon="heart" />
         </View>
-        <Text variant="footnote" color="textSecondary">
-          Satıcına hızlı ve güvenli bir şekilde teşekkür et. Bahşişin tamamı satıcıya gider.
-        </Text>
-        <Button title="Bahşiş Gönder" variant="inverse" fullWidth onPress={onTip} icon="heart" />
-      </View>
+      ) : null}
     </Sheet>
   );
 }

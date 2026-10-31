@@ -10,6 +10,7 @@ import { Platform, ScrollView, StyleSheet, View, type ScrollViewInstance } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Divider, EmptyState, Header, Icon, ListRow, PressableScale, Screen, SectionGap, Text, TextField, toast } from '@/components/ui';
+import { DEMO_COPY } from '@/config/demo';
 import { BlockTitle, CardBrandMark, Checkbox, NoticeBox, QtyStepper } from '@/features/commerce/components';
 import { checkCoupon, couponDiscount, useCouponStore, type Coupon } from '@/features/commerce/coupons';
 import { useIsBundled, useProductById, useRemainingStock, useSellerOf } from '@/features/commerce/hooks';
@@ -18,7 +19,7 @@ import { installmentPlan, installmentsAllowed, MIN_INSTALLMENT_TOTAL, plansFor, 
 import { OrderSuccess } from '@/features/commerce/OrderSuccess';
 import { AddressPickerSheet, PaymentPickerSheet } from '@/features/commerce/pickers';
 import { ThreeDSecure } from '@/features/commerce/ThreeDSecure';
-import { addressLine, CARRIER_LINE, deliveryWindow } from '@/features/commerce/utils';
+import { addressLine, deliveryWindow } from '@/features/commerce/utils';
 import { completePurchase } from '@/features/shared/purchase';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { formatPhone, formatRating, formatTRY } from '@/lib/format';
@@ -340,7 +341,7 @@ export default function CheckoutScreen() {
           <View style={styles.deliveryRow}>
             <Icon name="cube-outline" size={16} color="textSecondary" />
             <Text variant="footnote" color="textSecondary" style={styles.flex}>
-              Tahmini teslimat <Text variant="footnote" weight="700">{delivery.label}</Text> · {CARRIER_LINE}
+              Tahmini teslimat <Text variant="footnote" weight="700">{delivery.label}</Text> · Satıcı, uygulamada gösterilen kargo seçenekleriyle gönderir
             </Text>
           </View>
         </View>
@@ -358,7 +359,7 @@ export default function CheckoutScreen() {
                   {card.bank} •••• {card.last4}
                 </Text>
                 <Text variant="footnote" color="textSecondary">
-                  {program} · SKT {card.expiry}
+                  {card.holder} · SKT {card.expiry}
                 </Text>
               </View>
               <Icon name="chevron-forward" size={18} color="textTertiary" />
@@ -385,7 +386,7 @@ export default function CheckoutScreen() {
                   <View style={[styles.programRow, { backgroundColor: colors.surface }]}>
                     <Icon name="card" size={14} color="textSecondary" />
                     <Text variant="caption" color="textSecondary">
-                      {program.toLocaleUpperCase('tr-TR')} KARTINA ÖZEL
+                      KREDİ KARTINA TAKSİT · ÖRNEK ORANLAR (DEMO)
                     </Text>
                   </View>
                   {plans.map((p, i) => {
@@ -556,9 +557,12 @@ export default function CheckoutScreen() {
           <View style={styles.secureRow}>
             <Icon name="lock-closed" size={13} color="textTertiary" />
             <Text variant="caption" color="textTertiary" weight="500">
-              256-bit SSL · 3D Secure · iyzico güvencesiyle
+              256-bit SSL · 3D Secure
             </Text>
           </View>
+          <Text variant="caption" color="textTertiary" align="center">
+            {DEMO_COPY.payment}
+          </Text>
         </View>
       </ScrollView>
 

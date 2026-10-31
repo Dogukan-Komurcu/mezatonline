@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, EmptyState, Header, Icon, IconButton, LiveBadge, PressableScale, Screen, Text, toast } from '@/components/ui';
+import { DEMO_MODE } from '@/config/demo';
 import { getLiveShowOf, getUser } from '@/data';
 import { ActionSheet, ConfirmSheet, type SheetAction } from '@/features/account/ui';
 import { useAccountStore } from '@/features/account/store';
@@ -13,6 +14,7 @@ import { isRequest, SUPPORT_THREAD_ID, SUPPORT_USER, useInboxExtras } from '@/fe
 import { ReportSheet } from '@/features/shared/sheets';
 import { formatRating, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
+import { containsBlocked, MODERATION_BLOCKED_MESSAGE } from '@/lib/moderation';
 import { useInboxStore } from '@/store/inbox';
 import { ORDER_STATUS_LABELS, useOrdersStore } from '@/store/orders';
 import { useSocialStore } from '@/store/social';
@@ -21,6 +23,14 @@ import type { User } from '@/types';
 
 const SAFETY_NOTE = 'Güvenliğin için ödemeleri yalnızca Mezatonline üzerinden yap. Satıcılar senden asla kart bilgisi, IBAN ya da platform dışı ödeme istemez.';
 const SUPPORT_QUICK = ['Siparişim nerede?', 'İade talebi oluşturmak istiyorum', 'Ödeme sorunu yaşıyorum', 'Hesabımla ilgili yardım'];
+
+/** İçerik filtresi: uygunsuzsa uyarı gösterir ve false döner */
+function passesModeration(text: string): boolean {
+  if (!containsBlocked(text)) return true;
+  haptic.error();
+  toast.error(MODERATION_BLOCKED_MESSAGE, 'shield-outline');
+  return false;
+}
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -133,6 +143,7 @@ function DirectChat({ id }: { id: string }) {
   const openProfile = () => router.push(`/user/${user.username}`);
 
   const onSend = (text: string, image?: string) => {
+    if (!passesModeration(text)) return false;
     sendMessage(conv.id, text, image);
     setAwaiting(Date.now());
   };
@@ -326,8 +337,11 @@ function SupportChat() {
           messages={messages}
           partner={SUPPORT_USER}
           typing={typing}
-          header={<ChatIntro user={SUPPORT_USER} note="Mezatonline ekibi senden asla şifre, kart bilgisi ya da doğrulama kodu istemez. Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır." />}
-          footer={<Composer onSend={(t, img) => sendSupport(t, img)} placeholder="Destek ekibine yaz…" quickReplies={asked ? undefined : SUPPORT_QUICK} />}
+          header={<ChatIntro user={SUPPORT_USER} note={`Mezatonline ekibi senden asla şifre, kart bilgisi ya da doğrulama kodu istemez.${DEMO_MODE ? '' : ' Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır.'}`} />}
+          footer={<Composer onSend={(t, img) => {
+            if (!passesModeration(t)) return false;
+            sendSupport(t, img);
+          }} placeholder="Destek ekibine yaz…" quickReplies={asked ? undefined : SUPPORT_QUICK} />}
         />
       </KeyboardAvoidingView>
       <ActionSheet
@@ -339,8 +353,11 @@ function SupportChat() {
           {
             label: 'E-posta ile yaz',
             icon: 'mail-outline',
-            subtitle: 'destek@mezatonline.com',
-            onPress: () => Linking.openURL('mailto:destek@mezatonline.com?subject=Mezatonline%20Destek').catch(() => toast.error('E-posta uygulaması açılamadı')),
+            subtitle: DEMO_MODE ? 'destek@mezatonline.com · yayın öncesi aktif edilecek' : 'destek@mezatonline.com',
+            onPress: () =>
+              DEMO_MODE
+                ? toast('Demo: destek e-posta adresi yayın öncesi aktif edilecek. Şimdilik uygulama içi destek sohbetini kullanabilirsin.', 'mail-outline')
+                : Linking.openURL('mailto:destek@mezatonline.com?subject=Mezatonline%20Destek').catch(() => toast.error('E-posta uygulaması açılamadı')),
           },
           { label: 'Yasal & KVKK', icon: 'document-text-outline', onPress: () => router.push('/settings/legal') },
         ]}

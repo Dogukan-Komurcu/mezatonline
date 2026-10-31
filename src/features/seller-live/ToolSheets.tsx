@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { Avatar, Button, Chip, Divider, EmptyState, Icon, IconButton, ListRow, PressableScale, Sheet, Text, TextField, UnderlineTabs, toast } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { getLiveShows, getUser } from '@/data';
 import type { LiveViewer } from '@/features/live/engine';
 import { formatCompact, formatTRY, timeAgo } from '@/lib/format';
@@ -95,7 +96,7 @@ export function ViewersSheet({
         <MiniStat label="Şu an" value={formatCompact(stats.viewers)} />
         <MiniStat label="Zirve" value={formatCompact(stats.peak)} />
         <MiniStat label="Yeni takipçi" value={`+${stats.newFollowers}`} />
-        <MiniStat label="Bahşiş" value={formatTRY(stats.tips)} />
+        {FEATURES.tips ? <MiniStat label="Bahşiş" value={formatTRY(stats.tips)} /> : null}
       </View>
     </View>
   );
@@ -132,7 +133,9 @@ export function ViewersSheet({
                   ['tip', 'Bahşiş'],
                   ['follow', 'Takip'],
                 ] as const
-              ).map(([k, l]) => <Chip key={k} label={l} size="sm" selected={filter === k} onPress={() => setFilter(k)} />)}
+              )
+                .filter(([k]) => (k !== 'tip' || FEATURES.tips) && (k !== 'giveaway' || FEATURES.giveaways))
+                .map(([k, l]) => <Chip key={k} label={l} size="sm" selected={filter === k} onPress={() => setFilter(k)} />)}
         </View>
         {tab === 'watching' ? (
           <FlatList
@@ -179,7 +182,7 @@ export function ViewersSheet({
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={ActivitySeparator}
             ListEmptyComponent={
-              <EmptyState icon="pulse-outline" title="Henüz etkinlik yok" message="Satışlar, bahşişler, yeni takipçiler ve çekiliş kazananları burada görünür." />
+              <EmptyState icon="pulse-outline" title="Henüz etkinlik yok" message={`Satışlar, ${FEATURES.tips ? 'bahşişler, ' : ''}yeni takipçiler${FEATURES.giveaways ? ' ve çekiliş kazananları' : ''} burada görünür.`} />
             }
             renderItem={({ item }) => <ActivityRow m={item} />}
           />
@@ -332,7 +335,7 @@ export function MoreSheet({
 
 const PIN_PRESETS = [
   'Kargo 24 saat içinde çıkar 📦',
-  'Her 50 izleyicide çekiliş! 🎁 Takip etmeyi unutma',
+  ...(FEATURES.giveaways ? ['Her 50 izleyicide çekiliş! 🎁 Takip etmeyi unutma'] : []),
   'Tüm kartlar orijinal ve kılıflı gönderilir ✅',
   'Aynı yayındaki alımlarda kargo tek sefer ödenir 🚚',
   'Sorularınızı yazın, hepsini cevaplıyorum 💬',

@@ -6,8 +6,8 @@ import type { ID } from '@/types';
 
 import { persistStorage, storeKey } from './storage';
 
-/** Günlük görev türleri (Whatnot Rewards Hub → Görevler) */
-export type ChallengeKind = 'watch_show' | 'save_show' | 'follow_seller' | 'place_bid' | 'purchase' | 'chat' | 'enter_giveaway';
+/** Günlük görev türleri. Şansa dayalı çekiliş katılımına puan verilmez (çekiliş görevi yoktur). */
+export type ChallengeKind = 'watch_show' | 'save_show' | 'follow_seller' | 'place_bid' | 'purchase' | 'chat';
 
 export type Challenge = {
   kind: ChallengeKind;
@@ -22,7 +22,6 @@ export const DAILY_CHALLENGES: Challenge[] = [
   { kind: 'follow_seller', title: 'Yeni bir satıcıyı takip et', points: 30, icon: 'person-add' },
   { kind: 'chat', title: 'Yayın sohbetine mesaj yaz', points: 20, icon: 'chatbubble' },
   { kind: 'place_bid', title: 'Bir açık artırmaya teklif ver', points: 75, icon: 'hammer' },
-  { kind: 'enter_giveaway', title: 'Bir çekilişe katıl', points: 40, icon: 'gift' },
   { kind: 'purchase', title: 'Bir ürün satın al', points: 150, icon: 'bag-handle' },
 ];
 

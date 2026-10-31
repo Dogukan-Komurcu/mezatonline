@@ -15,6 +15,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { ShowCard } from '@/components/cards/ShowCard';
 import { Divider, EmptyState, Header, IconButton, Screen, Text, toast, UnderlineTabs, type TabItem } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { GuestPrompt } from '@/features/auth/GuestPrompt';
 import { APP_URL, ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
@@ -339,7 +340,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         blocked={blocked}
         onRatingPress={showReviews}
         onMessage={message}
-        onTip={() => requireAuth(() => setSheet('tip'), { reason: AUTH_REASONS.tip })}
+        onTip={FEATURES.tips ? () => requireAuth(() => setSheet('tip'), { reason: AUTH_REASONS.tip }) : undefined}
         onShare={share}
       />
       <View onLayout={onTabsLayout} style={styles.tabsWrap}>
@@ -510,7 +511,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
           }}
         />
       ) : null}
-      {user.isSeller && !isMe ? <TipSheet visible={sheet === 'tip'} onClose={() => setSheet('none')} seller={user} /> : null}
+      {FEATURES.tips && user.isSeller && !isMe ? <TipSheet visible={sheet === 'tip'} onClose={() => setSheet('none')} seller={user} /> : null}
       <ReportSheet visible={sheet === 'report'} onClose={() => setSheet('none')} subject={`@${user.username}`} />
       <ReportSheet visible={sheet === 'reviewReport'} onClose={() => setSheet('none')} subject="Değerlendirme" />
       <CenterModal

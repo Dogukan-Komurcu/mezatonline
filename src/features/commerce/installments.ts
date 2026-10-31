@@ -1,6 +1,7 @@
 /**
- * Kredi kartı taksit tablosu (mock). Türkiye'de "şimdi al, sonra öde"nin karşılığı kart taksitidir.
+ * Kredi kartı taksit tablosu (mock, örnek oranlar). Türkiye'de "şimdi al, sonra öde"nin karşılığı kart taksitidir.
  * Yalnızca Hemen Al / fiyat önerisi alımlarında sunulur; açık artırma, çekiliş ve bahşişte sunulmaz.
+ * Banka veya kart programı adı kullanılmaz: gerçek oranları ödeme kuruluşu ve kartı veren banka belirler.
  */
 import type { OrderSource } from '@/types';
 
@@ -10,38 +11,19 @@ export type InstallmentCount = (typeof INSTALLMENT_COUNTS)[number];
 /** Taksit için asgari sepet tutarı */
 export const MIN_INSTALLMENT_TOTAL = 250;
 
-/** Banka → kart programı */
-export const BANK_PROGRAMS: Record<string, string> = {
-  'Garanti BBVA': 'Bonus',
-  'İş Bankası': 'Maximum',
-  'Yapı Kredi': 'World',
-  Akbank: 'Axess',
-  'Ziraat Bankası': 'Bankkart Combo',
-  QNB: 'CardFinans',
-  Enpara: 'Enpara.com',
-  VakıfBank: 'VakıfBank Worldcard',
-  Halkbank: 'Paraf',
-  DenizBank: 'DenizBank Bonus',
-};
+/** Tek, genel taksit programı (banka/kart programı adı yok) */
+export const GENERIC_PROGRAM = 'Kredi kartı';
 
-/** Program bazında toplam vade farkı oranları (0 = vade farksız) */
+/** Program bazında toplam vade farkı oranları (0 = vade farksız) — demo için örnek değerler */
 const RATES: Record<string, Record<InstallmentCount, number>> = {
-  Bonus: { 1: 0, 2: 0, 3: 0, 6: 0.069, 9: 0.104 },
-  Maximum: { 1: 0, 2: 0, 3: 0.018, 6: 0.072, 9: 0.109 },
-  World: { 1: 0, 2: 0, 3: 0, 6: 0.065, 9: 0.099 },
-  Axess: { 1: 0, 2: 0, 3: 0.021, 6: 0.074, 9: 0.112 },
-  'Bankkart Combo': { 1: 0, 2: 0.012, 3: 0.024, 6: 0.078, 9: 0.118 },
-  CardFinans: { 1: 0, 2: 0, 3: 0.02, 6: 0.071, 9: 0.108 },
-  'Enpara.com': { 1: 0, 2: 0.015, 3: 0.029, 6: 0.081, 9: 0.123 },
-  'VakıfBank Worldcard': { 1: 0, 2: 0, 3: 0.022, 6: 0.075, 9: 0.114 },
-  Paraf: { 1: 0, 2: 0, 3: 0.019, 6: 0.07, 9: 0.106 },
-  'DenizBank Bonus': { 1: 0, 2: 0, 3: 0, 6: 0.069, 9: 0.104 },
+  [GENERIC_PROGRAM]: { 1: 0, 2: 0, 3: 0.02, 6: 0.07, 9: 0.105 },
 };
 
-const DEFAULT_PROGRAM = 'Bonus';
+const DEFAULT_PROGRAM = GENERIC_PROGRAM;
 
+/** Kartın taksit programı: bankaya göre ayrım yapılmaz */
 export function programOf(bank: string | undefined): string {
-  return (bank && BANK_PROGRAMS[bank]) || DEFAULT_PROGRAM;
+  return (bank && RATES[bank] ? bank : undefined) ?? DEFAULT_PROGRAM;
 }
 
 export type InstallmentPlan = {

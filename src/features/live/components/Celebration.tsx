@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Button, Text } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { formatTRY } from '@/lib/format';
 import { liveColors } from '@/theme';
 import type { Product } from '@/types';
@@ -24,7 +25,7 @@ export type CelebrationData = {
 
 const COPY = {
   won: { emoji: '🏆', title: 'Kazandın! 🎉', caption: 'Açık artırmayı kazandın' },
-  giveaway: { emoji: '🎁', title: 'Çekilişi kazandın! 🎉', caption: 'Hediyen ücretsiz olarak kargolanacak' },
+  giveaway: { emoji: '🎁', title: 'Çekilişi kazandın! 🎉', caption: DEMO_MODE ? DEMO_COPY.giveaway : 'Hediyen ücretsiz olarak kargolanacak' },
   purchase: { emoji: '🛍️', title: 'Satın aldın! 🎉', caption: 'Siparişin alındı' },
 } as const;
 

@@ -153,7 +153,7 @@ function ChatRow({ message: m, isMod, isBuyer, opacity, onPress }: { message: Ch
     return (
       <Animated.View entering={FadeInDown.duration(180)}>
         <View style={[styles.eventRow, { opacity }]}>
-          <Text variant="footnote" weight="600" color={meta.color} numberOfLines={2} style={styles.shadow}>
+          <Text variant="footnote" weight="600" color={meta.color} numberOfLines={m.type === 'system' ? 4 : 2} style={styles.shadow}>
             {meta.icon ? meta.icon + ' ' : ''}
             {meta.showName ? (
               <Text variant="footnote" weight="800" color={meta.nameColor ?? meta.color}>

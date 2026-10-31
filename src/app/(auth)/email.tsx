@@ -4,11 +4,12 @@ import { Keyboard, StyleSheet, View, type TextInputInstance } from 'react-native
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Button, Header, Icon, Sheet, Text, TextField, toast } from '@/components/ui';
+import { setMarketingConsent } from '@/features/account/store';
 import { AuthLayout, Checkbox, StepTitle } from '@/features/auth/components';
 import { useLegalSheet, type LegalDoc } from '@/features/auth/legal';
 import { loginAndFinish, startSignup } from '@/features/auth/session';
 import { haptic } from '@/lib/haptics';
-import { useSettingsStore } from '@/store/settings';
+import { useAuthStore } from '@/store/auth';
 import { ForceScheme, useTheme } from '@/theme';
 
 const PASSWORD_MIN = 8;
@@ -71,7 +72,7 @@ function ForgotPasswordSheet({ visible, initialEmail, onClose }: { visible: bool
     setTimeout(() => {
       setSending(false);
       haptic.success();
-      toast.success('Sıfırlama bağlantısını e-postana gönderdik', 'mail');
+      toast.success('Demo: e-posta gönderilmez. Gerçek sürümde sıfırlama bağlantısı e-postana gelir.', 'mail');
       onClose();
     }, 1000);
   };
@@ -117,7 +118,6 @@ function EmailScreen() {
   const legal = useLegalSheet();
   const emailRef = useRef<TextInputInstance>(null);
   const passwordRef = useRef<TextInputInstance>(null);
-  const setNotificationPref = useSettingsStore((s) => s.setNotificationPref);
 
   useEffect(() => {
     const t = setTimeout(() => emailRef.current?.focus(), 380);
@@ -137,8 +137,10 @@ function EmailScreen() {
       setSubmitting(false);
       haptic.success();
       if (isSignup) {
-        if (marketing) setNotificationPref('promotions', true);
         startSignup('email', identifier.toLowerCase());
+        // Onay ve açık rıza burada alındı; kullanıcı adı adımında tekrar sorulmaz
+        useAuthStore.getState().acceptTerms('email');
+        setMarketingConsent(marketing);
         toast.success('Hesabın oluşturuldu', 'checkmark-circle');
         router.push({ pathname: '/(auth)/phone', params: { mode: 'finish' } });
       } else {
@@ -147,7 +149,7 @@ function EmailScreen() {
       }
     }, 1100);
     return () => clearTimeout(t);
-  }, [submitting, isSignup, identifier, marketing, setNotificationPref]);
+  }, [submitting, isSignup, identifier, marketing]);
 
   const submit = () => {
     if (!canSubmit) {
@@ -171,6 +173,12 @@ function EmailScreen() {
   const legalLink = (doc: LegalDoc, label: string) => (
     <Text variant="callout" weight="700" style={styles.underline} onPress={() => legal.open(doc)} suppressHighlighting>
       {label}
+    </Text>
+  );
+
+  const kvkkLink = (
+    <Text variant="footnote" weight="700" color="textSecondary" style={styles.underline} onPress={() => legal.open('kvkk')} suppressHighlighting>
+      KVKK Aydınlatma Metni
     </Text>
   );
 
@@ -262,8 +270,7 @@ function EmailScreen() {
               error={attempted && !terms}
               label={
                 <Text variant="callout">
-                  {legalLink('terms', 'Kullanım Koşulları')}’nı ve {legalLink('privacy', 'Gizlilik Politikası')}’nı kabul ediyorum;{' '}
-                  {legalLink('kvkk', 'KVKK Aydınlatma Metni')}’ni okudum.
+                  {legalLink('terms', 'Kullanım Koşulları')}’nı ve {legalLink('privacy', 'Gizlilik Politikası')}’nı okudum, kabul ediyorum.
                 </Text>
               }
             />
@@ -272,10 +279,13 @@ function EmailScreen() {
               onChange={setMarketing}
               label={
                 <Text variant="callout" color="textSecondary">
-                  Kampanya ve fırsatlardan haberdar olmak için {legalLink('marketing', 'ticari elektronik ileti')} almak istiyorum. (İsteğe bağlı)
+                  Kampanya ve fırsatlardan e-posta ve bildirimle haberdar olmak için {legalLink('marketing', 'ticari elektronik ileti')} almaya açık rıza veriyorum. (İsteğe bağlı)
                 </Text>
               }
             />
+            <Text variant="footnote" color="textTertiary" style={styles.kvkk}>
+              Kişisel verilerinin nasıl işlendiğini {kvkkLink} metninde bulabilirsin.
+            </Text>
           </View>
         ) : null}
       </View>
@@ -303,5 +313,6 @@ const styles = StyleSheet.create({
   meterBar: { flex: 1, height: 4, borderRadius: 2 },
   forgot: { alignSelf: 'flex-end', paddingVertical: 4 },
   checks: { gap: 2, marginTop: 4 },
+  kvkk: { marginTop: 6, paddingHorizontal: 2 },
   underline: { textDecorationLine: 'underline' },
 });

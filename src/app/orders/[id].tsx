@@ -220,7 +220,7 @@ export default function OrderDetailScreen() {
         </View>
 
         <View style={styles.rows}>
-          <IconCircleRow icon="document-text-outline" title="Fatura (e-Arşiv)" subtitle="Faturanı görüntüle ve paylaş" onPress={() => setSheet('invoice')} />
+          <IconCircleRow icon="document-text-outline" title="Örnek fatura (demo)" subtitle="Geçerli bir fatura değildir" onPress={() => setSheet('invoice')} />
           {order.showId ? (
             <IconCircleRow
               icon="videocam-outline"

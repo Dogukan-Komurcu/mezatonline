@@ -470,11 +470,11 @@ export default function ProductScreen() {
             title={bundled ? 'Kargo: +₺0 (aynı pakete eklenir)' : shippingFree ? 'Ücretsiz kargo' : `Kargo ücreti: ${formatTRY(product.shippingCost)}`}
             subtitle={bundled ? 'Bu yayından aldığın diğer ürünlerle tek pakette gelir.' : product.showId ? 'Aynı yayından alacağın diğer ürünler tek pakette, ek kargo ücreti olmadan gelir.' : 'Fiyatlara KDV dahildir.'}
           />
-          <InfoLine icon="business-outline" title="Anlaşmalı kargo firmaları" subtitle={CARRIER_LINE} />
+          <InfoLine icon="business-outline" title="Kargo firmaları" subtitle={CARRIER_LINE} />
           <InfoLine icon="time-outline" title="Satıcı 2 iş günü içinde kargolar" subtitle={`Bu satıcının ortalama kargolama süresi: ${avgShip}`} />
           <InfoLine icon="calendar-outline" title="Tahmini teslimat: 2–4 iş günü" subtitle={delivery.label} />
           {seller ? <InfoLine icon="location-outline" title="Gönderim yeri" subtitle={`${seller.city}, Türkiye`} /> : null}
-          <InfoLine icon="shield-checkmark" tint={colors.success} title="Alıcı Koruması" subtitle="Ürün gelmezse ya da açıklandığı gibi değilse paran iade edilir." onPress={() => setProtectionOpen(true)} />
+          <InfoLine icon="shield-checkmark" tint={colors.success} title="Alıcı Koruması" subtitle="Ürün ulaşmazsa ya da açıklandığı gibi değilse, ürün sana ulaştıktan sonra 14 gün içinde bildirirsen paran iade edilir." onPress={() => setProtectionOpen(true)} />
         </View>
 
         <SectionGap />

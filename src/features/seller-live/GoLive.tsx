@@ -87,7 +87,7 @@ function GoLiveContent() {
       const show = scheduleShow({
         title: quickTitle.trim(),
         description: 'Hızlı canlı yayın',
-        coverImage: cat?.image ?? me.avatar,
+        coverImage: cat?.image || me.cover || me.avatar,
         categoryId: quickCategory,
         scheduledAt: new Date().toISOString(),
         tags: ['Hızlı yayın'],

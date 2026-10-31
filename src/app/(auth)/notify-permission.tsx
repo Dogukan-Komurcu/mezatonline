@@ -92,13 +92,13 @@ const ALL_ON: NotificationPrefs = {
   outbid: true,
   orderUpdates: true,
   messages: true,
+  // Pazarlama nitelikli bildirimler burada açılmaz (bkz. enable)
   promotions: false,
-  priceDrops: true,
+  priceDrops: false,
 };
 
 function NotificationsScreen() {
   const [interests] = useState(() => onboardingInterests());
-  const promotions = useSettingsStore((s) => s.notifications.promotions);
   const setPref = useSettingsStore((s) => s.setNotificationPref);
   const [enabling, setEnabling] = useState(false);
 
@@ -109,7 +109,7 @@ function NotificationsScreen() {
   const pushes: MockPush[] = [
     {
       key: 'live',
-      title: `${liveSeller?.username ?? 'pokemerkez'} canlı yayında 🔴`,
+      title: `${liveSeller?.username ?? 'kartmerkezi'} canlı yayında 🔴`,
       body: live ? `“${live.title}” başladı. Hemen katıl, ilk teklifi sen ver!` : 'Yayın başladı. Hemen katıl!',
       avatar: liveSeller?.avatar,
       name: liveSeller?.username,
@@ -121,7 +121,9 @@ function NotificationsScreen() {
   const enable = () => {
     setEnabling(true);
     setTimeout(() => {
-      (Object.keys(ALL_ON) as (keyof NotificationPrefs)[]).forEach((k) => setPref(k, k === 'promotions' ? promotions : ALL_ON[k]));
+      // Pazarlama nitelikli bildirimler (kampanya, fiyat düşüşü) yalnızca açık rızayla açılır: mevcut değer korunur
+      const current = useSettingsStore.getState().notifications;
+      (Object.keys(ALL_ON) as (keyof NotificationPrefs)[]).forEach((k) => setPref(k, k === 'promotions' || k === 'priceDrops' ? current[k] : ALL_ON[k]));
       haptic.success();
       finishOnboarding();
     }, 700);

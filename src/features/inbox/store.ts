@@ -7,7 +7,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { DEMO_MODE } from '@/config/demo';
 import { getSellers, getUser, SELLER_USERS, BUYER_USERS } from '@/data';
+import { BINDING_BID_SHORT } from '@/features/commerce/utils';
 import { uid } from '@/lib/rng';
 import { useInboxStore } from '@/store/inbox';
 import { persistStorage, storeKey } from '@/store/storage';
@@ -43,13 +45,13 @@ function supportReply(text: string, isFirst: boolean, agent: string): string {
   if (/kargo|nerede|takip|gelmedi|teslim/.test(t))
     return `${intro}Siparişinin durumunu Aktivite → Siparişlerim'den takip edebilirsin. Satıcılar 2 iş günü içinde kargolamakla yükümlü; gecikme varsa sipariş numaranı yazarsan hemen kontrol edeyim 📦`;
   if (/iade|cayma|geri|bozuk|hasar|sahte/.test(t))
-    return `${intro}Üzgünüm, böyle bir durum yaşamana. Sipariş detayındaki "Bu siparişle ilgili yardım al" adımından fotoğraflarla talep oluşturabilirsin. Alıcı Koruması kapsamında paran güvende 🛡️`;
+    return `${intro}Üzgünüm, böyle bir durum yaşamana. Sipariş detayındaki "Bu siparişle ilgili yardım al" adımından fotoğraflarla talep oluşturabilirsin. Alıcı Koruması kapsamında sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirebilirsin. Satıcı kurumsal ise 14 günlük yasal cayma hakkını da aynı adımdan kullanabilirsin 🛡️`;
   if (/iptal/.test(t))
-    return `${intro}Satın alımdan sonraki 24 saat içinde ve kargo etiketi oluşmadan iptal talep edebilirsin. Satıcının yanıt vermek için 2 iş günü var. Hangi sipariş için yardımcı olayım?`;
+    return `${intro}Sipariş kargoya verilmeden önce, satın alımdan sonraki ilk 24 saat içinde iptal talep edebilirsin; kargo öncesi iptal satıcının onayına bağlıdır. Satıcı kurumsal ise ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını da kullanabilirsin. Hangi sipariş için yardımcı olayım?`;
   if (/ödeme|kart|çekim|para|provizyon|ücret/.test(t))
-    return `${intro}Ödemeler 3D Secure ile korunur ve yalnızca kazandığında ya da satın aldığında çekim yapılır. Doğrulama için alınan ₺1 / ₺250 provizyonlar 24 saat içinde otomatik iptal edilir 💳`;
+    return `${intro}Ödemeler 3D Secure ile korunur ve yalnızca kazandığında ya da satın aldığında çekim yapılır. Doğrulama için alınan ₺1 / ₺250 provizyonlar 24 saat içinde otomatik iptal edilir 💳${DEMO_MODE ? ' Demo sürümde kartından hiçbir ödeme alınmaz.' : ''}`;
   if (/teklif|pey|mezat|açık artırma/.test(t))
-    return `${intro}Teklifler bağlayıcıdır ve geri alınamaz. Yanlışlıkla verdiğin bir teklif varsa 2 saat içinde yayın adını ve ürünü yazarsan satıcıyla birlikte inceleyelim.`;
+    return `${intro}${BINDING_BID_SHORT} Teknik bir hata nedeniyle istemediğin bir teklif kaydedildiyse yayın adını ve ürünü yaz, satıcıyla birlikte değerlendirelim.`;
   if (/hesap|şifre|giriş|kullanıcı adı|telefon/.test(t))
     return `${intro}Hesap bilgilerini Hesap → Profili düzenle'den güncelleyebilirsin. Telefon numarası değişikliği için güvenlik doğrulaması gerekiyor; kayıtlı e-posta adresini yazar mısın?`;
   if (/teşekkür|sağ ol|sağol/.test(t)) return 'Rica ederim! Başka bir konuda yardım gerekirse buradayız 💛';
@@ -89,7 +91,7 @@ export const useInboxExtras = create<InboxExtrasState>()(
             {
               id: uid('sp'),
               fromMe: false,
-              text: "Merhaba 👋 Mezatonline Destek'e hoş geldin! Sipariş, ödeme, iade ya da hesabınla ilgili her konuda yardımcı olabiliriz. Nasıl yardımcı olalım?",
+              text: `Merhaba 👋 Mezatonline Destek'e hoş geldin! Sipariş, ödeme, iade ya da hesabınla ilgili her konuda yardımcı olabiliriz. Nasıl yardımcı olalım?${DEMO_MODE ? ' (Demo sürüm: bu sohbetteki yanıtlar otomatik örnek yanıtlardır.)' : ''}`,
               createdAt: new Date().toISOString(),
             },
           ],

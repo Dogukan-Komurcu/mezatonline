@@ -5,6 +5,7 @@
  * çekiliş kartı, sohbet + moderasyon, sağ ray, sahnedeki ürün kartı ve Mağaza.
  * Simülasyon `useLiveShow` motorunun satıcı moduyla çalışır; mağaza satışları, bahşiş ve
  * takip olayları konsolda yerel olarak üretilir.
+ * Ücretli "Tanıt" (FEATURES.paidBoost), bahşiş (FEATURES.tips) ve çekiliş (FEATURES.giveaways) bayraklarla açılıp kapanır.
  */
 import type { CameraType } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +16,7 @@ import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-re
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, Header, Icon, IconButton, PressableScale, Text, toast } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { getShow } from '@/data';
 import { makeBots } from '@/features/live/bots';
 import type { SoldItem } from '@/features/live/engine';
@@ -24,6 +26,7 @@ import { shareLink } from '@/features/shared/sheets';
 import { DEFAULT_AUCTION_DURATION, DEFAULT_COUNTER_BID_TIME } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
+import { containsBlocked, MODERATION_BLOCKED_MESSAGE } from '@/lib/moderation';
 import { random, uid } from '@/lib/rng';
 import { ME_ID, useMe } from '@/store/auth';
 import { useSellerStore } from '@/store/seller';
@@ -73,7 +76,7 @@ type SheetKind = 'shop' | 'auction' | 'flash' | 'giveaway' | 'viewers' | 'more' 
 
 const SHEET_SWAP_MS = 280;
 const ACTIVITY_TYPES = new Set<ChatMessage['type']>(['won', 'purchase', 'tip', 'follow', 'giveaway_won']);
-const DEFAULT_NOTES = 'Hoş geldin! 👋 Takip etmeyi unutma.\nKargo 2 iş günü içinde çıkar 📦\nHer 50 izleyicide çekiliş 🎁';
+const DEFAULT_NOTES = `Hoş geldin! 👋 Takip etmeyi unutma.\nKargo 2 iş günü içinde çıkar 📦${FEATURES.giveaways ? '\nHer 50 izleyicide çekiliş 🎁' : ''}`;
 
 // ─── Rota: yayını çöz ────────────────────────────────────────────────────────
 
@@ -376,7 +379,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
       pushLocal({ type: 'follow', userId: b.id, username: b.username, avatar: b.avatar, text: 'seni takip etti' });
       setNewFollowers((n) => n + 1);
     }
-    if (viewers > 8 && random.chance(0.01)) {
+    if (FEATURES.tips && viewers > 8 && random.chance(0.01)) {
       const b = random.pick(bots);
       const amount = random.pick([20, 50, 50, 100, 250]);
       pushLocal({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi 💛', amount });
@@ -496,6 +499,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   };
 
   const requestGiveaway = (p?: Product) => {
+    if (!FEATURES.giveaways) return;
     if (giveawayRunning) {
       toast.warning('Aynı anda yalnızca bir çekiliş yapılabilir');
       return;
@@ -535,6 +539,12 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const send = () => {
     const text = draft.trim();
     if (!text) return;
+    // Sohbet ve sabitlenen duyurular için içerik filtresi
+    if (containsBlocked(text)) {
+      haptic.error();
+      toast.error(MODERATION_BLOCKED_MESSAGE, 'shield-outline');
+      return;
+    }
     const [cmdRaw, ...rest] = text.split(/\s+/);
     const cmd = cmdRaw.toLocaleLowerCase('tr-TR');
     const arg = rest.join(' ').trim();
@@ -822,13 +832,18 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
                   { key: 'mic', icon: muted ? 'mic-off' : 'mic-outline', label: muted ? 'Sessiz' : 'Ses', onPress: toggleMute, danger: muted },
                   { key: 'share', icon: 'share-social-outline', label: 'Paylaş', onPress: share },
                   { key: 'notes', icon: 'document-text-outline', label: 'Notlar', onPress: () => openSheet('notes') },
-                  {
-                    key: 'promo',
-                    icon: promoActive ? 'rocket' : 'megaphone-outline',
-                    label: promoActive ? formatTimer(promoLeft) : 'Tanıt',
-                    onPress: () => (rehearsal ? toast('Provada tanıtım yapılamaz', 'lock-closed-outline') : openSheet('promote')),
-                    active: promoActive,
-                  },
+                  // Ücretli tanıtım (öne çıkarma) IAP gerektirir: FEATURES.paidBoost kapalıyken gizli
+                  ...(FEATURES.paidBoost
+                    ? [
+                        {
+                          key: 'promo',
+                          icon: promoActive ? ('rocket' as const) : ('megaphone-outline' as const),
+                          label: promoActive ? formatTimer(promoLeft) : 'Tanıt',
+                          onPress: () => (rehearsal ? toast('Provada tanıtım yapılamaz', 'lock-closed-outline') : openSheet('promote')),
+                          active: promoActive,
+                        },
+                      ]
+                    : []),
                 ]}
               />
             </View>
@@ -984,7 +999,9 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
         onRemove={toggleMod}
       />
       <RaidSheet visible={sheet === 'raid'} onClose={closeSheet} viewers={viewers} currentShowId={show.id} initialQuery={raidQuery} onRaid={(t) => finish(t)} />
-      <PromoteSheet visible={sheet === 'promote'} onClose={closeSheet} promo={promo} credit={promoCredit} now={now} onStart={startPromo} onStop={stopPromo} />
+      {FEATURES.paidBoost ? (
+        <PromoteSheet visible={sheet === 'promote'} onClose={closeSheet} promo={promo} credit={promoCredit} now={now} onStart={startPromo} onStop={stopPromo} />
+      ) : null}
       <NotesSheet
         visible={sheet === 'notes'}
         onClose={closeSheet}

@@ -1,5 +1,6 @@
 /**
  * Birden çok ekranda kullanılan ortak sheet'ler: Bahşiş, Şikayet, Paylaş yardımcıları.
+ * Bahşiş giriş noktaları FEATURES.tips ile kapatılır (bkz. '@/config/demo').
  */
 import { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
@@ -10,6 +11,7 @@ import { TIP_PRESETS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
+import { useModerationStore } from '@/store/moderation';
 import { selectDefaultPayment, useWalletStore } from '@/store/wallet';
 import type { User } from '@/types';
 
@@ -135,8 +137,11 @@ export function ReportSheet({ visible, onClose, subject, dark }: { visible: bool
           fullWidth
           disabled={!reason}
           onPress={() => {
+            if (!reason) return;
+            // Demo: şikâyet yalnızca bu cihazda saklanır
+            useModerationStore.getState().addReport({ subject, reason, details });
             haptic.success();
-            toast.success('Şikayetin alındı. Güvenlik ekibimiz inceleyecek.', 'shield-checkmark');
+            toast.success('Demo: şikâyetin bu cihazda kaydedildi. Gerçek sürümde moderasyon ekibine iletilir.', 'shield-checkmark');
             setReason(null);
             setDetails('');
             onClose();

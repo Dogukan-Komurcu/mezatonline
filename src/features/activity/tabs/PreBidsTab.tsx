@@ -72,7 +72,7 @@ export function PreBidsTab() {
           list.length ? (
             <InfoBanner
               icon="information-circle-outline"
-              text="Ön teklifler bağlayıcıdır ve geri alınamaz. Ürün sahneye geldiğinde maks. ön teklifine kadar senin adına otomatik teklif verilir."
+              text="Ön teklifler bağlayıcıdır; geri çekilemez ve düşürülemez. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Ürün sahneye geldiğinde maks. ön teklifine kadar senin adına otomatik teklif verilir."
               style={styles.banner}
             />
           ) : undefined

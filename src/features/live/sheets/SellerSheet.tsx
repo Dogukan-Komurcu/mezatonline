@@ -14,8 +14,10 @@ export type SellerSheetProps = {
   following: boolean;
   onToggleFollow: () => void;
   onMessage: () => void;
-  onTip: () => void;
-  onBoost: () => void;
+  /** Verilmezse satır gizlenir (FEATURES.tips) */
+  onTip?: () => void;
+  /** Verilmezse satır gizlenir (FEATURES.paidBoost) */
+  onBoost?: () => void;
   onProfile: () => void;
   onReport: () => void;
   onBlock: () => void;
@@ -77,8 +79,8 @@ export function SellerSheet({ visible, onClose, seller, following, onToggleFollo
         <Button title="Mesaj" icon="chatbubble-outline" variant="secondary" onPress={onMessage} style={styles.flex} />
       </View>
       <View style={styles.rows}>
-        <ListRow title="Bahşiş gönder" subtitle="Bahşişin %100'ü satıcıya gider" icon="cash-outline" onPress={onTip} style={styles.row} />
-        <ListRow title="Yayını öne çıkar" subtitle="Bu yayının daha çok kişiye ulaşmasına destek ol" icon="rocket-outline" onPress={onBoost} style={styles.row} />
+        {onTip ? <ListRow title="Bahşiş gönder" subtitle="Bahşişin %100'ü satıcıya gider" icon="cash-outline" onPress={onTip} style={styles.row} /> : null}
+        {onBoost ? <ListRow title="Yayını öne çıkar" subtitle="Bu yayının daha çok kişiye ulaşmasına destek ol" icon="rocket-outline" onPress={onBoost} style={styles.row} /> : null}
         <ListRow title="Profili gör" subtitle={`Katılma: ${formatMonthYear(seller.joinedAt)}`} icon="person-circle-outline" onPress={onProfile} style={styles.row} />
         <ListRow title="Şikayet et" icon="flag-outline" onPress={onReport} style={styles.row} />
         <ListRow title="Engelle" icon="ban" destructive onPress={onBlock} style={styles.row} chevron={false} />

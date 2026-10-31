@@ -2,6 +2,7 @@
  * S82 — Yayın Planla / Düzenle (modal, ?id= düzenleme).
  * Başlık, 9:16 kapak, kategori, gün + saat çipleri, açıklama, etiketler, yayın formatı,
  * ücretsiz kargo eşiği, ürünler, moderatörler, görünürlük → Planla + paylaş.
+ * "Kutu Açılışı (Break)" formatı şans oyunu riski nedeniyle FEATURES.breaks ile kapatılır.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -9,6 +10,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, ty
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Button, Chip, EmptyState, Header, Icon, PressableScale, Screen, Segmented, SelectField, Sheet, Text, TextField, toast } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { CATEGORIES, getCategory, getUserByUsername } from '@/data';
 import { categoryPhotos } from '@/data/categories';
 import { formatDayLong, formatShowTime, formatTRY } from '@/lib/format';
@@ -86,7 +88,7 @@ export function ScheduleForm() {
         time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
         description: existing.description,
         tags: existing.tags,
-        format: meta?.format ?? 'auction',
+        format: meta?.format === 'breaks' && !FEATURES.breaks ? 'auction' : (meta?.format ?? 'auction'),
         freeShip: existing.freeShippingThreshold ?? null,
         productIds: existing.productIds,
         moderators: meta?.moderators ?? [],
@@ -203,7 +205,7 @@ export function ScheduleForm() {
       const cover = s.cover ?? categoryPhotos(s.categoryId!)[0];
       const highlights = [
         ...(s.freeShip ? [`${formatTRY(s.freeShip)} üzeri ücretsiz kargo`] : []),
-        ...(s.format === 'breaks' ? ['Kutu açılışı'] : s.format === 'buy_now' ? ['Hemen Al'] : []),
+        ...(s.format === 'breaks' && FEATURES.breaks ? ['Kutu açılışı'] : s.format === 'buy_now' ? ['Hemen Al'] : []),
         ...(s.visibility === 'private' ? ['Özel yayın'] : []),
       ];
       let show: Show;
@@ -436,7 +438,9 @@ export function ScheduleForm() {
           <FormSection title="Yayın formatı" subtitle="Yayında ağırlıklı olarak nasıl satış yapacaksın?">
             <OptionCard icon="hammer-outline" title="Açık artırma ağırlıklı" subtitle="Ürünler teklifle satılır, heyecan yüksek" selected={s.format === 'auction'} onPress={() => set({ format: 'auction' })} />
             <OptionCard icon="flash-outline" title="Hemen Al" subtitle="Sabit fiyat, flaş indirimlerle hızlı satış" selected={s.format === 'buy_now'} onPress={() => set({ format: 'buy_now' })} />
-            <OptionCard icon="cube-outline" title="Kutu Açılışı (Break)" subtitle="Alıcılar slot ya da takım satın alır, kutuyu canlı açarsın" selected={s.format === 'breaks'} onPress={() => set({ format: 'breaks' })} />
+            {FEATURES.breaks ? (
+              <OptionCard icon="cube-outline" title="Kutu Açılışı (Break)" subtitle="Alıcılar slot ya da takım satın alır, kutuyu canlı açarsın" selected={s.format === 'breaks'} onPress={() => set({ format: 'breaks' })} />
+            ) : null}
           </FormSection>
 
           <FormSection title="Ücretsiz kargo" subtitle="Bu tutarın üzerindeki alışverişlerde kargo ücretini sen karşılarsın">

@@ -36,6 +36,9 @@ const GROUPS: { title: string; rows: PrefRow[] }[] = [
   },
 ];
 
+/** Pazarlama nitelikli bildirimler "Tümünü aç" ile toplu açılmaz; yalnızca kendi anahtarıyla açılır */
+const MARKETING_KEYS: (keyof NotificationPrefs)[] = ['promotions', 'priceDrops'];
+
 const IYS: { key: AccountFlag; title: string }[] = [
   { key: 'iysEmail', title: 'E-posta' },
   { key: 'iysSms', title: 'SMS' },
@@ -55,7 +58,8 @@ export default function NotificationSettingsScreen() {
   const setFlag = useAccountStore((s) => s.setFlag);
   const iysValues: Record<string, boolean> = { iysEmail, iysSms, iysCall };
 
-  const allOn = Object.values(prefs).every(Boolean);
+  const serviceKeys = (Object.keys(prefs) as (keyof NotificationPrefs)[]).filter((k) => !MARKETING_KEYS.includes(k));
+  const allOn = serviceKeys.every((k) => prefs[k]);
 
   return (
     <Screen>
@@ -98,8 +102,9 @@ export default function NotificationSettingsScreen() {
             color="accent"
             suppressHighlighting
             onPress={() => {
-              (Object.keys(prefs) as (keyof NotificationPrefs)[]).forEach((k) => setPref(k, !allOn));
-              toast.success(allOn ? 'Tüm bildirimler kapatıldı' : 'Tüm bildirimler açıldı', 'notifications');
+              // Kapatırken hepsi kapanır; açarken pazarlama bildirimleri açık rıza gerektirdiği için dokunulmaz
+              (allOn ? (Object.keys(prefs) as (keyof NotificationPrefs)[]) : serviceKeys).forEach((k) => setPref(k, !allOn));
+              toast.success(allOn ? 'Tüm bildirimler kapatıldı' : 'Bildirimler açıldı (kampanya ve fiyat düşüşü hariç)', 'notifications');
             }}>
             {allOn ? 'Tümünü kapat' : 'Tümünü aç'}
           </Text>

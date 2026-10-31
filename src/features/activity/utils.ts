@@ -125,33 +125,32 @@ export function estimatedDelivery(order: Order): number {
 
 // ─── Alıcı Koruması / iptal / cayma ─────────────────────────────────────────
 
-/** 7 günlük koruma: kartlar, sikke, sneaker, lüks. 2 gün: bitki ve gıda. Diğerleri 14 gün (teslimattan). */
-const SHORT_PROTECTION = ['tcg', 'sports_cards', 'coins', 'sneakers', 'watches', 'bags'];
-const PERISHABLE = ['plants', 'food'];
+/** Alıcı Koruması: tüm kategorilerde ürün alıcıya ulaştıktan sonra 14 gün içinde sorun bildirimi */
+export const PROTECTION_DAYS = 14;
 
 export type ProtectionInfo = {
   /** Koruma hâlâ geçerli mi */
   active: boolean;
   daysLeft: number;
   deadline: number;
-  /** Teslimattan sonraki gün sayısı (kategoriye göre) */
+  /** Teslimattan sonraki gün sayısı (tüm kategorilerde aynı) */
   windowDays: number;
   delivered: boolean;
 };
 
-export function protectionInfo(order: Order, categoryId: string | undefined, now: number = Date.now()): ProtectionInfo {
-  const windowDays = categoryId && PERISHABLE.includes(categoryId) ? 2 : categoryId && SHORT_PROTECTION.includes(categoryId) ? 7 : 14;
-  const created = Date.parse(order.createdAt);
-  const purchaseLimit = created + 30 * DAY;
-  const deliveredAt = eventAt(order, 'delivered');
-  const deadline = deliveredAt ? Math.min(purchaseLimit, Date.parse(deliveredAt) + windowDays * DAY) : purchaseLimit;
-  const msLeft = deadline - now;
+/** Teslim edilmemiş siparişte koruma açık kalır ("ürün ulaşmadı" talebi); teslimattan sonra 14 gün işler */
+export function protectionInfo(order: Order, _categoryId?: string, now: number = Date.now()): ProtectionInfo {
   const closed = order.status === 'cancelled' || order.status === 'refunded';
-  return { active: msLeft > 0 && !closed, daysLeft: Math.max(0, Math.ceil(msLeft / DAY)), deadline, windowDays, delivered: !!deliveredAt };
+  const deliveredAt = eventAt(order, 'delivered');
+  if (!deliveredAt) return { active: !closed, daysLeft: PROTECTION_DAYS, deadline: Number.POSITIVE_INFINITY, windowDays: PROTECTION_DAYS, delivered: false };
+  const deadline = Date.parse(deliveredAt) + PROTECTION_DAYS * DAY;
+  const msLeft = deadline - now;
+  return { active: msLeft > 0 && !closed, daysLeft: Math.max(0, Math.ceil(msLeft / DAY)), deadline, windowDays: PROTECTION_DAYS, delivered: true };
 }
 
 export function protectionLabel(p: ProtectionInfo): string {
   if (!p.active) return 'Koruma süresi sona erdi';
+  if (!p.delivered) return `Koruma: ürün sana ulaştıktan sonra ${PROTECTION_DAYS} gün`;
   if (p.daysLeft <= 1) return 'Koruma süresi: son gün';
   return `Koruma süresi: ${p.daysLeft} gün kaldı`;
 }

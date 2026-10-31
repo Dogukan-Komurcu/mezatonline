@@ -5,6 +5,7 @@ import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip, EmptyState, Header, Icon, PressableScale, Screen, Text, TextField, toast } from '@/components/ui';
+import { DEMO_MODE } from '@/config/demo';
 import { FAQ_TOPICS, FAQS, type Faq, type FaqTopic } from '@/features/account/content';
 import { MenuGroup, MenuRow } from '@/features/account/ui';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
@@ -127,12 +128,16 @@ export default function HelpScreen() {
         )}
 
         <MenuGroup title="Hâlâ yardıma mı ihtiyacın var?">
-          <MenuRow icon="chatbubbles-outline" title="Destek ekibiyle sohbet et" subtitle="Her gün 09:00 – 23:00 · ortalama yanıt 5 dk" onPress={() => requireAuth(() => router.push('/inbox/support'), { reason: AUTH_REASONS.support })} />
+          <MenuRow icon="chatbubbles-outline" title="Destek ekibiyle sohbet et" subtitle="Destek ekibimiz en kısa sürede yanıt verir" onPress={() => requireAuth(() => router.push('/inbox/support'), { reason: AUTH_REASONS.support })} />
           <MenuRow
             icon="mail-outline"
             title="E-posta gönder"
-            subtitle="destek@mezatonline.com"
-            onPress={() => Linking.openURL('mailto:destek@mezatonline.com?subject=Mezatonline%20Destek').catch(() => toast.error('E-posta uygulaması açılamadı'))}
+            subtitle={DEMO_MODE ? 'destek@mezatonline.com · yayın öncesi aktif edilecek' : 'destek@mezatonline.com'}
+            onPress={() =>
+              DEMO_MODE
+                ? toast('Demo: destek e-posta adresi yayın öncesi aktif edilecek. Şimdilik uygulama içi destek sohbetini kullanabilirsin.', 'mail-outline')
+                : Linking.openURL('mailto:destek@mezatonline.com?subject=Mezatonline%20Destek').catch(() => toast.error('E-posta uygulaması açılamadı'))
+            }
           />
           <MenuRow icon="bag-handle-outline" title="Bir siparişle ilgili yardım" subtitle="Sipariş detayından talep oluştur" onPress={() => router.navigate({ pathname: '/activity', params: { tab: 'purchases' } })} />
           <MenuRow icon="document-text-outline" title="Yasal & KVKK" onPress={() => router.push('/settings/legal')} />
@@ -141,7 +146,7 @@ export default function HelpScreen() {
         <View style={[styles.warn, { backgroundColor: colors.surface }]}>
           <Icon name="shield-checkmark-outline" size={18} color="textSecondary" />
           <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-            Mezatonline ekibi senden asla şifre, kart bilgisi ya da SMS doğrulama kodu istemez. Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır.
+            Mezatonline ekibi senden asla şifre, kart bilgisi ya da SMS doğrulama kodu istemez.{DEMO_MODE ? '' : ' Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır.'}
           </Text>
         </View>
       </ScrollView>

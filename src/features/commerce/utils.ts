@@ -8,8 +8,23 @@ const DAYS_SHORT = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 
 export const DAY_MS = 86_400_000;
 
-/** Platformun anlaştığı kargo firmaları (alıcıya gösterilen kısa liste) */
-export const CARRIER_LINE = 'Yurtiçi · Aras · MNG · PTT · HepsiJet';
+/** Kargo firmaları: sözleşme imzalanmadan firma adı gösterilmez */
+export const CARRIER_LINE = 'Uygulama yayına çıktığında duyurulacak';
+
+// ─── Alıcıya gösterilen ortak yasal metinler ─────────────────────────────────
+
+/** Bağlayıcı teklif (uzun: tanıtım, yasal ve SSS metinleri) */
+export const BINDING_BID_TEXT =
+  'Teklifler bağlayıcıdır: açık artırmayı kazanırsan satın alma yükümlülüğü doğar ve teklifini geri çekemezsin. Satıcı kurumsal (tacir veya esnaf) ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını kullanabilirsin.';
+
+/** Bağlayıcı teklif (kısa: teklif satırları, küçük notlar) */
+export const BINDING_BID_SHORT = 'Teklifin bağlayıcıdır; kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır.';
+
+/** Teklif öncesi ücret bilgisi (bkz. lib/pricing.ts buyerServiceFee) */
+export const WIN_COST_NOTE = 'Kazanırsan: teklif + kargo + %2 Alıcı Koruması bedeli (en az ₺2, en çok ₺49)';
+
+/** Ödemenin bekletilmesi: Mezatonline parayı kendisi tutmaz */
+export const ESCROW_TEXT = 'Gerçek sürümde ödemen, lisanslı bir ödeme kuruluşu tarafından ürün sana ulaşana kadar bekletilir.';
 
 /**
  * Türkçe ayrılma hâli eki (-dan/-den/-tan/-ten), sayının okunuşuna göre.

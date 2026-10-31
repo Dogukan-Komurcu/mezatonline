@@ -2,6 +2,7 @@
  * Tek bir canlı yayın sayfası (dikey kaydırıcıdaki bir sayfa).
  * Video + üst bilgi + çekiliş + sohbet + sağ eylem sütunu + sabit ürün kartı + kaydır-teklif-ver
  * ve tüm alt sayfalar (S20–S34).
+ * Ücretli öne çıkarma, bahşiş ve çekiliş giriş noktaları FEATURES bayraklarıyla açılıp kapanır.
  */
 import { router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -10,6 +11,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
@@ -17,6 +19,7 @@ import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { nextMinBid } from '@/lib/auction';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
+import { containsBlocked, MODERATION_BLOCKED_MESSAGE } from '@/lib/moderation';
 import { random } from '@/lib/rng';
 import { useMe } from '@/store/auth';
 import { useInboxStore } from '@/store/inbox';
@@ -483,10 +486,10 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
   // ─── Çekiliş ───────────────────────────────────────────────────────────────
 
+  // Şansa dayalı katılım için görev puanı verilmez
   const giveawayFeedback = () => {
     haptic.success();
-    const pts = completeChallenge('enter_giveaway');
-    toast.success(`Çekilişe katıldın! Bitene kadar yayında kal 🎁${pts ? ` · +${pts} puan` : ''}`, 'gift');
+    toast.success('Çekilişe katıldın! Bitene kadar yayında kal 🎁', 'gift');
   };
 
   const enterGiveaway = () => {
@@ -577,6 +580,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       withAuth(() => setComposer({ open: true, text }), AUTH_REASONS.chat);
       return true;
     }
+    if (containsBlocked(text)) {
+      haptic.error();
+      toast.error(MODERATION_BLOCKED_MESSAGE, 'shield-outline');
+      return false;
+    }
     const now = Date.now();
     if (now - lastChatAt.current < CHAT_COOLDOWN_MS) {
       haptic.warning();
@@ -621,6 +629,12 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     haptic.tap();
     setLiveSoundOn(!liveSoundOn);
   };
+
+  // Satıcıyı destekle: ücretli öne çıkarma ve bahşiş bayraklarla kapatılabilir
+  const supportEnabled = FEATURES.paidBoost || FEATURES.tips;
+  const openTip = () => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip });
+  // Sağ sütunda ref erişen withGate kullanılmaz (render sırasında sıralanıyor); kart kontrolünü TipSheet yapar
+  const openSupport = () => (FEATURES.paidBoost ? openSheet('boost') : withAuth(() => openSheet('tip'), AUTH_REASONS.tip));
 
   const doBoost = (amount: number) => {
     withGate(
@@ -710,7 +724,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   useEffect(() => {
     if (!__DEV__ || !qa || qaDone || !visible) return;
     setQaDone(true);
-    const sheetNames: SheetName[] = ['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'intro', 'reactions', 'tip', 'giveawayInfo'];
+    const sheetNames: SheetName[] = (['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'intro', 'reactions', 'tip', 'giveawayInfo'] as SheetName[]).filter(
+      (n) => (n !== 'boost' || FEATURES.paidBoost) && (n !== 'tip' || FEATURES.tips),
+    );
     // Lot isteyen durumlar: en az 8 sn'si kalan, süren bir açık artırma bekle (en fazla ~30 sn)
     const needsLot = ['custom', 'product', 'won', 'sold', 'leading'].includes(qa);
     let tries = 0;
@@ -754,7 +770,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const leading = !!lot?.leader?.isMe && running;
   const shippingCost = lot ? lot.product.shippingCost : 0;
   const couponOff = lot && running && !guest ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
-  const giveaway = state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
+  const giveaway = FEATURES.giveaways && state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
   const flash = state.flash;
   const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
   const shopCount = state.queue.filter((p) => !soldAuctionIds.has(p.id)).length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
@@ -789,7 +805,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const railAll: (RailItem & { prio: number })[] = [
     ...(hasClub ? [{ key: 'club', label: 'Sadakat', crown: true, prio: 4, onPress: openClub }] : []),
     { key: 'more', label: 'Diğer', icon: 'ellipsis-horizontal' as const, prio: 0, onPress: () => openSheet('more') },
-    { key: 'boost', label: 'Destekle', icon: 'flash' as const, prio: 3, onPress: () => openSheet('boost') },
+    ...(supportEnabled ? [{ key: 'boost', label: 'Destekle', icon: 'flash' as const, prio: 3, onPress: openSupport }] : []),
     { key: 'share', label: 'Paylaş', icon: 'share-outline' as const, badge: formatCompact(shareCount), prio: 1, onPress: share },
     { key: 'wallet', label: 'Cüzdan', icon: 'wallet-outline' as const, prio: 2, onPress: openWallet },
     ...(tall
@@ -1031,13 +1047,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         following={following}
         onToggleFollow={toggleFollow}
         onMessage={() => messageUser(seller.id)}
-        onTip={() => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip })}
-        onBoost={() => openSheet('boost')}
+        onTip={FEATURES.tips ? openTip : undefined}
+        onBoost={FEATURES.paidBoost ? () => openSheet('boost') : undefined}
         onProfile={() => navigate(`/user/${seller.username}`)}
         onReport={() => withAuth(() => openSheet('reportSeller'), AUTH_REASONS.report)}
         onBlock={blockSeller}
       />
-      <TipSheet visible={sheet === 'tip'} onClose={closeAllSheets} seller={seller} dark onSent={(amount) => engine.tip(amount)} />
+      {FEATURES.tips ? <TipSheet visible={sheet === 'tip'} onClose={closeAllSheets} seller={seller} dark onSent={(amount) => engine.tip(amount)} /> : null}
       <ReportSheet visible={sheet === 'reportSeller'} onClose={closeAllSheets} subject={`@${seller.username}`} dark />
       <ReportSheet visible={sheet === 'reportShow'} onClose={closeAllSheets} subject={`Yayın: ${show.title}`} dark />
       <ReportSheet visible={sheet === 'reportUser'} onClose={closeAllSheets} subject={`@${chatUser?.username ?? ''}`} dark />
@@ -1081,7 +1097,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onToggleMute={(m) => setLiveSoundOn(!m)}
         onToggleChat={setChatHidden}
         onReactions={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
-        onBoost={() => openSheet('boost')}
+        onBoost={supportEnabled ? openSupport : undefined}
         onClub={hasClub ? openClub : undefined}
         onCaptions={() => {
           setSheet(null);
@@ -1113,16 +1129,18 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         }
       />
       <WalletSheet visible={sheet === 'wallet'} onClose={closeAllSheets} onNavigate={navigate} />
-      <BoostSheet
-        visible={sheet === 'boost'}
-        onClose={closeAllSheets}
-        sellerName={seller.username}
-        raised={boost.raised}
-        goal={boost.goal}
-        boosting={boosting}
-        onBoost={doBoost}
-        onTip={() => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip })}
-      />
+      {FEATURES.paidBoost ? (
+        <BoostSheet
+          visible={sheet === 'boost'}
+          onClose={closeAllSheets}
+          sellerName={seller.username}
+          raised={boost.raised}
+          goal={boost.goal}
+          boosting={boosting}
+          onBoost={doBoost}
+          onTip={FEATURES.tips ? openTip : undefined}
+        />
+      ) : null}
       <ShopSheet
         visible={sheet === 'shop'}
         onClose={closeAllSheets}
@@ -1163,7 +1181,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       />
       <FollowEnterSheet visible={sheet === 'followEnter'} onClose={closeAllSheets} seller={seller} onConfirm={followAndEnter} />
       <GiveawayInfoSheet
-        visible={sheet === 'giveawayInfo'}
+        visible={FEATURES.giveaways && sheet === 'giveawayInfo'}
         onClose={closeAllSheets}
         giveaway={state.giveaway}
         onEnter={() => {

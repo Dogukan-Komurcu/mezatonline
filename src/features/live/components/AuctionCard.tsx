@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Icon, PressableScale, Text } from '@/components/ui';
 import { CONDITION_LABELS } from '@/components/cards/ProductCard';
+import { WIN_COST_NOTE } from '@/features/commerce/utils';
 import { formatTRY } from '@/lib/format';
 import { liveColors } from '@/theme';
 
@@ -127,6 +128,11 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
             ) : null}
           </View>
         </View>
+        {running ? (
+          <Text variant="caption" weight="500" color={liveColors.textSecondary} numberOfLines={2} style={styles.costNote}>
+            {WIN_COST_NOTE}
+          </Text>
+        ) : null}
         </PressableScale>
         {children ? <View style={styles.actions}>{children}</View> : null}
       </View>
@@ -173,5 +179,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, flexWrap: 'wrap' },
   coupon: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   couponText: { fontSize: 10, lineHeight: 13 },
+  costNote: { fontSize: 10, lineHeight: 13, marginTop: 6 },
   right: { alignItems: 'flex-end', minWidth: 76, gap: 1 },
 });

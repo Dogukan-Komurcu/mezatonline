@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Button, Icon, PressableScale, Sheet, Text } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { formatCompact } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { POINTS_SHOP, useRewardsStore } from '@/store/rewards';
@@ -9,6 +10,7 @@ import { liveColors, useTheme } from '@/theme';
 import type { User } from '@/types';
 
 import type { Giveaway } from '../engine';
+import { GIVEAWAY_LEGAL_NOTE, GIVEAWAY_RULES } from '../giveawayRules';
 
 // ─── Takip et ve katıl ───────────────────────────────────────────────────────
 
@@ -71,12 +73,18 @@ export function GiveawayInfoSheet({ visible, onClose, giveaway, onEnter }: { vis
           </Text>
         </View>
       </View>
-      {[
-        'Katılım ücretsizdir; kayıtlı bir kart ve teslimat adresi gerekir (karttan çekim yapılmaz).',
-        'Kazanan, çekiliş bittiğinde rastgele seçilir ve yayında duyurulur.',
-        'Kazanmak için çekiliş bitene kadar yayında kalmalısın; ayrılırsan katılımın iptal olur.',
-        'Kargo ücretini satıcı öder; hediye diğer siparişlerinle aynı pakette gelebilir.',
-      ].map((r) => (
+      {DEMO_MODE ? (
+        <View style={[styles.demo, { backgroundColor: colors.surface }]}>
+          <Icon name="information-circle" size={16} color={liveColors.primary} />
+          <Text variant="subhead" weight="700" color="text" style={styles.flex}>
+            {DEMO_COPY.giveaway}
+          </Text>
+        </View>
+      ) : null}
+      <Text variant="caption" weight="700" color="textSecondary" style={styles.rulesTitle}>
+        Katılım kuralları
+      </Text>
+      {GIVEAWAY_RULES.map((r) => (
         <View key={r} style={styles.rule}>
           <Icon name="checkmark-circle" size={16} color={liveColors.success} />
           <Text variant="subhead" color="text" style={styles.flex}>
@@ -89,7 +97,7 @@ export function GiveawayInfoSheet({ visible, onClose, giveaway, onEnter }: { vis
           Yasal uyarı
         </Text>
         <Text variant="caption" color="textTertiary">
-          Çekilişler, Milli Piyango İdaresi mevzuatı kapsamında düzenlenir. Katılım için satın alma şartı aranmaz; her kullanıcı bir kez katılabilir.
+          {GIVEAWAY_LEGAL_NOTE}
         </Text>
       </View>
     </Sheet>
@@ -165,6 +173,8 @@ const styles = StyleSheet.create({
   prizeImg: { width: 72, height: 72, borderRadius: 12, backgroundColor: liveColors.panelAlt },
   rule: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 5 },
   legal: { borderRadius: 12, padding: 12, gap: 4, marginTop: 12, marginBottom: 4 },
+  demo: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
+  rulesTitle: { marginBottom: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cell: { width: '47%', flexGrow: 1, borderRadius: 14, borderWidth: 1.5, padding: 12, alignItems: 'center', gap: 2 },
   cellEmoji: { fontSize: 32, lineHeight: 40 },

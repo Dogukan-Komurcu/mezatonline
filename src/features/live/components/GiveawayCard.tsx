@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { Avatar, Icon, PressableScale, Text } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { formatCompact } from '@/lib/format';
 import { liveColors, SCREEN_PADDING } from '@/theme';
 
@@ -18,7 +19,10 @@ export type GiveawayCardProps = {
   onInfo: () => void;
 };
 
-/** S27: ekranın üstünde çekiliş kartı (alıcılar süreyi görmez; son saniyelerde "Kazanan seçiliyor…") */
+/**
+ * S27: ekranın üstünde çekiliş kartı (alıcılar süreyi görmez; son saniyelerde "Kazanan seçiliyor…").
+ * Demo sürümde gerçek ödül verilmediği kartta da yazar (DEMO_COPY.giveaway).
+ */
 export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayCardProps) {
   const remaining = useRemaining(giveaway.status === 'running' ? giveaway.endsAt : undefined);
   const selecting = giveaway.status === 'running' && remaining > 0 && remaining < 3.2;
@@ -53,6 +57,11 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayC
         <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
           {giveaway.product.title.replace(/^🎁\s*/, '')}
         </Text>
+        {DEMO_MODE ? (
+          <Text variant="caption" weight="700" color={liveColors.textSecondary} numberOfLines={1}>
+            {DEMO_COPY.giveaway}
+          </Text>
+        ) : null}
       </Animated.View>
     );
   }
@@ -94,6 +103,11 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo }: GiveawayC
               {giveaway.entered ? 'Katıldın ✓ · Çekiliş bitene kadar yayında kal' : `${formatCompact(giveaway.entrants)} katılımcı · Ücretsiz`}
             </Text>
           )}
+          {DEMO_MODE ? (
+            <Text variant="caption" weight="700" color={liveColors.textSecondary} numberOfLines={2}>
+              {DEMO_COPY.giveaway}
+            </Text>
+          ) : null}
         </View>
       </PressableScale>
       {giveaway.entered ? (

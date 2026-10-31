@@ -2,13 +2,14 @@
  * Satış başlatma sheet'leri:
  * - S87 Açık Artırmayı Başlat (açılış fiyatı, süre, karşı teklif süresi, Ani Bitiş 💀)
  * - Flaş İndirim (% indirim, süre)
- * - Çekiliş Başlat (ödül, süre ≤ 5 dk, Herkes / Takipçilere özel, MPİ notu)
+ * - Çekiliş Başlat (ödül, süre ≤ 5 dk, Herkes / Takipçilere özel, kurallar ve yasal not)
  */
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, Segmented, Sheet, Text, TextField } from '@/components/ui';
+import { GIVEAWAY_LEGAL_NOTE, GIVEAWAY_RULES } from '@/features/live/giveawayRules';
 import { AUCTION_DURATIONS, bidIncrement, COUNTER_BID_OPTIONS, durationLabel, EXTEND_THRESHOLD_SEC, FLASH_SALE_DURATIONS, GIVEAWAY_DURATIONS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { radius, useTheme } from '@/theme';
@@ -271,8 +272,15 @@ export function GiveawaySheet({
             KATILIM İÇİN ALIŞVERİŞ ŞARTI YOKTUR
           </Text>
           <Text variant="caption" weight="500" color="textSecondary">
-            Çekilişler Milli Piyango İdaresi (MPİ) mevzuatına tabidir. Kazanan rastgele seçilir ve yayında duyurulur. Kazananı reddetmek ya da ödülü değiştirmek yasaktır. Ödülün
-            kargo ücreti bakiyenden düşülür.
+            {GIVEAWAY_LEGAL_NOTE}
+          </Text>
+          {GIVEAWAY_RULES.map((r) => (
+            <Text key={r} variant="caption" weight="500" color="textSecondary">
+              • {r}
+            </Text>
+          ))}
+          <Text variant="caption" weight="500" color="textSecondary">
+            • Kazananı reddetmek ya da ödülü değiştirmek yasaktır. Ödülün kargo ücreti bakiyenden düşülür.
           </Text>
         </View>
       </View>

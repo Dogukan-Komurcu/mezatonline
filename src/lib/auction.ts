@@ -6,7 +6,8 @@
  * - Ani Bitiş (sudden death 💀): süre asla uzamaz; 00:01'de son teklif veren kazanır.
  * - Özel teklif + "Maks. teklif" açık (varsayılan): sistem yalnızca biri sana karşı teklif
  *   verdiğinde, minimum artışla, belirlediğin tavana kadar otomatik teklif verir (gizli).
- * - Tüm teklifler bağlayıcıdır.
+ * - Tüm teklifler bağlayıcıdır; kurumsal satıcılardan alımlarda alıcının 14 günlük yasal cayma hakkı saklıdır
+ *   (alıcıya gösterilen metin: features/commerce/utils.ts BINDING_BID_TEXT).
  */
 
 /** Son kaç saniye içinde gelen teklif süreyi uzatır (Whatnot ile aynı, sabit) */

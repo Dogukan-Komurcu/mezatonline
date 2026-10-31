@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Button, Chip, EmptyState, Icon, ListRow, Segmented, Sheet, Text, TextField, toast, type IconName } from '@/components/ui';
+import { DEMO_MODE, FEATURES } from '@/config/demo';
 import { emptyAddress } from '@/features/wallet/forms';
 import { formatTRY, timeAgoLong } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -67,7 +68,8 @@ export function HubMenuSheet({ visible, onClose, onOpen }: { visible: boolean; o
         { key: 'shows', icon: 'videocam-outline', title: 'Yayınlarım', onPress: nav('/seller/shows') },
         { key: 'inventory', icon: 'cube-outline', title: 'Envanter', onPress: nav('/seller/inventory') },
         { key: 'offers', icon: 'pricetag-outline', title: 'Teklifler', badge: pendingOffers, onPress: sheet('offers') },
-        { key: 'tips', icon: 'heart-outline', title: 'Bahşişler', onPress: sheet('tips') },
+        // Bahşiş kapalıyken (FEATURES.tips) menüde gösterilmez
+        ...(FEATURES.tips ? [{ key: 'tips', icon: 'heart-outline' as const, title: 'Bahşişler', onPress: sheet('tips') }] : []),
         { key: 'health', icon: 'pulse-outline', title: 'Hesap Sağlığı', onPress: sheet('health') },
       ],
     },
@@ -555,7 +557,9 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
   }, [visible, kyc, iban, me.displayName]);
 
   const nameOk = name.trim().split(/\s+/).length >= 2;
-  const tcknOk = isValidTckn(tckn);
+  // TCKN cihaza yazılmaz (yalnızca maskeli hâli): boş bırakılırsa kayıtlı kimlik korunur
+  const keepSavedTckn = !tckn && !!kyc?.tcknMasked;
+  const tcknOk = keepSavedTckn || isValidTckn(tckn);
   const ibanOk = isValidIban(`TR${digits}`);
 
   const save = () => {
@@ -578,7 +582,7 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
     });
     setIban(`TR${digits}`);
     haptic.success();
-    toast.success('Kimlik ve IBAN bilgilerin doğrulandı ✅');
+    toast.success(DEMO_MODE ? 'Demo: bilgilerin kaydedildi; gerçek kimlik ve IBAN doğrulaması yapılmaz' : 'Kimlik ve IBAN bilgilerin doğrulandı ✅');
     onClose();
   };
 
@@ -591,7 +595,7 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
           value={tckn}
           onChangeText={(t) => setTckn(t.replace(/\D/g, '').slice(0, 11))}
           keyboardType="number-pad"
-          placeholder="11 haneli kimlik numaran"
+          placeholder={kyc?.tcknMasked ? `Kayıtlı: ${kyc.tcknMasked}` : '11 haneli kimlik numaran'}
           error={(submitted || tckn.length === 11) && !tcknOk ? 'Geçersiz T.C. Kimlik No' : undefined}
           right={tcknOk ? <Icon name="checkmark-circle" size={20} color={colors.success} /> : undefined}
         />
@@ -599,7 +603,9 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
         <View style={[styles.inline, { alignItems: 'flex-start' }]}>
           <Icon name="lock-closed" size={16} color="textSecondary" />
           <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-            Bilgilerin KVKK kapsamında şifrelenerek saklanır ve yalnızca kimlik doğrulama ile ödemeler için kullanılır.
+            {DEMO_MODE
+              ? 'Demo sürümde bilgilerin yalnızca bu cihazda tutulur; T.C. Kimlik No cihaza kaydedilmez (yalnızca son 2 hane). Gerçek sürümde yalnızca kimlik doğrulama ve ödemeler için kullanılır.'
+              : 'Bilgilerin yalnızca kimlik doğrulama ve ödemeler için kullanılır.'}
           </Text>
         </View>
       </View>

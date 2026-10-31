@@ -7,7 +7,9 @@
  *   Plan bittiğinde satıcı yayını kapatır (`ended`, `endReason: 'sold_out'`).
  *   Sayfa görünmezken (stop) simülasyon zamanı durur; tekrar başlayınca kaldığı yerden devam eder.
  * - Satıcı modu (seller): açık artırmayı/çekilişi satıcı başlatır; botlar katılır.
+ * Demo sürümde sohbetin başına ve sabitlenmiş mesaja simülasyon uyarısı (DEMO_COPY.simulated) eklenir.
  */
+import { DEMO_COPY, DEMO_MODE, FEATURES } from '@/config/demo';
 import {
   bidIncrement,
   DEFAULT_AUCTION_DURATION,
@@ -205,14 +207,9 @@ export class LiveEngine {
       peakViewers: viewers,
       likes: random.int(200, 4000),
       messages: [],
-      pinned: {
-        id: uid('pin'),
-        type: 'chat',
-        username: random.pick(MOD_NAMES),
-        text: random.pick(PINNED_LINES),
-        isMod: true,
-        createdAt: now,
-      },
+      pinned: DEMO_MODE
+        ? { id: uid('pin'), type: 'chat', username: 'Mezatonline', text: `📌 ${DEMO_COPY.short}: ${DEMO_COPY.simulated}`, createdAt: now }
+        : { id: uid('pin'), type: 'chat', username: random.pick(MOD_NAMES), text: random.pick(PINNED_LINES), isMod: true, createdAt: now },
       sold: [],
       queue,
       shop: shopItems,
@@ -227,10 +224,12 @@ export class LiveEngine {
       const offset = queue.length > 2 ? random.int(0, Math.floor(queue.length / 3)) : 0;
       this.plan = [...queue.slice(offset), ...queue.slice(0, offset)].map((product) => ({ product }));
       this.seedHistory(now);
+      this.pushDemoNotice();
       // İlk lotu hemen başlat; süresinin bir kısmı geçmiş gibi göster
       this.startNextLot(now, true);
       this.pausedAt = now;
     } else {
+      this.pushDemoNotice();
       this.pushMessage({ type: 'system', username: 'Mezatonline', text: 'Yayındasın! İzleyiciler katılıyor… 🎥' });
     }
     this.nextChatAt = now + 600;
@@ -315,6 +314,12 @@ export class LiveEngine {
     const messages = this.state.messages.length >= MAX_MESSAGES ? this.state.messages.slice(-MAX_MESSAGES + 1) : this.state.messages.slice();
     messages.push(msg);
     this.state = { ...this.state, messages };
+  }
+
+  /** Demo: izleyici, teklif, sohbet ve kazananların simülasyon olduğunu sohbetin başında belirt */
+  private pushDemoNotice() {
+    if (!DEMO_MODE) return;
+    this.pushMessage({ type: 'system', username: 'Mezatonline', text: `ℹ️ ${DEMO_COPY.short}: ${DEMO_COPY.simulated}` });
   }
 
   private seedHistory(now: number) {
@@ -564,10 +569,10 @@ export class LiveEngine {
       changed = true;
     }
 
-    // Ara sıra bahşiş / takip olayları
+    // Ara sıra bahşiş / takip olayları (bahşiş kapalıysa yalnız takip)
     if (now >= this.nextExtraAt && viewerMode) {
       const b = random.pick(this.bots);
-      if (random.chance(0.45)) {
+      if (FEATURES.tips && random.chance(0.45)) {
         this.pushMessage({ type: 'tip', userId: b.id, username: b.username, avatar: b.avatar, text: 'bahşiş gönderdi 💛', amount: random.pick([20, 50, 50, 100, 250]) });
       } else {
         this.pushMessage({ type: 'follow', userId: b.id, username: b.username, avatar: b.avatar, text: 'satıcıyı takip etti' });
@@ -587,7 +592,7 @@ export class LiveEngine {
       }
     } else if (viewerMode && now >= this.nextLotAt) {
       // Ara etkinlikler: çekiliş / flaş indirim
-      if (!this.state.giveaway && this.lotsSinceGiveaway >= random.int(3, 5)) {
+      if (FEATURES.giveaways && !this.state.giveaway && this.lotsSinceGiveaway >= random.int(3, 5)) {
         this.startGiveaway(undefined, 45, random.chance(0.6));
         this.lotsSinceGiveaway = 0;
       } else if (!this.state.flash && this.state.shop.some((p) => p.quantity - p.sold > 0) && this.lotsSinceFlash >= random.int(4, 7)) {
@@ -788,13 +793,15 @@ export class LiveEngine {
   }
 
   startGiveaway(product?: Product, durationSec = 60, requiresFollow = true) {
+    if (!FEATURES.giveaways) return;
     const now = Date.now();
     const prize: Product =
       product ??
       ({
         ...(this.state.queue[0] ?? this.opts.products[0]),
         id: uid('gw'),
-        title: '🎁 Çekiliş: ' + random.pick(['Sürpriz Paket', 'Booster Paketi', 'Mini Hediye', 'Gizemli Kutu', 'Koleksiyon Parçası']),
+        // Gizemli kutu / booster paketi gibi şansa dayalı ödüller kullanılmaz
+        title: '🎁 Çekiliş: ' + random.pick(['Mini Hediye', 'Koleksiyon Parçası', 'Teşekkür Hediyesi', 'Yayın Hatırası']),
         price: 0,
         format: 'giveaway',
       } as Product);

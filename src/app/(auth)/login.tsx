@@ -77,7 +77,7 @@ function LoginScreen() {
       </View>
 
       <View style={styles.legal}>
-        <LegalFooter onOpen={legal.open} prefix="Giriş yaparak" />
+        <LegalFooter onOpen={legal.open} />
       </View>
       {legal.sheet}
     </AuthLayout>

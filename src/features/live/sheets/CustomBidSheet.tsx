@@ -4,6 +4,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Sheet, Text } from '@/components/ui';
+import { BINDING_BID_SHORT, WIN_COST_NOTE } from '@/features/commerce/utils';
 import { nextMinBid, quickBidOptions } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -224,9 +225,15 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
       ) : null}
 
       <View style={styles.legal}>
+        <Icon name="receipt-outline" size={14} color="textSecondary" />
+        <Text variant="caption" weight="600" color="textSecondary" style={styles.flex}>
+          {WIN_COST_NOTE}.
+        </Text>
+      </View>
+      <View style={styles.legalNext}>
         <Icon name="shield-checkmark" size={14} color="textSecondary" />
         <Text variant="caption" weight="500" color="textSecondary" style={styles.flex}>
-          Teklifler bağlayıcıdır. Teklifini istediğin zaman artırabilirsin ama düşüremez veya iptal edemezsin. Kazanırsan kayıtlı kartından otomatik çekim yapılır.
+          {BINDING_BID_SHORT} Teklifini artırabilirsin ama düşüremezsin; kazanırsan kayıtlı kartından otomatik çekim yapılır.
         </Text>
       </View>
       <Text variant="footnote" weight="700" color="accent" onPress={() => setShowHow((s) => !s)} suppressHighlighting style={styles.howLink}>
@@ -238,7 +245,7 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
             Maks. teklif, ödemeye razı olduğun en yüksek tutardır ve gizli kalır. Sistem yalnızca biri sana karşı teklif verdiğinde, en küçük artışla senin adına teklif verir.
           </Text>
           <Text variant="footnote" color="textSecondary">
-            Örnek: Güncel teklif ₺300 ve sen ₺500 maks. teklif verdin. Başka biri ₺320 verirse sistem otomatik olarak ₺330 verir. Kimse karşı çıkmazsa ₺500'ün altında kazanabilirsin.
+            Örnek: Güncel teklif ₺300 ve sen ₺500 maks. teklif verdin. Başka biri ₺320 verirse sistem otomatik olarak ₺330 verir. Kimse karşı çıkmazsa ₺500’ün altında kazanabilirsin.
           </Text>
           <Text variant="footnote" color="textSecondary">
             Aynı tutarda iki maks. teklif varsa önce veren önde kalır.
@@ -261,6 +268,7 @@ const styles = StyleSheet.create({
   chip: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, minWidth: 72, alignItems: 'center' },
   maxRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   legal: { flexDirection: 'row', gap: 6, marginTop: 14, alignItems: 'flex-start' },
+  legalNext: { flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'flex-start' },
   howLink: { marginTop: 10, alignSelf: 'flex-start' },
   how: { borderRadius: 12, padding: 12, gap: 8, marginTop: 8, marginBottom: 6 },
   footer: { gap: 2 },

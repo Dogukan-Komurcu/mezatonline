@@ -45,7 +45,13 @@ export function detectCardBrand(number: string): CardBrand {
   return 'mastercard';
 }
 
-const BANKS = ['Garanti BBVA', 'İş Bankası', 'Yapı Kredi', 'Akbank', 'Ziraat Bankası', 'QNB', 'Enpara', 'VakıfBank', 'Halkbank', 'DenizBank'];
+/**
+ * Kartın görünen adı. Banka adı uydurulmaz (kart numarasından banka tespit edilmez);
+ * PaymentMethod.bank alanında kart ağının adı tutulur.
+ */
+const CARD_LABELS: Record<CardBrand, string> = { visa: 'Visa', mastercard: 'Mastercard', troy: 'Troy', amex: 'Amex' };
+
+type PersistedWallet = Partial<WalletState> & { paymentMethods?: PaymentMethod[] };
 
 export const useWalletStore = create<WalletState>()(
   persist(
@@ -82,13 +88,14 @@ export const useWalletStore = create<WalletState>()(
       addPaymentMethod: ({ number, holder, expiry, isDefault }) => {
         const digits = number.replace(/\D/g, '');
         const isFirst = get().paymentMethods.length === 0;
+        const brand = detectCardBrand(digits);
         const pm: PaymentMethod = {
           id: uid('pm'),
-          brand: detectCardBrand(digits),
+          brand,
           last4: digits.slice(-4),
           holder: holder.toLocaleUpperCase('tr-TR'),
           expiry,
-          bank: BANKS[parseInt(digits.slice(-2) || '0', 10) % BANKS.length],
+          bank: CARD_LABELS[brand],
           isDefault: isDefault || isFirst,
         };
         set((s) => ({
@@ -120,7 +127,19 @@ export const useWalletStore = create<WalletState>()(
         return amount;
       },
     }),
-    { name: storeKey('wallet'), storage: persistStorage },
+    {
+      name: storeKey('wallet'),
+      storage: persistStorage,
+      version: 1,
+      // v0: kartlara rastgele gerçek banka adı atanıyordu → kart ağı adına çevir
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as PersistedWallet;
+        if (version < 1 && Array.isArray(s.paymentMethods)) {
+          s.paymentMethods = s.paymentMethods.map((p) => ({ ...p, bank: CARD_LABELS[p.brand] ?? 'Kart' }));
+        }
+        return s as WalletState;
+      },
+    },
   ),
 );
 

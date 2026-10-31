@@ -317,14 +317,14 @@ function ReceiptLine({ label, value, valueColor }: { label: string; value: strin
 export function ProtectionCard({ info, onPress }: { info: ProtectionInfo; onPress: () => void }) {
   const { colors } = useTheme();
   return (
-    <PressableScale scaleTo={0.985} onPress={onPress} style={[styles.protect, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Mezat Alıcı Garantisi">
+    <PressableScale scaleTo={0.985} onPress={onPress} style={[styles.protect, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Alıcı Koruması">
       <View style={[styles.shield, { backgroundColor: colors.primary }]}>
         <Icon name="shield-checkmark" size={22} color={colors.onPrimary} />
       </View>
       <View style={styles.flex}>
-        <Text variant="headline">Mezat Alıcı Garantisi</Text>
+        <Text variant="headline">Alıcı Koruması</Text>
         <Text variant="footnote" color="textSecondary">
-          Ürünün zamanında ve açıklandığı gibi gelmezse paranı iade ediyoruz.
+          Ürün ulaşmazsa ya da açıklandığı gibi çıkmazsa, ürün sana ulaştıktan sonra 14 gün içinde bildir.
         </Text>
         <Text variant="footnote" weight="700" color={info.active ? 'success' : 'textTertiary'} style={styles.protectLabel}>
           {protectionLabel(info)}

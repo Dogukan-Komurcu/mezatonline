@@ -284,8 +284,10 @@ export function AboutSection({
           <View style={styles.aboutBlock}>
             <Text variant="headline">İade politikası</Text>
             <Text variant="callout" color="textSecondary">
-              Tüm siparişler Mezat Alıcı Garantisi kapsamındadır: ürün gelmezse, hasarlı, yanlış, sahte ya da açıklamaya uygun değilse paran iade edilir.
-              {corporate ? ' Kurumsal satıcı olduğu için teslimattan itibaren 14 gün cayma hakkın da vardır.' : ''}
+              Tüm siparişler Alıcı Koruması kapsamındadır: ürün gelmezse paran iade edilir; hasarlı, yanlış, sahte ya da açıklamaya uygun değilse ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli.
+              {corporate
+                ? ' Satıcı kurumsal olduğu için ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını da kullanabilirsin.'
+                : ' Bireysel satıcıdan (tüketiciden tüketiciye) alımlar Tüketici Kanunu kapsamında değildir.'}
             </Text>
           </View>
         </>

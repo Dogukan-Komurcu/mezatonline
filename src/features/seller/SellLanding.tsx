@@ -12,6 +12,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, type IconName } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { getLiveShows, getSellers, getUser } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatTRY } from '@/lib/format';
@@ -47,7 +48,7 @@ const FAQ: { q: string; a: string }[] = [
   { q: 'Kimler satıcı olabilir?', a: '18 yaşını doldurmuş, Türkiye’de yaşayan herkes başvurabilir. Bireysel, şahıs şirketi ya da kurumsal olarak satış yapabilirsin.' },
   { q: 'Hangi ürünleri satabilirim?', a: 'Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Orijinal olmayan ürünler, silah ve şans oyunları yasaktır.' },
   { q: 'Ödemelerimi nasıl alırım?', a: 'Siparişi kargoya verdiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
-  { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini anlaşmalı firmanın şubesine bırakıp kodu göstermen yeterli. Kargo ücretini alıcı öder.' },
+  { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini kargo firmasının şubesine bırakıp kodu göstermen yeterli. Kargo ücretini alıcı öder.' },
   { q: 'Yayın için ekipman gerekir mi?', a: 'Hayır. Telefonun yeterli. İyi ışık ve sabit bir tripod yayın kaliteni artırır.' },
   { q: 'Fatura kesmem gerekiyor mu?', a: 'Bireysel satıcılar ara sıra yaptıkları satışlar için fatura kesmek zorunda değildir. Şirketler her satış için e-Arşiv fatura düzenler.' },
 ];
@@ -224,7 +225,7 @@ export function SellLanding() {
               ['Ödeme işlem ücreti', '%2,9 + ₺3', 'Alıcının ödediği toplam üzerinden'],
               ['Listeleme ve yayın', 'Ücretsiz', 'Sınırsız ürün, sınırsız yayın'],
               ['Kargo', 'Alıcı öder', `Desi bazlı, ${formatTRY(SHIPPING_PRICES.small)}'den başlar`],
-              ['Bahşişler', '%0', 'Bahşişlerin tamamı senin'],
+              ...(FEATURES.tips ? [['Bahşişler', '%0', 'Bahşişlerin tamamı senin']] : []),
             ].map(([label, value, hint], i) => (
               <View key={label} style={[styles.feeRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>
                 <View style={{ flex: 1 }}>

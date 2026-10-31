@@ -4,11 +4,13 @@ import { ActivityIndicator, Alert, Keyboard, StyleSheet, View, type TextInputIns
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import { Avatar, Button, Chip, Header, Icon, Text, TextField, type IconName } from '@/components/ui';
-import { AuthLayout, OnboardingProgress, StepTitle } from '@/features/auth/components';
+import { setMarketingConsent } from '@/features/account/store';
+import { AuthLayout, Checkbox, OnboardingProgress, StepTitle } from '@/features/auth/components';
+import { useLegalSheet, type LegalDoc } from '@/features/auth/legal';
 import { cancelSignup, isUsernameAvailable, normalizeUsernameInput, USERNAME_MAX, usernameFormatError, usernameSuggestions } from '@/features/auth/session';
 import { useAuthFlow } from '@/features/auth/store';
 import { haptic } from '@/lib/haptics';
-import { useAuthStore } from '@/store/auth';
+import { LEGAL_VERSION, useAuthStore } from '@/store/auth';
 import { ForceScheme, radius, useTheme } from '@/theme';
 
 type Check = { name: string; available: boolean };
@@ -23,6 +25,13 @@ function UsernameScreen() {
   const [salt] = useState(() => Math.floor(Math.random() * 1000));
   const inputRef = useRef<TextInputInstance>(null);
   const nameRef = useRef<TextInputInstance>(null);
+  const legal = useLegalSheet();
+  // E-posta kaydında onay zaten alındıysa tekrar sorma (telefon ve sosyal kayıtta burada alınır)
+  const [askConsent] = useState(() => useAuthStore.getState().termsAcceptance?.version !== LEGAL_VERSION);
+  const [terms, setTerms] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+  const consentOk = !askConsent || terms;
 
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 380);
@@ -58,12 +67,17 @@ function UsernameScreen() {
   };
 
   const submit = () => {
-    if (status !== 'available') {
+    if (status !== 'available' || !consentOk) {
+      if (!consentOk) setAttempted(true);
       haptic.warning();
       return;
     }
     Keyboard.dismiss();
     haptic.success();
+    if (askConsent) {
+      useAuthStore.getState().acceptTerms('username');
+      setMarketingConsent(marketing);
+    }
     flow.setUsername(value, displayName.trim());
     router.push('/(auth)/notify-permission');
   };
@@ -74,6 +88,12 @@ function UsernameScreen() {
       { text: 'Kayıttan çık', style: 'destructive', onPress: cancelSignup },
     ]);
   };
+
+  const legalLink = (doc: LegalDoc, label: string) => (
+    <Text variant="callout" weight="700" style={styles.underline} onPress={() => legal.open(doc)} suppressHighlighting>
+      {label}
+    </Text>
+  );
 
   const statusIcon =
     status === 'checking' ? (
@@ -105,7 +125,7 @@ function UsernameScreen() {
           <OnboardingProgress step="username" />
         </>
       }
-      footer={<Button title="Devam" size="lg" fullWidth disabled={status !== 'available'} onPress={submit} />}>
+      footer={<Button title="Devam" size="lg" fullWidth disabled={status !== 'available' || !consentOk} onPress={submit} />}>
       <StepTitle title="Kullanıcı adını oluştur" subtitle="Alıcılar ve satıcılar seni bu adla görecek. Akılda kalıcı, kolay yazılan bir ad seç." />
 
       <View style={[styles.preview, { backgroundColor: colors.surface }]}>
@@ -174,7 +194,39 @@ function UsernameScreen() {
           icon="person-outline"
           helper="Profilinde kullanıcı adının üstünde görünür. İstediğin zaman değiştirebilirsin."
         />
+
+        {askConsent ? (
+          <View style={styles.checks}>
+            <Checkbox
+              checked={terms}
+              onChange={setTerms}
+              error={attempted && !terms}
+              label={
+                <Text variant="callout">
+                  18 yaşından büyüğüm; {legalLink('terms', 'Kullanım Koşulları')}’nı ve {legalLink('privacy', 'Gizlilik Politikası')}’nı okudum, kabul ediyorum.
+                </Text>
+              }
+            />
+            <Checkbox
+              checked={marketing}
+              onChange={setMarketing}
+              label={
+                <Text variant="callout" color="textSecondary">
+                  Kampanya ve fırsatlardan e-posta ve bildirimle haberdar olmak için {legalLink('marketing', 'ticari elektronik ileti')} almaya açık rıza veriyorum. (İsteğe bağlı)
+                </Text>
+              }
+            />
+            <Text variant="footnote" color="textTertiary" style={styles.kvkk}>
+              Kişisel verilerinin nasıl işlendiğini{' '}
+              <Text variant="footnote" weight="700" color="textSecondary" style={styles.underline} onPress={() => legal.open('kvkk')} suppressHighlighting>
+                KVKK Aydınlatma Metni
+              </Text>{' '}
+              metninde bulabilirsin.
+            </Text>
+          </View>
+        ) : null}
       </View>
+      {legal.sheet}
     </AuthLayout>
   );
 }
@@ -208,4 +260,7 @@ const styles = StyleSheet.create({
   hintFlex: { flex: 1 },
   suggestions: { gap: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  checks: { gap: 2 },
+  kvkk: { marginTop: 6, paddingHorizontal: 2 },
+  underline: { textDecorationLine: 'underline' },
 });

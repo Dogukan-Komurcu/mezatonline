@@ -1,7 +1,8 @@
 /**
  * S42 — Ön Teklif sayfası (yayın öncesi maks. teklif).
  * Asgari tutar açılış fiyatıdır (mevcut ön teklif varsa ondan yüksek olmalı), üst sınır yoktur.
- * Ön teklifler bağlayıcıdır, iptal edilemez / düşürülemez; yayının planlanan saatinden 24 saat sonra sona erer.
+ * Ön teklifler bağlayıcıdır, geri çekilemez / düşürülemez (kurumsal satıcıda yasal cayma hakkı saklıdır);
+ * yayının planlanan saatinden 24 saat sonra sona erer.
  */
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
@@ -21,7 +22,7 @@ import type { Product, Show } from '@/types';
 
 import { AmountInput, CardBrandMark, NoticeBox } from './components';
 import { useMyPreBid } from './hooks';
-import { DAY_MS } from './utils';
+import { DAY_MS, WIN_COST_NOTE } from './utils';
 
 export type PreBidSheetProps = {
   visible: boolean;
@@ -141,7 +142,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
       </NoticeBox>
 
       <NoticeBox icon="alert-circle-outline" tone="warning" title="Teklifler bağlayıcıdır">
-        Ön teklifler iptal edilemez ve düşürülemez. Kazanırsan kayıtlı kartından otomatik ödeme alınır.
+        {`Ön teklifin geri çekilemez ve düşürülemez; kazanırsan kayıtlı kartından otomatik ödeme alınır. ${WIN_COST_NOTE}. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır.`}
       </NoticeBox>
 
       <View style={styles.metaRow}>

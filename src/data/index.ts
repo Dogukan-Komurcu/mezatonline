@@ -195,5 +195,5 @@ export function search(query: string): SearchResults {
 
 /** Arama önerileri (otomatik tamamlama) */
 export const TRENDING_SEARCHES = [
-  'Charizard', 'Jordan 1', 'Osmanlı sikke', 'Arda Güler', 'Kilim', 'LEGO', 'Funko Pop', 'Rolex', 'Plak', 'Oltu taşı', 'Game Boy', 'Lokum',
+  'Charizard', 'Jordan 1', 'Osmanlı sikke', 'Rookie kart', 'Kilim', 'LEGO', 'Funko Pop', 'Rolex', 'Plak', 'Oltu taşı', 'Game Boy', 'Lokum',
 ];

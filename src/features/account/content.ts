@@ -3,6 +3,12 @@
  * Yayın öncesi metinler hukuk ekibinin onayından geçirilecek; Supabase'e geçişte CMS tablosundan okunacak.
  */
 import type { IconName } from '@/components/ui';
+import { DEMO_COPY } from '@/config/demo';
+import { BINDING_BID_TEXT, ESCROW_TEXT } from '@/features/commerce/utils';
+
+/** Şirket kurulana kadar tüm yasal metinlerde kullanılan unvan */
+const ENTITY = 'Mezatonline (demo sürüm; şirket unvanı, MERSİS numarası ve adres şirket kuruluşundan sonra eklenecektir)';
+const GIVEAWAY_NOTE = `${DEMO_COPY.giveaway} Gerçek ödüllü çekilişler Milli Piyango İdaresi izniyle düzenlenebilir.`;
 
 export type FaqTopic = 'bids' | 'shipping' | 'returns' | 'protection' | 'giveaway' | 'payment' | 'account';
 
@@ -29,7 +35,7 @@ export const FAQS: Faq[] = [
     id: 'f2',
     topic: 'bids',
     q: 'Verdiğim teklifi geri alabilir miyim?',
-    a: 'Hayır. Mezatonline’da verilen tüm teklifler ve ön teklifler bağlayıcıdır; iptal edilemez ve düşürülemez. Yanlışlıkla verdiğin bir teklif için 2 saat içinde Bize Ulaş’tan yayın adını ve ürünü yazarsan satıcıyla birlikte inceleriz.',
+    a: `Hayır. ${BINDING_BID_TEXT} Ön teklifler de bu kurala tabidir; yalnızca yükseltilebilir. Teknik bir hata nedeniyle istemediğin bir teklifin kaydedildiğini düşünüyorsan, yayın adını ve ürünü yazarak destek ekibimize bildir; durumu satıcıyla birlikte değerlendiririz.`,
   },
   {
     id: 'f3',
@@ -41,7 +47,7 @@ export const FAQS: Faq[] = [
     id: 'f4',
     topic: 'bids',
     q: 'Ön teklif nedir, nasıl çalışır?',
-    a: 'Yayın başlamadan önce ürün sayfasından ön teklif verebilirsin. Ön teklifin, ürün sahneye geldiğinde maks. teklif gibi çalışır. Ön teklifler iptal edilemez ve planlanan yayın saatinden 24 saat sonra geçerliliğini yitirir. Teklifin geçilirse sana bildirim göndeririz.',
+    a: 'Yayın başlamadan önce ürün sayfasından ön teklif verebilirsin. Ön teklifin, ürün sahneye geldiğinde maks. teklif gibi çalışır. Ön teklifler bağlayıcıdır: geri çekilemez ve düşürülemez, yalnızca yükseltilebilir. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Ürün, planlanan yayın saatinden sonraki 24 saat içinde satışa çıkmazsa ön teklifin düşer. Teklifin geçilirse sana bildirim göndeririz.',
   },
   {
     id: 'f5',
@@ -59,67 +65,67 @@ export const FAQS: Faq[] = [
     id: 'f7',
     topic: 'shipping',
     q: 'Hangi kargo firmalarıyla çalışıyorsunuz?',
-    a: 'Yurtiçi Kargo, Aras Kargo, MNG Kargo, PTT Kargo, Sürat Kargo, HepsiJet ve Trendyol Express ile anlaşmalıyız. Satıcı, kargo kodunu oluştururken firmayı seçer; takip bağlantısı sipariş detayına otomatik eklenir.',
+    a: 'Çalışılacak kargo firmaları uygulama yayına çıktığında duyurulacaktır. Satıcı, ürünü uygulamada gösterilen kargo seçenekleriyle gönderir; takip numarası sipariş detayına eklenir. Demo sürümde gerçek kargo gönderimi yapılmaz.',
   },
   {
     id: 'f8',
     topic: 'returns',
     q: 'Cayma hakkımı nasıl kullanırım?',
-    a: 'Kurumsal satıcılardan aldığın ürünlerde, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca teslimattan itibaren 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilirsin. Sipariş detayından iade talebi oluştur; iade kargo kodu satıcı tarafından sağlanır ve ücreti satıcıya aittir.',
+    a: 'Satıcı kurumsal (tacir veya esnaf) ise, canlı yayında açık artırmayla aldıkların dahil, ürünü teslim aldıktan sonra 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilirsin (6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği). Sipariş detayındaki “Bu siparişle ilgili yardım al” adımından cayma talebi oluştur; iade kargo ücreti satıcıya aittir. Ödemen, cayma bildiriminden itibaren 14 gün içinde iade edilir.',
   },
   {
     id: 'f9',
     topic: 'returns',
     q: 'Siparişimi iptal edebilir miyim?',
-    a: 'Satın alımdan sonraki 24 saat içinde ve kargo etiketi oluşturulmadan önce iptal talep edebilirsin. Satıcının talebi yanıtlamak için 2 iş günü vardır; yanıt verilmezse sipariş kargolanır. Onaylanan iptallerde ödeme 3-5 iş günü içinde kartına iade edilir.',
+    a: 'Sipariş kargoya verilmeden önce, satın alımdan sonraki ilk 24 saat içinde sipariş detayındaki “Bu siparişle ilgili yardım al” adımından iptal talebinde bulunabilirsin. Kargo öncesi iptal satıcının onayına bağlıdır; onaylanırsa ödemenin tamamı kartına iade edilir ve iadenin kartına yansıma süresi bankana göre değişir. Satıcı kurumsal ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin.',
   },
   {
     id: 'f10',
     topic: 'returns',
     q: 'Hangi ürünlerde cayma hakkı yoktur?',
-    a: 'Ambalajı açılmış kozmetik ve hijyen ürünleri, çabuk bozulan ürünler, kişiye özel üretilenler ve fiyatı piyasaya bağlı olarak değişen ürünler (ör. altın, külçe) cayma hakkı kapsamı dışındadır. Bireysel satıcılardan yapılan alışverişlerde ise Alıcı Koruması geçerlidir.',
+    a: 'Cayma hakkı kurumsal (tacir veya esnaf) satıcılardan yapılan alımlarda geçerlidir; canlı yayında açık artırmayla yapılan alımlar da buna dahildir. Mesafeli Sözleşmeler Yönetmeliği m.15’te sayılan hâllerde cayma hakkı kullanılamaz; örneğin kişiye özel hazırlanan ürünler, çabuk bozulabilen ürünler ve ambalajı açılmış, sağlık ve hijyen açısından iadesi uygun olmayan ürünler. Bireysel satıcılardan (tüketiciden tüketiciye) yapılan alımlar Tüketici Kanunu kapsamında değildir; bu alımlarda Alıcı Koruması geçerlidir.',
   },
   {
     id: 'f11',
     topic: 'protection',
     q: 'Alıcı Koruması neleri kapsar?',
-    a: 'Ürün hiç ulaşmazsa, hasarlı gelirse, açıklamadan önemli ölçüde farklıysa ya da sahteyse paranı iade ederiz. Ödemen, sipariş teslim edilip onaylanana kadar Mezatonline güvencesinde tutulur; satıcıya ancak sonra aktarılır.',
+    a: `Ürün sana hiç ulaşmazsa paranı iade ederiz. Ürün hasarlı, eksik, sahte ya da açıklamayla önemli ölçüde farklı çıkarsa, ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli. ${ESCROW_TEXT} Mezatonline bu parayı kendi hesabında tutmaz. ${DEMO_COPY.payment}`,
   },
   {
     id: 'f12',
     topic: 'protection',
     q: 'Sorun bildirmek için ne kadar sürem var?',
-    a: 'Satın alımdan itibaren 30 gün ya da teslimattan itibaren 14 gün (hangisi önce dolarsa). Koleksiyon kartları, sikke, sneaker ve lüks ürünlerde bu süre teslimattan itibaren 7 gün, bitki ve taze gıdada 2 gündür. Sahtecilik bildirimleri teslimattan itibaren 30 gün içinde yapılabilir.',
+    a: 'Ürün sana ulaştıktan sonra 14 gün içinde sorun bildirebilirsin; bu süre tüm kategorilerde aynıdır. Ürün hiç ulaşmadıysa, sipariş detayındaki “Bu siparişle ilgili yardım al” adımından talep oluşturabilirsin. Destek ekibimiz en kısa sürede yanıt verir.',
   },
   {
     id: 'f13',
     topic: 'giveaway',
     q: 'Çekilişlere nasıl katılırım?',
-    a: 'Yayında çekiliş kartı göründüğünde “Katıl”a dokun. Katılmak için yayında olman, kayıtlı bir adresinin ve ödeme yönteminin bulunması gerekir. Her çekilişe bir kez katılabilirsin; bazı çekilişler yalnızca takipçilere ya da doğrulanmış alıcılara açıktır.',
+    a: `Çekiliş kartı yayında göründüğünde “Katıl”a dokunman yeterli. Her çekilişe bir kez katılabilirsin; bazı çekilişler yalnızca satıcının takipçilerine açıktır. Kazanan, çekiliş süresi dolduğunda katılımcılar arasından rastgele belirlenir. ${GIVEAWAY_NOTE}`,
   },
   {
     id: 'f14',
     topic: 'giveaway',
     q: 'Çekilişi kazandığımı nasıl anlarım?',
-    a: 'Kazanan, yayın ekranında duyurulur ve sana anlık bildirim gönderilir. Ürün otomatik olarak siparişlerine eklenir; ürün için ödeme yapmazsın, yalnızca satıcı belirlediyse kargo ücreti alınır.',
+    a: `Kazandıysan yayın ekranında adın görünür ve sana bildirim gelir; ödül, Aktivite → Siparişlerim’e ₺0 tutarlı bir sipariş olarak eklenir. ${GIVEAWAY_NOTE}`,
   },
   {
     id: 'f15',
     topic: 'payment',
     q: 'Hangi ödeme yöntemlerini kullanabilirim?',
-    a: 'Visa, Mastercard ve Troy logolu kredi ve banka kartları kabul edilir. Kartlar 3D Secure ile doğrulanarak kaydedilir. Hemen Al ürünlerinde anlaşmalı bankalarla taksit seçenekleri sunulur; açık artırma ve bahşişlerde taksit yapılamaz.',
+    a: `Kredi ve banka kartıyla ödeme yapılır; kartlar 3D Secure ile doğrulanarak kaydedilir. Hemen Al ürünlerinde kredi kartına taksit seçenekleri sunulabilir; açık artırma alımlarında taksit yapılamaz. ${DEMO_COPY.payment}`,
   },
   {
     id: 'f16',
     topic: 'payment',
     q: 'Kartımdan ne zaman çekim yapılır?',
-    a: 'Açık artırmayı kazandığında, Hemen Al ile satın aldığında ya da fiyat önerin kabul edildiğinde varsayılan kartından çekim yapılır. Teklif vermek tek başına çekime neden olmaz. Mezatonline’ın abonelik ücreti yoktur.',
+    a: 'Açık artırmayı kazandığında, Hemen Al ile satın aldığında ya da fiyat önerin kabul edildiğinde varsayılan kartından çekim yapılır. Teklif vermek tek başına çekime neden olmaz. Mezatonline’ın abonelik ücreti yoktur. Demo sürümde kartından hiçbir çekim yapılmaz.',
   },
   {
     id: 'f17',
     topic: 'payment',
     q: 'Mezat Kredisi nedir?',
-    a: 'Davet ve kampanyalardan kazandığın kredilerdir. Bir sonraki alışverişinde ürün tutarından otomatik düşülür; kargo ve hizmet bedeline uygulanmaz. Krediler tanımlandıkları tarihten itibaren 90 gün geçerlidir. Cüzdan ekranından bakiyeni ve geçmişini görebilirsin.',
+    a: 'Arkadaş davetleri ve kampanyalarla hesabına tanımlanan indirim bakiyesidir; satın alınamaz ve nakde çevrilemez. Ödeme adımında yalnızca ürün tutarından düşülür, kargo ve Alıcı Koruması bedeline uygulanmaz. Bakiyeni ve geçmişini Cüzdan ekranında görebilirsin. Demo sürümdeki krediler örnek amaçlıdır ve gerçek bir değer taşımaz.',
   },
   {
     id: 'f18',
@@ -149,13 +155,13 @@ export const LEGAL_DOCS: LegalDoc[] = [
     title: 'KVKK Aydınlatma Metni',
     icon: 'shield-checkmark-outline',
     updated: '1 Ekim 2026',
-    intro: '6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) uyarınca, veri sorumlusu sıfatıyla Mezatonline olarak kişisel verilerini hangi amaçlarla ve nasıl işlediğimizi açıklarız.',
+    intro: `6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) uyarınca, veri sorumlusu sıfatıyla kişisel verilerini hangi amaçlarla ve nasıl işlediğimizi açıklarız. Veri sorumlusu: ${ENTITY}.`,
     sections: [
       { h: 'İşlenen kişisel veriler', p: 'Kimlik (ad, soyad, kullanıcı adı), iletişim (telefon, e-posta, teslimat adresi), müşteri işlem (siparişler, teklifler, ödeme kayıtları), işlem güvenliği (IP adresi, cihaz bilgisi, oturum kayıtları) ve görsel/işitsel veriler (canlı yayın ve sohbet içerikleri).' },
       { h: 'İşleme amaçları', p: 'Üyelik ve hesabının yönetimi; açık artırma, satış ve ödeme süreçlerinin yürütülmesi; siparişlerin kargoya teslimi; dolandırıcılığın önlenmesi; yasal yükümlülüklerin (e-Arşiv fatura, 6563 sayılı Kanun) yerine getirilmesi ve açık rızan varsa kişiselleştirilmiş kampanyaların sunulması.' },
       { h: 'Hukuki sebepler', p: 'KVKK md. 5/2 uyarınca sözleşmenin kurulması ve ifası, hukuki yükümlülük, meşru menfaat ve bir hakkın tesisi; pazarlama faaliyetleri için md. 5/1 uyarınca açık rıza.' },
-      { h: 'Aktarım', p: 'Verilerin; siparişin satıcısı, anlaşmalı kargo şirketleri, ödeme kuruluşu, bulut hizmet sağlayıcıları ve yetkili kamu kurumlarıyla, yalnızca amaçla sınırlı ve ölçülü olarak paylaşılır.' },
-      { h: 'Hakların', p: 'KVKK md. 11 kapsamında verilerinin işlenip işlenmediğini öğrenme, düzeltilmesini veya silinmesini isteme, itiraz etme ve zararın giderilmesini talep etme haklarına sahipsin. Taleplerini kvkk@mezatonline.com adresine iletebilirsin; en geç 30 gün içinde yanıtlanır.' },
+      { h: 'Aktarım', p: 'Verilerin; siparişin satıcısı, kargo şirketleri, lisanslı ödeme kuruluşu, bulut hizmet sağlayıcıları ve yetkili kamu kurumlarıyla, yalnızca amaçla sınırlı ve ölçülü olarak paylaşılır. Demo sürümde verilerin yalnızca bu cihazda tutulur ve bu taraflarla paylaşılmaz.' },
+      { h: 'Hakların', p: 'KVKK md. 11 kapsamında verilerinin işlenip işlenmediğini öğrenme, düzeltilmesini veya silinmesini isteme, itiraz etme ve zararın giderilmesini talep etme haklarına sahipsin. Taleplerini kvkk@mezatonline.com adresine iletebilirsin; en geç 30 gün içinde yanıtlanır. Demo sürümde bu adres henüz aktif değildir; taleplerini uygulama içi destek sohbetinden iletebilirsin.' },
     ],
   },
   {
@@ -163,10 +169,10 @@ export const LEGAL_DOCS: LegalDoc[] = [
     title: 'Kullanım Koşulları',
     icon: 'document-text-outline',
     updated: '1 Ekim 2026',
-    intro: 'Mezatonline’ı kullanarak bu koşulları kabul etmiş olursun. Lütfen dikkatlice oku.',
+    intro: `Bu koşullar, ${ENTITY} ile kullanıcılar arasındaki ilişkiyi düzenler. Mezatonline’ı kullanarak bu koşulları kabul etmiş olursun. Lütfen dikkatlice oku. ${DEMO_COPY.banner}`,
     sections: [
       { h: 'Üyelik', p: 'Platformu kullanmak için 18 yaşını doldurmuş olman ve doğru bilgilerle tek bir hesap oluşturman gerekir. Hesabının güvenliğinden sen sorumlusun.' },
-      { h: 'Teklifler bağlayıcıdır', p: 'Canlı mezatlarda ve ön tekliflerde verdiğin teklifler bağlayıcıdır. Kazandığında ödeme, varsayılan ödeme yönteminden otomatik olarak tahsil edilir.' },
+      { h: 'Teklifler bağlayıcıdır', p: `${BINDING_BID_TEXT} Bu kural canlı mezatlarda ve ön tekliflerde geçerlidir. Kazandığında ödeme, varsayılan ödeme yönteminden otomatik olarak tahsil edilir (demo sürümde ödeme alınmaz).` },
       { h: 'Yasaklı davranışlar', p: 'Sahte teklif (şişirme), bot kullanımı, platform dışı ödeme talebi, taciz, nefret söylemi, başkalarının kişisel bilgilerini paylaşma ve yasaklı ürün satışı kesinlikle yasaktır. İhlallerde uyarıdan hesabın kapatılmasına kadar yaptırım uygulanır.' },
       { h: 'Satıcı yükümlülükleri', p: 'Satıcılar ürünleri doğru ve eksiksiz tanıtmak, siparişleri 2 iş günü içinde kargoya vermek ve ilgili mevzuata (vergi, tüketici, e-ticaret) uymakla yükümlüdür.' },
       { h: 'Uyuşmazlıklar', p: 'Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir. Tüketici uyuşmazlıklarında, parasal sınırlar dahilinde Tüketici Hakem Heyetleri; aşan durumlarda arabuluculuk ve Tüketici Mahkemeleri yetkilidir.' },
@@ -179,11 +185,11 @@ export const LEGAL_DOCS: LegalDoc[] = [
     updated: '1 Ekim 2026',
     intro: 'Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca, Mezatonline üzerinden kurumsal satıcılardan yapılan alışverişlerde tarafların hak ve yükümlülüklerini düzenler.',
     sections: [
-      { h: 'Taraflar', p: 'Satıcı: siparişin ait olduğu, bilgileri ürün ve sipariş sayfasında yer alan kurumsal satıcı. Alıcı: Mezatonline üyesi tüketici. Mezatonline, 6563 sayılı Kanun kapsamında aracı hizmet sağlayıcıdır.' },
+      { h: 'Taraflar', p: `Satıcı: siparişin ait olduğu, bilgileri ürün ve sipariş sayfasında yer alan kurumsal satıcı. Alıcı: Mezatonline üyesi tüketici. Aracı hizmet sağlayıcı (6563 sayılı Kanun): ${ENTITY}.` },
       { h: 'Ürün ve fiyat', p: 'Ürünün temel nitelikleri, KDV dahil satış fiyatı ve kargo ücreti sipariş özetinde yer alır. Açık artırmalarda fiyat, alıcının kazandığı en yüksek tekliftir.' },
       { h: 'Teslimat', p: 'Ürün, siparişten itibaren en geç 30 gün içinde alıcının belirttiği adrese teslim edilir. Satıcı, siparişi genellikle 2 iş günü içinde kargoya verir.' },
-      { h: 'Cayma hakkı', p: 'Alıcı, teslimattan itibaren 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Cayma bildiriminden itibaren 14 gün içinde ödeme iade edilir. Yönetmelik md. 15’te sayılan ürünlerde cayma hakkı bulunmaz.' },
-      { h: 'Ön bilgilendirme', p: 'Alıcı, sipariş öncesinde Ön Bilgilendirme Formu’nu okuduğunu ve elektronik ortamda onayladığını kabul eder. Sözleşmenin bir örneği sipariş detayında saklanır.' },
+      { h: 'Cayma hakkı', p: 'Alıcı, canlı yayında açık artırmayla yapılanlar dahil, ürünü teslim aldıktan sonra 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Cayma bildiriminden itibaren 14 gün içinde ödeme iade edilir. Yönetmelik m.15’te sayılan hâllerde (ör. kişiye özel hazırlanan ürünler, çabuk bozulabilen ürünler, ambalajı açılmış ve sağlık/hijyen açısından iadesi uygun olmayan ürünler) cayma hakkı kullanılamaz.' },
+      { h: 'Ön bilgilendirme', p: 'Alıcı, sipariş öncesinde Ön Bilgilendirme Formu’nu okuduğunu ve elektronik ortamda onayladığını kabul eder. Gerçek sürümde sözleşmenin bir örneği sipariş detayında saklanır; demo sürümde kopya oluşturulmaz.' },
     ],
   },
   {

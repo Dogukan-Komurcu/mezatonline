@@ -5,19 +5,61 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Header, Icon, PressableScale, Screen, Segmented, Sheet, Text, TextField, toast } from '@/components/ui';
+import { DEMO_MODE } from '@/config/demo';
 import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
+import { useActivityExtras } from '@/features/activity/store';
 import { useIsGuest } from '@/features/auth/gate';
+import { useBrowseStore } from '@/features/browse/store';
+import { useCouponStore } from '@/features/commerce/coupons';
+import { useInboxExtras } from '@/features/inbox/store';
+import { useProfilePrefs } from '@/features/profile/store';
+import { useSellerExtras } from '@/features/seller/store';
 import { haptic } from '@/lib/haptics';
 import { useAuthStore } from '@/store/auth';
+import { useInboxStore } from '@/store/inbox';
+import { useModerationStore } from '@/store/moderation';
 import { useOrdersStore } from '@/store/orders';
+import { useRewardsStore } from '@/store/rewards';
 import { useSellerStore } from '@/store/seller';
 import { useSettingsStore, type Appearance } from '@/store/settings';
+import { useWalletStore } from '@/store/wallet';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
 const DELETE_REASONS = ['Uygulamayı artık kullanmıyorum', 'Aradığım ürünleri bulamıyorum', 'Çok fazla bildirim alıyorum', 'Gizlilik endişelerim var', 'Başka bir hesap kullanıyorum', 'Diğer'];
 const OPEN_STATUSES = ['paid', 'preparing', 'shipped', 'out_for_delivery', 'return_requested'];
+
+/**
+ * Tamamen hesaba ait kalıcı store'lar: silmede depolama anahtarları da kaldırılır.
+ * Cihaz tercihi de taşıyan store'lar (ayarlar, sosyal: son aramalar, canlı yayın tercihleri) yalnızca çıkıştaki sıfırlamayla temizlenir.
+ */
+const ACCOUNT_STORES = [
+  useAuthStore,
+  useAccountStore,
+  useWalletStore,
+  useOrdersStore,
+  useSellerStore,
+  useSellerExtras,
+  useRewardsStore,
+  useInboxStore,
+  useInboxExtras,
+  useActivityExtras,
+  useProfilePrefs,
+  useCouponStore,
+  useBrowseStore,
+  useModerationStore,
+];
+
+/** Demo: hesap yalnızca bu cihazda yaşar; çıkış + yerel depolamanın silinmesi hesabı tamamen siler */
+function deleteDeviceAccount() {
+  // Çıkış, gate aboneliği üzerinden resetAccountData'yı tetikler: bellekteki hesap verileri ve
+  // kampanya bildirimi izni sıfırlanır; tema vb. cihaz tercihleri korunur
+  useAuthStore.getState().signOut();
+  ACCOUNT_STORES.forEach((store) => {
+    store.persist.clearStorage();
+  });
+}
 
 export default function PreferencesScreen() {
   const qa = useQaParams();
@@ -37,7 +79,6 @@ export default function PreferencesScreen() {
   const suggestAccount = useAccountStore((s) => s.suggestAccount);
   const personalizedAds = useAccountStore((s) => s.personalizedAds);
   const setFlag = useAccountStore((s) => s.setFlag);
-  const signOut = useAuthStore((s) => s.signOut);
   const guest = useIsGuest();
   const openOrders = useOrdersStore((s) => s.orders.filter((o) => OPEN_STATUSES.includes(o.status)).length);
   const sellerBalance = useSellerStore((s) => s.balance + s.pendingBalance);
@@ -65,12 +106,13 @@ export default function PreferencesScreen() {
 
   const startDelete = () => {
     setDeleteOpen(false);
-    if (openOrders > 0) {
+    // Demo: siparişler ve bakiyeler simülasyon olduğundan silmeyi engellemez
+    if (!DEMO_MODE && openOrders > 0) {
       haptic.warning();
       setTimeout(() => toast.warning(`Açık ${openOrders} siparişin var. Hesabını silmeden önce tamamlanmalarını bekle.`, 'bag-handle-outline'), 260);
       return;
     }
-    if (sellerBalance > 0) {
+    if (!DEMO_MODE && sellerBalance > 0) {
       haptic.warning();
       setTimeout(() => toast.warning('Satıcı bakiyende para var. Önce bakiyeni hesabına aktar.', 'cash-outline'), 260);
       return;
@@ -128,7 +170,13 @@ export default function PreferencesScreen() {
 
         {guest ? null : (
           <MenuGroup title="Hesap yönetimi">
-            <MenuRow icon="person-remove-outline" title="Hesabı sil" subtitle="Hesabın ve verilerin kalıcı olarak silinir" destructive onPress={() => setDeleteOpen(true)} />
+            <MenuRow
+              icon="person-remove-outline"
+              title="Hesabı sil"
+              subtitle={DEMO_MODE ? 'Bu cihazdaki hesap verilerin kalıcı olarak silinir' : 'Hesabın ve verilerin kalıcı olarak silinir'}
+              destructive
+              onPress={() => setDeleteOpen(true)}
+            />
           </MenuGroup>
         )}
       </ScrollView>
@@ -171,15 +219,19 @@ export default function PreferencesScreen() {
         icon="warning-outline"
         destructive
         title="Hesabın kalıcı olarak silinsin mi?"
-        message="Profilin, sipariş geçmişin, kayıtlıların, Mezat Kredin ve puanların silinir. Bu işlem geri alınamaz. Yasal saklama yükümlülüğü olan fatura kayıtları mevzuat süresince saklanır."
+        message={
+          DEMO_MODE
+            ? 'Demo: Hesabın yalnızca bu cihazda tutulur. Profilin, onay kayıtların, adreslerin, kartların (son 4 hane), siparişlerin, mesajların, kayıtlıların, Mezat Kredin ve puanların bu cihazdan silinir. Bu işlem geri alınamaz. Tema gibi cihaz tercihlerin korunur.'
+            : 'Profilin, sipariş geçmişin, kayıtlıların, Mezat Kredin ve puanların silinir. Bu işlem geri alınamaz. Yasal saklama yükümlülüğü olan fatura kayıtları mevzuat süresince saklanır.'
+        }
         confirmLabel="Hesabımı kalıcı olarak sil"
         onConfirm={() => {
           setFinalConfirm(false);
           haptic.heavy();
           setTimeout(() => {
-            signOut();
+            deleteDeviceAccount();
             router.dismissTo('/');
-            toast('Hesabın silindi. Seni özleyeceğiz 💛');
+            toast('Demo: bu cihazdaki hesap verilerin silindi.');
           }, 300);
         }}
       />

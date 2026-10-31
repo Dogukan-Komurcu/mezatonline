@@ -3,6 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 import { Button, Icon, Sheet, Text, type IconName } from '@/components/ui';
+import { DEMO_COPY } from '@/config/demo';
+import { BINDING_BID_TEXT, WIN_COST_NOTE } from '@/features/commerce/utils';
 import { haptic } from '@/lib/haptics';
 import { liveColors, useTheme } from '@/theme';
 
@@ -13,8 +15,12 @@ const STEPS: { icon: IconName; tint: string; title: string; body: string; bullet
     icon: 'shield-checkmark',
     tint: liveColors.primary,
     title: 'Mezatonline Alıcı Koruması',
-    body: 'Satın aldığın ürünü al, yoksa telafi edelim.',
-    bullets: ['Ürün gelmezse ya da açıklamaya uymazsa paran iade edilir', 'Ödemen, ürün sana ulaşana kadar güvende tutulur', 'Destek ekibimiz 7/24 yanında'],
+    body: 'Ürün sana ulaşmazsa ya da açıklamayla önemli ölçüde farklıysa paranı iade ederiz; sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli.',
+    bullets: [
+      'Gerçek sürümde ödemen, lisanslı bir ödeme kuruluşu tarafından ürün sana ulaşana kadar bekletilir',
+      'Sorun bildirdiğinde destek ekibimiz en kısa sürede yanıt verir',
+      DEMO_COPY.payment,
+    ],
   },
   {
     icon: 'hand-right',
@@ -27,8 +33,12 @@ const STEPS: { icon: IconName; tint: string; title: string; body: string; bullet
     icon: 'hammer',
     tint: liveColors.live,
     title: 'Teklifler bağlayıcıdır',
-    body: 'Açık artırmayı kazanırsan ödeme kayıtlı kartından otomatik olarak alınır. Verdiğin teklifler iptal edilemez veya düşürülemez.',
-    bullets: ['Kazandığın ürünler Aktivite › Siparişlerim’de görünür', 'Aynı yayından aldıkların tek kargoda gelir', 'Lütfen yalnızca almak istediğin ürünlere teklif ver'],
+    body: BINDING_BID_TEXT,
+    bullets: [
+      'Kazanırsan ödeme kayıtlı kartından otomatik olarak alınır',
+      `${WIN_COST_NOTE}; aynı yayından aldıkların tek kargoda gelir`,
+      'Lütfen yalnızca almak istediğin ürünlere teklif ver',
+    ],
   },
 ];
 

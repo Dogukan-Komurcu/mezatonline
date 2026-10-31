@@ -8,6 +8,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 
 import { CONDITION_LABELS } from '@/components/cards/ProductCard';
 import { Button, EmptyState, Icon, IconButton, PressableScale, Sheet, Text, TextField, UnderlineTabs } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import type { FlashSale, Giveaway, LiveLot, SoldItem } from '@/features/live/engine';
 import { formatTRY, timeAgo } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -49,7 +50,9 @@ function norm(s: string) {
 export function ShopSheet(props: ShopSheetProps) {
   const { visible, onClose, initialTab, products, remainingOf, sold, lot, flash, giveaway } = props;
   const { colors } = useTheme();
-  const [tab, setTab] = useState<ShopTab>(initialTab);
+  const [rawTab, setTab] = useState<ShopTab>(initialTab);
+  // Çekiliş kapalıysa (FEATURES.giveaways) sekmesi gösterilmez
+  const tab: ShopTab = rawTab === 'giveaway' && !FEATURES.giveaways ? 'auction' : rawTab;
   const [query, setQuery] = useState('');
   const lotRunning = lot?.status === 'running';
   const flashRunning = flash?.status === 'running';
@@ -71,7 +74,7 @@ export function ShopSheet(props: ShopSheetProps) {
   const tabs = [
     { key: 'auction' as const, label: 'Açık Artırma', count: products.filter((p) => p.format === 'auction' && remainingOf(p) > 0).length },
     { key: 'buy_now' as const, label: 'Hemen Al', count: binAvailable },
-    { key: 'giveaway' as const, label: 'Çekiliş' },
+    ...(FEATURES.giveaways ? [{ key: 'giveaway' as const, label: 'Çekiliş' }] : []),
     { key: 'sold' as const, label: 'Satıldı', count: sold.length },
   ];
 

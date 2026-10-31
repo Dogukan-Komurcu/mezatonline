@@ -1,11 +1,12 @@
 /**
- * Sipariş detayı sheet'leri: teslimat adresini değiştir (S65), e-Arşiv fatura, Alıcı Koruması bilgisi.
+ * Sipariş detayı sheet'leri: teslimat adresini değiştir (S65), örnek fatura (demo), Alıcı Koruması bilgisi.
  */
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button, Divider, EmptyState, Icon, PressableScale, Sheet, Text, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { getUser } from '@/data';
 import { formatDateTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -17,7 +18,7 @@ import type { Address, Order } from '@/types';
 
 import { InfoBanner } from '../components';
 import { useActivityExtras } from '../store';
-import { addressLines, hashString, protectionLabel, type ProtectionInfo } from '../utils';
+import { addressLines, protectionLabel, type ProtectionInfo } from '../utils';
 
 // ─── Teslimat adresini değiştir ─────────────────────────────────────────────
 
@@ -95,20 +96,16 @@ function AddressOption({ address, selected, onPress }: { address: Address; selec
   );
 }
 
-// ─── e-Arşiv fatura ─────────────────────────────────────────────────────────
+// ─── Örnek fatura (demo) ────────────────────────────────────────────────────
 
 const KDV_RATE = 0.2;
+/** Demo: gerçek fatura numarası, VKN veya ETTN üretilmez */
+const SAMPLE = 'ÖRNEK';
 
 export function InvoiceSheet({ visible, onClose, order, address }: { visible: boolean; onClose: () => void; order: Order; address?: Address }) {
   const { colors } = useTheme();
   const me = useMe();
   const seller = getUser(order.sellerId);
-  const h = hashString(order.id);
-  const year = new Date(order.createdAt).getFullYear();
-  const invoiceNo = `MZA${year}${String(h % 1_000_000_000).padStart(9, '0')}`;
-  const hex = h.toString(16).padStart(8, '0');
-  const ettn = `${hex}-${hex.slice(0, 4)}-4${hex.slice(1, 4)}-a${hex.slice(5, 8)}-${(h * 7).toString(16).padStart(12, '0').slice(0, 12)}`;
-  const vkn = String(1_000_000_000 + (h % 8_999_999_999)).slice(0, 10);
   const gross = Math.max(0, order.itemPrice + order.shippingCost + order.serviceFee - order.creditUsed);
   const base = Math.round((gross / (1 + KDV_RATE)) * 100) / 100;
   const kdv = Math.round((gross - base) * 100) / 100;
@@ -122,53 +119,40 @@ export function InvoiceSheet({ visible, onClose, order, address }: { visible: bo
   ];
   if (order.creditUsed > 0) lines.push({ label: 'Mezat Kredisi indirimi', value: -order.creditUsed });
 
-  const share = async () => {
-    const text = [
-      `e-Arşiv Fatura · ${invoiceNo}`,
-      `Satıcı: ${seller?.displayName ?? 'Mezat satıcısı'} (VKN ${vkn})`,
-      `Alıcı: ${buyerName}`,
-      `Tarih: ${formatDateTime(order.createdAt)}`,
-      ...lines.map((l) => `${l.label}: ${formatTRY(l.value, { cents: true })}`),
-      `KDV (%20): ${formatTRY(kdv, { cents: true })}`,
-      `Toplam: ${formatTRY(gross, { cents: true })}`,
-      `ETTN: ${ettn}`,
-    ].join('\n');
-    try {
-      await Share.share({ title: `Fatura ${invoiceNo}`, message: text });
-    } catch {
-      toast.error('Fatura paylaşılamadı');
-    }
-  };
-
   return (
     <Sheet
       visible={visible}
       onClose={onClose}
-      title="e-Arşiv Fatura"
+      title="Örnek Fatura (Demo)"
       subtitle={`Sipariş ${order.number} · ${ORDER_SOURCE_LABELS[order.source]}`}
       showClose
       maxHeight={0.92}
-      footer={<Button title="Faturayı paylaş" icon="share-outline" size="lg" fullWidth onPress={share} />}>
+      footer={<Button title="Kapat" variant="secondary" size="lg" fullWidth onPress={onClose} />}>
+      <View style={[styles.sampleBanner, { backgroundColor: colors.surface }]}>
+        <Icon name="alert-circle-outline" size={18} color="warning" />
+        <Text variant="footnote" weight="700" style={styles.flex}>
+          Bu belge geçerli bir fatura değildir; demo amaçlı örnektir.
+        </Text>
+      </View>
       <View style={[styles.invoice, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <View style={styles.invoiceHead}>
           <View style={styles.flex}>
             <Text variant="headline">{seller?.displayName ?? 'Mezat satıcısı'}</Text>
             <Text variant="caption" color="textSecondary">
-              VKN: {vkn} · {seller?.city ?? 'İstanbul'}
+              VKN: — · {seller?.city ?? 'İstanbul'}
             </Text>
           </View>
-          <View style={[styles.stamp, { borderColor: cancelled ? colors.danger : colors.success }]}>
-            <Text variant="caption" weight="800" color={cancelled ? 'danger' : 'success'}>
-              {cancelled ? 'İPTAL' : 'e-ARŞİV'}
+          <View style={[styles.stamp, { borderColor: cancelled ? colors.danger : colors.warning }]}>
+            <Text variant="caption" weight="800" color={cancelled ? 'danger' : 'warning'}>
+              {cancelled ? 'İPTAL' : SAMPLE}
             </Text>
           </View>
         </View>
         <Divider style={styles.invDivider} />
-        <InvoiceMeta label="Fatura no" value={invoiceNo} />
-        <InvoiceMeta label="Fatura tarihi" value={formatDateTime(order.createdAt)} />
+        <InvoiceMeta label="Fatura no" value={SAMPLE} />
+        <InvoiceMeta label="Tarih" value={formatDateTime(order.createdAt)} />
         <InvoiceMeta label="Alıcı" value={buyerName} />
         {address ? <InvoiceMeta label="Adres" value={`${address.district} / ${address.city}`} /> : null}
-        <InvoiceMeta label="Senaryo" value="e-Arşiv · İnternet satışı" />
         <Divider style={styles.invDivider} />
         {lines.map((l) => (
           <View key={l.label} style={styles.invLine}>
@@ -192,11 +176,11 @@ export function InvoiceSheet({ visible, onClose, order, address }: { visible: bo
           </Text>
         </View>
         <Text variant="caption" color="textTertiary" style={styles.ettn}>
-          ETTN: {ettn}
+          ETTN: —
         </Text>
       </View>
       <Text variant="caption" color="textTertiary" style={styles.note}>
-        Bu fatura 213 sayılı VUK kapsamında elektronik ortamda düzenlenmiştir. Bir kopyası kayıtlı e-posta adresine de gönderildi.
+        Tutarlar örnek hesaplamadır. Gerçek sürümde ürün faturasını satıcı kendisi düzenler; Mezatonline hizmet bedelleri ayrıca faturalandırılır.
       </Text>
     </Sheet>
   );
@@ -226,14 +210,14 @@ export function ProtectionSheet({ visible, onClose, info, onGetHelp }: { visible
     <Sheet
       visible={visible}
       onClose={onClose}
-      title="Mezat Alıcı Garantisi"
-      subtitle="Ürünün zamanında ve açıklandığı gibi gelmezse paranı iade ediyoruz."
+      title="Alıcı Koruması"
+      subtitle="Ürün ulaşmazsa ya da açıklandığı gibi çıkmazsa, ürün sana ulaştıktan sonra 14 gün içinde sorun bildirebilirsin."
       showClose
       footer={<Button title="Bu siparişle ilgili yardım al" size="lg" fullWidth onPress={onGetHelp} disabled={!info.active} />}>
       <InfoBanner
         icon={info.active ? 'shield-checkmark' : 'shield-outline'}
         tone={info.active ? 'success' : 'neutral'}
-        text={`${protectionLabel(info)} · Teslimattan sonra ${info.windowDays} gün, satın almadan sonra en fazla 30 gün.`}
+        text={info.delivered ? `${protectionLabel(info)} · Sorun bildirimi: ürün sana ulaştıktan sonra 14 gün içinde.` : `${protectionLabel(info)}. Ürün sana ulaşmazsa da talep oluşturabilirsin.`}
         style={styles.mbLg}
       />
       <Text variant="headline" style={styles.listTitle}>
@@ -259,7 +243,8 @@ export function ProtectionSheet({ visible, onClose, info, onGetHelp }: { visible
         </View>
       ))}
       <Text variant="caption" color="textTertiary" style={styles.note}>
-        Kartlar, sikkeler, sneaker ve lüks ürünlerde koruma süresi teslimattan sonra 7 gün; bitki ve gıdada 2 gündür. İadeler bankana bağlı olarak 2–10 iş günü içinde kartına yansır.
+        Talebin incelenir; destek ekibimiz en kısa sürede yanıt verir. Onaylanan iadeler bankana bağlı olarak birkaç iş günü içinde kartına yansır.
+        {DEMO_MODE ? ` ${DEMO_COPY.banner}` : ''}
       </Text>
     </Sheet>
   );
@@ -272,6 +257,7 @@ const styles = StyleSheet.create({
   note: { marginTop: 12 },
   addrRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   pin: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  sampleBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: radius.md, marginBottom: 10 },
   invoice: { borderWidth: StyleSheet.hairlineWidth * 2, borderRadius: radius.md, padding: 14, gap: 6 },
   invoiceHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stamp: { borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, transform: [{ rotate: '-6deg' }] },

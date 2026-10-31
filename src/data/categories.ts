@@ -2,9 +2,13 @@
  * Kategori ağacı — Whatnot'un "Browse by Category" listesinin Türkiye uyarlaması.
  * `mediaKey`, media.ts içindeki görsel havuzunu seçer.
  */
+import { FEATURES } from '@/config/demo';
 import type { Category } from '@/types';
 
 import { categoryImage, mediaFor } from './media';
+
+/** Şansa dayalı satış (gizemli kutu, depo açılışı) alt kategorileri: FEATURES.breaks kapalıyken listelenmez */
+const BREAK_SUBS = new Set(['mystery_box', 'storage']);
 
 type CategoryDef = {
   id: string;
@@ -119,7 +123,7 @@ const DEFS: CategoryDef[] = [
     subs: [['lokum', 'Lokum & Tatlı'], ['coffee_tea', 'Kahve & Çay'], ['spices', 'Baharat'], ['honey', 'Bal & Reçel'], ['olive_oil', 'Zeytinyağı']],
   },
   {
-    id: 'estate', name: 'Ev Boşaltma & Depo', shortName: 'Depo Mezatı', emoji: '📦', tint: '#E9E4DA', mediaKey: 'antiques', viewers: 2900,
+    id: 'estate', name: FEATURES.breaks ? 'Ev Boşaltma & Depo' : 'Ev Boşaltma & Toplu Lot', shortName: FEATURES.breaks ? 'Depo Mezatı' : 'Toplu Lot', emoji: '📦', tint: '#E9E4DA', mediaKey: 'antiques', viewers: 2900,
     subs: [['mystery_box', 'Gizemli Kutu'], ['storage', 'Depo Açılışı'], ['lots', 'Toplu Lot']],
   },
   {
@@ -136,7 +140,7 @@ export const CATEGORIES: Category[] = DEFS.map((d) => ({
   tint: d.tint,
   viewers: d.viewers,
   image: categoryImage(d.mediaKey, 0),
-  subcategories: d.subs.map(([id, name], i) => ({
+  subcategories: d.subs.filter(([id]) => FEATURES.breaks || !BREAK_SUBS.has(id)).map(([id, name], i) => ({
     id,
     categoryId: d.id,
     name,

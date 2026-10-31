@@ -10,6 +10,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Avatar, Button, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionHeader, Text, toast, type IconName } from '@/components/ui';
+import { FEATURES } from '@/config/demo';
 import { formatShowTime, formatTimeUntil, formatTRY, timeAgo } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -127,7 +128,7 @@ export function SellerHub() {
       done: listings.length >= 3,
       onPress: () => router.push('/seller/listing'),
     },
-    { key: 'verify', title: 'Kimlik & IBAN doğrula', subtitle: 'Ödeme alabilmen için gerekli', done: !!kyc && isValidTckn(kyc.tckn) && !!iban && isValidIban(iban), onPress: () => setSheet('verify') },
+    { key: 'verify', title: 'Kimlik & IBAN doğrula', subtitle: 'Ödeme alabilmen için gerekli', done: !!kyc && (isValidTckn(kyc.tckn) || !!kyc.tcknMasked) && !!iban && isValidIban(iban), onPress: () => setSheet('verify') },
     { key: 'shipping', title: 'Kargo ayarı', subtitle: 'Kargo firması ve ücret tercihi', done: shipping.configured, onPress: () => setSheet('shipping') },
   ];
   const doneCount = checklist.filter((c) => c.done).length;
@@ -456,7 +457,7 @@ export function SellerHub() {
 
       <HubMenuSheet visible={sheet === 'menu'} onClose={() => setSheet(null)} onOpen={setSheet} />
       <OffersSheet visible={sheet === 'offers'} onClose={() => setSheet(null)} />
-      <TipsSheet visible={sheet === 'tips'} onClose={() => setSheet(null)} />
+      {FEATURES.tips ? <TipsSheet visible={sheet === 'tips'} onClose={() => setSheet(null)} /> : null}
       <HealthSheet visible={sheet === 'health'} onClose={() => setSheet(null)} />
       <ShippingSettingsSheet visible={sheet === 'shipping'} onClose={() => setSheet(null)} />
       <RehearsalSheet visible={sheet === 'rehearsal'} onClose={() => setSheet(null)} />

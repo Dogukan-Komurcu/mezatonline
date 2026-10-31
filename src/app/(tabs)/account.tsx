@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
 import { Avatar, Button, CountBadge, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, Text, toast, type IconName } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { getUser } from '@/data';
 import { useAccountStore } from '@/features/account/store';
 import { CARD_BRAND_NAMES, ConfirmSheet, IconCircle, MenuGroup, MenuRow, Tag } from '@/features/account/ui';
@@ -30,6 +31,7 @@ import type { User } from '@/types';
 const APPEARANCE_LABEL = { system: 'Sistem', light: 'Açık', dark: 'Koyu' } as const;
 const ACTIVE_STATUSES = ['paid', 'preparing', 'shipped', 'out_for_delivery'];
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
+const VERSION_LABEL = DEMO_MODE ? `${DEMO_COPY.short} · v${APP_VERSION}` : `Mezatonline v${APP_VERSION}`;
 
 export default function AccountScreen() {
   const guest = useIsGuest();
@@ -56,11 +58,12 @@ function GuestAccount() {
         <MenuGroup title="Destek">
           <MenuRow icon="help-circle-outline" title="Yardım Merkezi" subtitle="Sık sorulan sorular ve rehberler" onPress={() => router.push('/settings/help')} />
           <MenuRow icon="document-text-outline" title="Yasal & KVKK" onPress={() => router.push('/settings/legal')} />
+          <MenuRow icon="business-outline" title="Künye ve İletişim" onPress={() => router.push('/settings/kunye')} />
         </MenuGroup>
         <View style={styles.footer}>
           <Logo size={20} />
           <Text variant="footnote" color="textTertiary">
-            Mezatonline v{APP_VERSION}
+            {VERSION_LABEL}
           </Text>
         </View>
       </ScrollView>
@@ -258,6 +261,7 @@ function MemberAccount() {
           <MenuRow icon="help-circle-outline" title="Yardım Merkezi" subtitle="Sık sorulan sorular ve rehberler" onPress={() => router.push('/settings/help')} />
           <MenuRow icon="chatbubbles-outline" title="Bize Ulaş" subtitle="Destek ekibiyle sohbet et" badge={supportUnread} onPress={() => router.push('/inbox/support')} />
           <MenuRow icon="document-text-outline" title="Yasal & KVKK" onPress={() => router.push('/settings/legal')} />
+          <MenuRow icon="business-outline" title="Künye ve İletişim" onPress={() => router.push('/settings/kunye')} />
         </MenuGroup>
 
         <View style={[styles.pad, { marginTop: 28 }]}>
@@ -266,7 +270,7 @@ function MemberAccount() {
         <View style={styles.footer}>
           <Logo size={20} />
           <Text variant="footnote" color="textTertiary">
-            Mezatonline v{APP_VERSION}
+            {VERSION_LABEL}
           </Text>
         </View>
       </ScrollView>

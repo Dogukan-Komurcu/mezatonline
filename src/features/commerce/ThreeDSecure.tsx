@@ -1,6 +1,7 @@
 /**
  * 3D Secure doğrulama (mock banka sayfası).
  * 1,5 sn sonra SMS kodu otomatik doldurulur (iOS/Android SMS otomatik doldurma gibi) ya da kullanıcı herhangi bir 6 haneli kod girer.
+ * Demo sürümde banka adı, kart programı markası veya şirket unvanı gösterilmez; sayfa simülasyon olarak etiketlenir.
  */
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
@@ -9,6 +10,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, Text, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { formatDateTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { ForceScheme, radius, SCREEN_PADDING, useTheme, type ColorTokens } from '@/theme';
@@ -16,18 +18,15 @@ import type { PaymentMethod } from '@/types';
 
 import { maskPhone, pad2, SECURE_PROGRAM } from './utils';
 
-const BANK_TINT: Record<string, keyof ColorTokens> = {
-  'Garanti BBVA': 'success',
-  'İş Bankası': 'info',
-  'Yapı Kredi': 'info',
-  Akbank: 'danger',
-  'Ziraat Bankası': 'danger',
-  QNB: 'accent',
-  Enpara: 'accent',
-  VakıfBank: 'warning',
-  Halkbank: 'info',
-  DenizBank: 'info',
+/** Kart ağına göre vurgu rengi (banka adı kullanılmaz) */
+const BRAND_TINT: Record<PaymentMethod['brand'], keyof ColorTokens> = {
+  visa: 'info',
+  mastercard: 'warning',
+  troy: 'accent',
+  amex: 'success',
 };
+/** Şirket kurulana kadar işyeri adı yer tutucudur */
+const MERCHANT_NAME = DEMO_MODE ? 'MEZATONLINE (DEMO)' : 'MEZATONLINE';
 
 const CODE_LEN = 6;
 const OTP_SECONDS = 180;
@@ -60,7 +59,7 @@ function BankPage({ amount, card, phone, installmentLabel, onSuccess, onCancel }
   const [left, setLeft] = useState(OTP_SECONDS);
   const [startedAt] = useState(() => Date.now());
   const [resendKey, setResendKey] = useState(0);
-  const tint = colors[BANK_TINT[card.bank] ?? 'info'];
+  const tint = colors[BRAND_TINT[card.brand] ?? 'info'];
   const alive = useRef(true);
 
   useEffect(() => {
@@ -139,7 +138,7 @@ function BankPage({ amount, card, phone, installmentLabel, onSuccess, onCancel }
   };
 
   const rows: [string, string][] = [
-    ['İşyeri adı', 'MEZATONLINE ELEKTRONİK TİC. A.Ş.'],
+    ['İşyeri adı', MERCHANT_NAME],
     ['Tutar', formatTRY(amount, { cents: true })],
     ...(installmentLabel ? ([['Taksit', installmentLabel]] as [string, string][]) : []),
     ['İşlem tarihi', formatDateTime(startedAt)],
@@ -153,17 +152,17 @@ function BankPage({ amount, card, phone, installmentLabel, onSuccess, onCancel }
         <View style={styles.bankBrand}>
           <View style={[styles.bankLogo, { backgroundColor: tint }]}>
             <Text variant="footnote" weight="900" color={colors.onInverse}>
-              {card.bank.charAt(0)}
+              {DEMO_MODE ? '3D' : card.bank.charAt(0)}
             </Text>
           </View>
           <Text variant="headline" weight="800" numberOfLines={1}>
-            {card.bank}
+            {DEMO_MODE ? 'Kartını veren banka' : card.bank}
           </Text>
         </View>
         <View style={styles.secureBadge}>
           <Icon name="shield-checkmark" size={14} color={tint} />
           <Text variant="caption" weight="700" color="textSecondary">
-            {SECURE_PROGRAM[card.brand]}
+            {DEMO_MODE ? 'Demo · simülasyon' : SECURE_PROGRAM[card.brand]}
           </Text>
         </View>
       </View>
@@ -257,7 +256,9 @@ function BankPage({ amount, card, phone, installmentLabel, onSuccess, onCancel }
           <View style={[styles.note, { backgroundColor: colors.surface }]}>
             <Icon name="information-circle-outline" size={16} color="textSecondary" />
             <Text variant="caption" color="textSecondary" weight="500" style={styles.flex}>
-              Bu sayfa kartınızı veren banka tarafından görüntülenmektedir. Doğrulama kodunu kimseyle paylaşmayınız. Mezatonline sizden asla şifre veya doğrulama kodu istemez.
+              {DEMO_MODE
+                ? `Demo: Bu sayfa banka doğrulamasının simülasyonudur; SMS gönderilmez, kod otomatik doldurulur. Gerçek sürümde bu adım kartınızı veren bankanın sayfasında yapılır. ${DEMO_COPY.payment}`
+                : 'Bu sayfa kartınızı veren banka tarafından görüntülenmektedir. Doğrulama kodunu kimseyle paylaşmayınız. Mezatonline sizden asla şifre veya doğrulama kodu istemez.'}
             </Text>
           </View>
         </ScrollView>

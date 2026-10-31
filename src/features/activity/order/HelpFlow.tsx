@@ -50,7 +50,7 @@ export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
     subtitle: 'Farklı ürün, beden ya da renk gönderildi',
     icon: 'swap-horizontal-outline',
     needsDelivery: true,
-    next: 'Gelen ürünün fotoğrafını ekle. İade kargo kodu satıcının anlaşmalı kargosuyla ücretsiz oluşturulur.',
+    next: 'Gelen ürünün fotoğrafını ekle. Yanlış gönderilen ürünün iade kargo ücreti satıcıya aittir.',
   },
   not_as_described: {
     title: 'Açıklamaya uygun değil',
@@ -68,10 +68,10 @@ export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
   },
   withdrawal: {
     title: 'Cayma hakkını kullan (14 gün)',
-    subtitle: 'Sebep belirtmeden iade et',
+    subtitle: 'Kurumsal satıcıdan alımlarda sebep belirtmeden iade et',
     icon: 'return-down-back-outline',
     needsDelivery: true,
-    next: 'Mesafeli Sözleşmeler Yönetmeliği kapsamında teslimattan itibaren 14 gün içinde sebep belirtmeden iade edebilirsin. İade kargo kodu ücretsizdir; ürünü 10 gün içinde kargoya vermelisin.',
+    next: 'Satıcı kurumsal (tacir veya esnaf) ise, canlı yayında açık artırmayla aldıkların dahil, ürünü teslim aldıktan sonra 14 gün içinde sebep belirtmeden cayma hakkını kullanabilirsin (Mesafeli Sözleşmeler Yönetmeliği). İade kargo kodu ücretsizdir; cayma bildiriminden sonra ürünü 10 gün içinde kargoya vermelisin. Bireysel satıcılardan alımlar Tüketici Kanunu kapsamında değildir; sorun yaşıyorsan diğer seçeneklerden Alıcı Koruması talebi oluşturabilirsin.',
   },
 };
 
@@ -371,7 +371,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
         <InfoBanner
           icon="alert-circle-outline"
           tone="warning"
-          text="Teklifler bağlayıcıdır; iptal satıcının onayına bağlıdır. İptal talebinde bulunduğun siparişi daha sonra değerlendiremezsin."
+          text="Kargo öncesi iptal satıcının onayına bağlıdır. Satıcı kurumsal (tacir veya esnaf) ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin. İptal talebinde bulunduğun siparişi daha sonra değerlendiremezsin."
           style={styles.mb}
         />
         <Text variant="subhead" weight="700" style={styles.reasonTitle}>
@@ -420,7 +420,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
                 fullWidth
                 onPress={() => {
                   haptic.success();
-                  toast.success('Talebin Mezat Destek ekibine iletildi. 48 saat içinde e-postayla dönüş yapacağız.', 'help-buoy');
+                  toast.success('Talebin Mezat Destek ekibine iletildi. Destek ekibimiz en kısa sürede yanıt verir.', 'help-buoy');
                   close();
                 }}
               />

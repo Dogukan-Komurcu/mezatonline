@@ -59,19 +59,26 @@ type Draft = {
 };
 
 const RULES = [
-  ['shield-checkmark-outline', 'Sadece orijinal ürünler sat; replika ve sahte ürün yasaktır.'],
+  ['shield-checkmark-outline', 'Sadece orijinal ürünler sat; sahte, replika veya izinsiz ürün yasaktır.'],
   ['eye-outline', 'Ürünü kamerada olduğu gibi göster, kusurlarını açıkça söyle.'],
   ['cube-outline', 'Siparişleri 2 iş günü içinde kargoya ver.'],
-  ['ban-outline', 'Şans oyunu, kumar ve alışveriş şartlı çekiliş düzenleme.'],
-  ['card-outline', 'Ödemeleri yalnızca Mezatonline üzerinden al; harici ödeme isteme.'],
+  ['ban-outline', 'Kutu açılımı (break), gizemli kutu ve şansa dayalı satış yapma; alışveriş şartlı çekiliş düzenleme.'],
+  ['hammer-outline', 'Kendi açık artırmana kendin ya da bağlantılı hesaplarla teklif verme (gölge teklif).'],
+  ['card-outline', 'Ödemeleri yalnızca Mezatonline üzerinden al; alıcıyı platform dışı ödemeye veya iletişime yönlendirme.'],
+  ['close-circle-outline', 'Tütün, alkol, ilaç, silah ve ruhsatsız kültür varlığı/antika satma.'],
   ['happy-outline', 'Alıcılara ve topluluğa saygılı ol; nefret söylemi ve tacize sıfır tolerans.'],
 ] as const;
 
+/** Şirket kurulana kadar kullanılan unvan */
+const ENTITY = 'Mezatonline (demo sürüm; şirket unvanı, MERSİS numarası ve adres şirket kuruluşundan sonra eklenecektir)';
+
 const LEGAL_TEXT = {
   rules:
-    'Mezatonline Topluluk Kuralları, alıcıların ve satıcıların güvenle alışveriş yapabilmesi için hazırlanmıştır. Satıcılar yalnızca sahip oldukları ve orijinal olan ürünleri listeleyebilir; ürün açıklamaları ve yayında gösterilen ürün gerçek durumu yansıtmalıdır. Satılan ürünler 2 iş günü içinde kargoya verilmelidir. 7258 sayılı Kanun ve ilgili mevzuat kapsamında şans oyunu niteliği taşıyan her türlü etkinlik, alışveriş şartlı çekiliş, çark ve benzeri rastgele seçim düzenekleri yasaktır. Platform dışı ödeme talep etmek, iletişim bilgisi paylaşarak alıcıyı yönlendirmek ve sahte değerlendirme yapmak hesabın kapatılmasına neden olabilir.',
+    'Mezatonline Topluluk Kuralları, alıcıların ve satıcıların güvenle alışveriş yapabilmesi için hazırlanmıştır. Satıcılar yalnızca sahip oldukları ve orijinal olan ürünleri listeleyebilir; ürün açıklamaları ve yayında gösterilen ürün gerçek durumu yansıtmalıdır. Satılan ürünler 2 iş günü içinde kargoya verilmelidir.\n\n' +
+    'Aşağıdakiler yasaktır: kutu açılımı (break), gizemli kutu ve sonucu şansa bağlı her türlü satış; alışveriş şartlı çekiliş, çark ve benzeri rastgele seçim düzenekleri; satıcının kendi açık artırmasına kendisi veya bağlantılı hesaplarla teklif vermesi (gölge teklif); alıcıyı platform dışı ödemeye veya iletişime yönlendirmek; sahte, taklit veya hak sahibinin izni olmadan üretilmiş ürün satmak; tütün, alkol, ilaç ve silah satışı; 2863 sayılı Kültür ve Tabiat Varlıklarını Koruma Kanunu kapsamında ruhsatsız kültür varlığı ve antika satışı; sahte değerlendirme yapmak. İhlaller ilanın kaldırılmasına ve hesabın kapatılmasına neden olabilir.\n\n' +
+    'Demo sürümdeki çekilişlerde gerçek ödül verilmez. Gerçek ödüllü çekilişler Milli Piyango İdaresi izniyle düzenlenebilir.',
   terms:
-    'Satıcı Sözleşmesi; komisyon oranlarını (ürün bedelinin %8’i, KDV dahil), ödeme işlem ücretini (%2,9 + ₺3), ödeme takvimini (teslimattan sonra çekilebilir bakiye, 1-2 iş günü içinde IBAN’a aktarım) ve iptal/iade süreçlerini düzenler. 6698 sayılı KVKK kapsamında kimlik, iletişim ve banka bilgilerin; kimlik doğrulama, ödeme, faturalandırma ve yasal yükümlülükler (ETBİS, e-ticaret stopajı) amacıyla işlenir ve yalnızca yetkili ödeme kuruluşları ile paylaşılır. Aydınlatma metninin tamamına Ayarlar > Yasal bölümünden ulaşabilirsin.',
+    `Satıcı Sözleşmesi, ${ENTITY} ile satıcı arasında kurulur; komisyon oranlarını (ürün bedelinin %8’i, KDV dahil), ödeme işlem ücretini (%2,9 + ₺3), ödeme takvimini (teslimattan sonra çekilebilir bakiye, 1-2 iş günü içinde IBAN’a aktarım) ve iptal/iade süreçlerini düzenler. Gerçek sürümde alıcı ödemeleri, lisanslı bir ödeme kuruluşu tarafından ürün alıcıya ulaşana kadar bekletilir ve hakedişin bu kuruluş aracılığıyla IBAN’ına aktarılır; Mezatonline alıcı ödemelerini kendi hesabında tutmaz. 6698 sayılı KVKK kapsamında kimlik, iletişim ve banka bilgilerin; kimlik doğrulama, ödeme, faturalandırma ve yasal yükümlülükler (ETBİS, e-ticaret stopajı) amacıyla işlenir ve yalnızca lisanslı ödeme kuruluşu ve yetkili kamu kurumlarıyla paylaşılır. Demo sürümde başvuru bilgilerin yalnızca bu cihazda tutulur; gerçek kimlik ve IBAN doğrulaması ya da para aktarımı yapılmaz. Aydınlatma metninin tamamına Ayarlar > Yasal bölümünden ulaşabilirsin.`,
 };
 
 function useDraft(): [Draft, (patch: Partial<Draft>) => void] {
@@ -111,7 +118,7 @@ function WelcomeStep({ draft, set, onLegal }: { draft: Draft; set: (p: Partial<D
       <View style={{ gap: 6 }}>
         <Text variant="title1">Satış yapmaya başla 👋</Text>
         <Text variant="body" color="textSecondary">
-          Başvurunu birkaç dakikada tamamla. Çoğu başvuru dakikalar içinde onaylanır.
+          Başvurunu birkaç dakikada tamamla. Demo sürümde başvurular otomatik onaylanır; gerçek kimlik ve IBAN doğrulaması yapılmaz.
         </Text>
       </View>
       <Card style={{ gap: 10, backgroundColor: colors.surface, borderColor: colors.surface }}>
@@ -325,7 +332,7 @@ function IdentityStep({ draft, set, submitted }: { draft: Draft; set: (p: Partia
       <View style={[styles.inline, { alignItems: 'flex-start' }]}>
         <Icon name="lock-closed" size={16} color="textSecondary" />
         <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-          Bilgilerin KVKK kapsamında şifrelenerek saklanır; yalnızca kimlik doğrulama, ödeme ve fatura için kullanılır.
+          Demo sürümde bilgilerin yalnızca bu cihazda tutulur ve hiçbir sunucuya gönderilmez. Gerçek sürümde yalnızca kimlik doğrulama, ödeme ve fatura için kullanılır.
         </Text>
       </View>
       {__DEV__ ? (
@@ -761,7 +768,7 @@ export function ApplyFlow() {
               <View style={{ gap: 6 }}>
                 <Text variant="title2">Kazancını nereye gönderelim?</Text>
                 <Text variant="callout" color="textSecondary">
-                  Satışlarından elde ettiğin kazanç bu IBAN’a 1-2 iş günü içinde aktarılır.
+                  Gerçek sürümde kazancın, lisanslı bir ödeme kuruluşu aracılığıyla bu IBAN’a 1-2 iş günü içinde aktarılır. Demo sürümde para aktarımı yapılmaz.
                 </Text>
               </View>
               <IbanField digits={draft.ibanDigits} onChange={(ibanDigits) => set({ ibanDigits })} error={submitted && !ibanValid ? (draft.ibanDigits.length < 24 ? 'IBAN 24 haneden oluşmalı' : 'Geçersiz IBAN') : undefined} />

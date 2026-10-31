@@ -7,6 +7,18 @@ import { persistStorage, storeKey } from './storage';
 
 export const ME_ID = 'me';
 
+/** Kayıtta onaylanan hukuki metinlerin sürümü (avukat incelemesi bekleyen taslaklar) */
+export const LEGAL_VERSION = 'taslak-2026-11';
+
+/** Kullanım Koşulları + Gizlilik Politikası onayı ve 18 yaş beyanı */
+export type TermsAcceptance = {
+  version: string;
+  acceptedAt: string;
+  adult: boolean;
+  /** Onayın alındığı kayıt ekranı */
+  source: 'email' | 'username';
+};
+
 export type AuthMethod = 'phone' | 'email' | 'apple' | 'google' | 'facebook';
 
 type AuthState = {
@@ -18,21 +30,27 @@ type AuthState = {
   email?: string;
   me: User;
   interests: ID[];
+  termsAcceptance?: TermsAcceptance;
   /** Hesap oluşturma / giriş: sahte doğrulama sonrası çağrılır */
   signIn: (method: AuthMethod, identifier?: string) => void;
   completeOnboarding: (data: { username: string; displayName?: string; interests: ID[]; categoryIds?: ID[] }) => void;
   setInterests: (ids: ID[]) => void;
+  /** 18 yaş beyanı + Kullanım Koşulları ve Gizlilik Politikası onayını kaydet */
+  acceptTerms: (source: TermsAcceptance['source']) => void;
   updateProfile: (patch: Partial<Pick<User, 'username' | 'displayName' | 'bio' | 'avatar' | 'city' | 'cover'>>) => void;
   /** Satıcı başvurusu onaylanınca */
   becomeSeller: () => void;
   signOut: () => void;
 };
 
+/** v0'daki varsayılan avatar (üçüncü taraf görsel); boş avatar baş harfleri gösterir */
+const LEGACY_AVATAR = 'https://randomuser.me/api/portraits/lego/5.jpg';
+
 const DEFAULT_ME: User = {
   id: ME_ID,
   username: 'yeni_kullanici',
   displayName: 'Yeni Kullanıcı',
-  avatar: 'https://randomuser.me/api/portraits/lego/5.jpg',
+  avatar: '',
   bio: '',
   city: 'İstanbul',
   isSeller: false,
@@ -69,12 +87,23 @@ export const useAuthStore = create<AuthState>()(
           me: { ...s.me, username, displayName: displayName || username, categoryIds: categoryIds ?? interests },
         })),
       setInterests: (interests) => set((s) => ({ interests, me: { ...s.me, categoryIds: interests } })),
+      acceptTerms: (source) => set({ termsAcceptance: { version: LEGAL_VERSION, acceptedAt: new Date().toISOString(), adult: true, source } }),
       updateProfile: (patch) => set((s) => ({ me: { ...s.me, ...patch } })),
       becomeSeller: () =>
         set((s) => ({ me: { ...s.me, isSeller: true, badges: Array.from(new Set([...s.me.badges, 'new_seller' as const])) } })),
-      signOut: () => set({ status: 'signedOut', onboarded: false, method: undefined, phone: undefined, email: undefined, me: DEFAULT_ME, interests: [] }),
+      signOut: () =>
+        set({ status: 'signedOut', onboarded: false, method: undefined, phone: undefined, email: undefined, me: DEFAULT_ME, interests: [], termsAcceptance: undefined }),
     }),
-    { name: storeKey('auth'), storage: persistStorage },
+    {
+      name: storeKey('auth'),
+      storage: persistStorage,
+      version: 1,
+      migrate: (persisted, version) => {
+        const s = persisted as AuthState;
+        if (version < 1 && s?.me?.avatar === LEGACY_AVATAR) return { ...s, me: { ...s.me, avatar: '' } };
+        return s;
+      },
+    },
   ),
 );
 

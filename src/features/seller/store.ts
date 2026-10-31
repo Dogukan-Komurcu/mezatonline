@@ -30,9 +30,12 @@ export type SellerKyc = {
   sellerType: SellerType;
   /** Kimlikteki ad soyad */
   legalName: string;
+  /** Yalnızca bellekte; cihaza boş yazılır (bkz. redactKyc) */
   tckn: string;
-  /** "GG.AA.YYYY" */
+  /** "GG.AA.YYYY" · yalnızca bellekte; cihaza boş yazılır */
   birthDate: string;
+  /** Cihazda saklanan maskeli TCKN (yalnızca son 2 hane), örn. "•••••••••46" */
+  tcknMasked?: string;
   taxOffice?: string;
   taxNo?: string;
   companyTitle?: string;
@@ -97,6 +100,13 @@ type SellerExtrasState = {
   dismissWelcome: () => void;
 };
 
+/** TCKN ve doğum tarihi AsyncStorage'a yazılmaz; görüntüleme için yalnızca maskeli hâli saklanır */
+function redactKyc(kyc: SellerKyc | undefined): SellerKyc | undefined {
+  if (!kyc) return kyc;
+  const digits = (kyc.tckn ?? '').replace(/\D/g, '');
+  return { ...kyc, tckn: '', birthDate: '', tcknMasked: digits.length === 11 ? `•••••••••${digits.slice(-2)}` : kyc.tcknMasked };
+}
+
 const DEFAULT_SHIPPING: ShippingSettings = {
   configured: false,
   carrier: 'Yurtiçi Kargo',
@@ -152,7 +162,17 @@ export const useSellerExtras = create<SellerExtrasState>()(
       setCelebrate: (celebrate) => set({ celebrate }),
       dismissWelcome: () => set({ welcomeDismissed: true }),
     }),
-    { name: storeKey('seller-extras'), storage: persistStorage },
+    {
+      name: storeKey('seller-extras'),
+      storage: persistStorage,
+      partialize: (s) => ({ ...s, kyc: redactKyc(s.kyc) }),
+      version: 1,
+      // v0 TCKN ve doğum tarihini açık metin saklıyordu
+      migrate: (persisted, version) => {
+        const s = persisted as SellerExtrasState;
+        return version < 1 && s ? { ...s, kyc: redactKyc(s.kyc) } : s;
+      },
+    },
   ),
 );
 

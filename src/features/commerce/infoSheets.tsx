@@ -5,12 +5,13 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Icon, Segmented, Sheet, Text, type IconName } from '@/components/ui';
+import { DEMO_COPY } from '@/config/demo';
 import { formatDate, formatTRY } from '@/lib/format';
 import { radius, useTheme } from '@/theme';
 import type { Address, Product, User } from '@/types';
 
 import { allPrograms, installmentPlan, INSTALLMENT_COUNTS, MIN_INSTALLMENT_TOTAL } from './installments';
-import { addressLine, CARRIER_LINE } from './utils';
+import { addressLine, ESCROW_TEXT } from './utils';
 
 // ─── Alıcı Koruması ──────────────────────────────────────────────────────────
 
@@ -18,22 +19,22 @@ const PROTECTION_POINTS: { icon: IconName; title: string; body: string }[] = [
   {
     icon: 'cube-outline',
     title: 'Ürün gelmezse paran iade',
-    body: 'Siparişin ulaşmazsa ya da satıcı 7 gün içinde kargoya vermezse ödemenin tamamını iade ederiz.',
+    body: 'Siparişin sana ulaşmazsa ya da satıcı 7 gün içinde kargoya vermezse ödemenin tamamını iade ederiz.',
   },
   {
     icon: 'search-outline',
     title: 'Açıklandığı gibi değilse iade',
-    body: 'Ürün hasarlı, eksik ya da ilandakinden farklı çıkarsa teslimattan sonraki 14 gün içinde talep oluştur.',
+    body: 'Ürün hasarlı, eksik ya da açıklamadan önemli ölçüde farklı çıkarsa ürün sana ulaştıktan sonra 14 gün içinde talep oluştur.',
   },
   {
     icon: 'ribbon-outline',
-    title: 'Orijinallik güvencesi',
-    body: 'Sahte ya da taklit ürün şüphesinde teslimattan sonraki 30 gün içinde inceleme talep edebilirsin.',
+    title: 'Sahte ürün şüphesi',
+    body: 'Ürünün sahte ya da taklit olduğundan şüpheleniyorsan ürün sana ulaştıktan sonra 14 gün içinde bildir; talebini destek ekibimiz inceler.',
   },
   {
     icon: 'lock-closed-outline',
     title: 'Güvenli ödeme',
-    body: 'Ödemen, sen ürünü teslim alana kadar Mezatonline güvencesinde tutulur. Platform dışı ödeme yapma.',
+    body: `${ESCROW_TEXT} Platform dışı ödeme yapma. ${DEMO_COPY.payment}`,
   },
 ];
 
@@ -49,7 +50,7 @@ export function BuyerProtectionSheet({ visible, onClose }: { visible: boolean; o
           Alıcı Koruması
         </Text>
         <Text variant="callout" color="textSecondary" align="center">
-          Siparişin zamanında ve açıklandığı gibi ulaşmazsa sorunu çözeriz. Her alışverişte otomatik olarak geçerlidir.
+          Ürün sana ulaşmazsa ya da açıklamayla önemli ölçüde farklıysa paranı iade ederiz; sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli. Mezatonline üzerinden ödenen her siparişte geçerlidir.
         </Text>
       </View>
       <View style={styles.points}>
@@ -70,7 +71,7 @@ export function BuyerProtectionSheet({ visible, onClose }: { visible: boolean; o
         ))}
       </View>
       <Text variant="footnote" color="textTertiary" style={styles.fine}>
-        Kart, koleksiyon, sneaker ve lüks ürünlerde iade talep süresi teslimattan sonra 7 gündür. Bitki ve taze gıdada 2 gündür. Cayma hakkın 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında saklıdır.
+        Alıcı Koruması yasal haklarına ek olarak sunulur. Satıcı kurumsal (tacir veya esnaf) ise 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamındaki 14 günlük cayma hakkın ayrıca saklıdır. {DEMO_COPY.banner}
       </Text>
     </Sheet>
   );
@@ -93,8 +94,8 @@ export type ContractContext = {
 
 type ContractTab = 'pre' | 'distance';
 
-export function ContractSheet({ visible, onClose, onAccept, ctx }: { visible: boolean; onClose: () => void; onAccept: () => void; ctx: ContractContext }) {
-  const [tab, setTab] = useState<ContractTab>('pre');
+/** Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi maddeleri (ödeme ekranı ve canlı Hemen Al ortak kullanır) */
+export function contractSections(ctx: ContractContext): { today: string; pre: [string, string][]; distance: [string, string][] } {
   const today = formatDate(Date.now());
   const sellerName = ctx.seller ? `${ctx.seller.displayName} (@${ctx.seller.username})` : 'Satıcı';
   const sellerCity = ctx.seller?.city ?? 'İstanbul';
@@ -104,7 +105,7 @@ export function ContractSheet({ visible, onClose, onAccept, ctx }: { visible: bo
   const pre: [string, string][] = [
     [
       '1. Satıcı bilgileri',
-      `Satıcı: ${sellerName}\nAdres: ${sellerCity}, Türkiye\nİletişim: Mezatonline uygulama içi mesajlaşma\nAracı hizmet sağlayıcı: Mezatonline Elektronik Ticaret A.Ş., İstanbul · destek@mezatonline.com`,
+      `Satıcı: ${sellerName}\nAdres: ${sellerCity}, Türkiye\nİletişim: Mezatonline uygulama içi mesajlaşma\nSatıcının unvanı veya adı soyadı ve vergi kimlik bilgileri gerçek sürümde burada gösterilir.\nAracı hizmet sağlayıcı: Mezatonline (demo sürüm; şirket unvanı, MERSİS numarası ve adres şirket kuruluşundan sonra eklenecektir) · destek@mezatonline.com`,
     ],
     ['2. Alıcı bilgileri', `Ad Soyad: ${ctx.buyerName}\nTeslimat adresi: ${addr}`],
     [
@@ -113,11 +114,11 @@ export function ContractSheet({ visible, onClose, onAccept, ctx }: { visible: bo
     ],
     [
       '4. Teslimat',
-      `Ürün, ödeme tarihinden itibaren en geç 2 iş günü içinde kargoya verilir ve yasal azami süre olan 30 gün içinde teslim edilir. Kargo firması platform tarafından atanır (${CARRIER_LINE}).`,
+      'Ürün, ödeme tarihinden itibaren en geç 2 iş günü içinde kargoya verilir ve yasal azami süre olan 30 gün içinde teslim edilir. Satıcı, ürünü uygulamada gösterilen kargo seçenekleriyle gönderir.',
     ],
     [
       '5. Cayma hakkı',
-      'Alıcı, ürünü teslim aldığı tarihten itibaren 14 gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin sözleşmeden cayma hakkına sahiptir. Cayma bildirimi uygulamadaki "Bu siparişle ilgili yardım al" bölümünden yapılır; iade kargo bedeli satıcıya aittir. Ambalajı açılmış hijyen ve kozmetik ürünleri, çabuk bozulan gıdalar ve kişiye özel üretilen ürünlerde cayma hakkı kullanılamaz.',
+      'Satıcı kurumsal (tacir veya esnaf) ise Alıcı, ürünü teslim aldığı tarihten itibaren 14 gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin sözleşmeden cayma hakkına sahiptir; bu hak canlı yayında açık artırmayla yapılan alımlarda da geçerlidir. Cayma bildirimi uygulamadaki "Bu siparişle ilgili yardım al" bölümünden yapılır; iade kargo bedeli satıcıya aittir. Mesafeli Sözleşmeler Yönetmeliği m.15\'te sayılan hâllerde (ör. kişiye özel hazırlanan ürünler, çabuk bozulabilen ürünler, ambalajı açılmış ve sağlık/hijyen açısından iadesi uygun olmayan ürünler) cayma hakkı kullanılamaz. Bireysel satıcılardan (tüketiciden tüketiciye) yapılan alımlar Tüketici Kanunu kapsamında değildir; bu alımlarda Alıcı Koruması geçerlidir.',
     ],
     [
       '6. Şikâyet ve itiraz',
@@ -136,20 +137,29 @@ export function ContractSheet({ visible, onClose, onAccept, ctx }: { visible: bo
     ],
     [
       'Madde 3 — Ödeme',
-      'Ödeme, kredi/banka kartı ile 3D Secure doğrulamasıyla alınır. Bedel, alıcı ürünü teslim alıp onaylayana ya da itiraz süresi dolana kadar Mezatonline güvencesinde tutulur, ardından satıcıya aktarılır. Taksitli alımlarda vade farkı kartı veren bankaca uygulanır.',
+      `Ödeme, kredi/banka kartı ile 3D Secure doğrulamasıyla alınır. Gerçek sürümde bedel, lisanslı bir ödeme kuruluşu tarafından Alıcı ürünü teslim alıp onaylayana ya da itiraz süresi dolana kadar bekletilir, ardından Satıcı'ya aktarılır; Mezatonline bedeli kendi hesabında tutmaz. Taksitli alımlarda vade farkı kartı veren bankaca uygulanır. ${DEMO_COPY.payment}`,
     ],
     ['Madde 4 — Teslimat', `Ürün, Alıcı'nın bildirdiği adrese (${addr}) kargo ile teslim edilir. Teslimat anında hasarlı paket tespit edilirse tutanak tutulması önerilir.`],
     [
       'Madde 5 — Cayma hakkı',
-      'Alıcı, teslimattan itibaren 14 gün içinde cayma hakkını kullanabilir. Cayma halinde satıcı, bildirimden itibaren 14 gün içinde toplam bedeli iade eder. Alıcı Koruması kapsamındaki talepler ayrıca platform tarafından değerlendirilir.',
+      'Satıcı kurumsal (tacir veya esnaf) ise Alıcı, ürünü teslim aldıktan sonra 14 gün içinde cayma hakkını kullanabilir; bu hak açık artırmayla yapılan alımlarda da geçerlidir. Cayma hâlinde toplam bedel, cayma bildiriminden itibaren 14 gün içinde iade edilir. Alıcı Koruması kapsamındaki talepler (ürün Alıcı\'ya ulaştıktan sonra 14 gün içinde) ayrıca değerlendirilir.',
     ],
     [
       'Madde 6 — Açık artırma alımları',
-      'Canlı yayında verilen teklifler ve ön teklifler bağlayıcıdır. Açık artırmayı kazanan alıcı, kayıtlı ödeme yönteminden otomatik tahsilata onay vermiş sayılır.',
+      'Canlı yayında verilen teklifler ve ön teklifler bağlayıcıdır: açık artırmayı kazanan Alıcı için satın alma yükümlülüğü doğar ve Alıcı teklifini geri çekemez. Satıcı kurumsal (tacir veya esnaf) ise Alıcı, ürünü teslim aldıktan sonra 14 gün içinde Madde 5\'teki yasal cayma hakkını kullanabilir. Açık artırmayı kazanan Alıcı, kayıtlı ödeme yönteminden otomatik tahsilata onay vermiş sayılır.',
     ],
-    ['Madde 7 — Yürürlük', 'Alıcı, ödeme adımında bu sözleşmeyi ve Ön Bilgilendirme Formu\'nu okuyup onayladığını kabul eder. Sözleşmenin bir kopyası sipariş detaylarında saklanır.'],
+    [
+      'Madde 7 — Yürürlük',
+      'Alıcı, ödeme adımında bu sözleşmeyi ve Ön Bilgilendirme Formu\'nu okuyup onayladığını kabul eder. Gerçek sürümde sözleşmenin bir kopyası sipariş detaylarında saklanır ve e-posta adresine gönderilir; demo sürümde kopya oluşturulmaz.',
+    ],
   ];
 
+  return { today, pre, distance };
+}
+
+export function ContractSheet({ visible, onClose, onAccept, ctx }: { visible: boolean; onClose: () => void; onAccept: () => void; ctx: ContractContext }) {
+  const [tab, setTab] = useState<ContractTab>('pre');
+  const { today, pre, distance } = contractSections(ctx);
   const sections = tab === 'pre' ? pre : distance;
 
   return (
@@ -213,7 +223,7 @@ export function InstallmentTableSheet({ visible, onClose, amount }: { visible: b
         <View>
           <View style={[styles.tRow, { borderBottomColor: colors.border }]}>
             <Text variant="caption" color="textSecondary" style={styles.tBank}>
-              KART PROGRAMI
+              KART
             </Text>
             {counts.map((c) => (
               <Text key={c} variant="caption" color="textSecondary" style={styles.tCell} align="right">
@@ -246,7 +256,7 @@ export function InstallmentTableSheet({ visible, onClose, amount }: { visible: b
       <View style={[styles.tNote, { backgroundColor: colors.surface }]}>
         <Icon name="information-circle-outline" size={18} color="textSecondary" />
         <Text variant="footnote" color="textSecondary" style={styles.flex}>
-          Taksit seçenekleri yalnızca kredi kartlarında ve {formatTRY(MIN_INSTALLMENT_TOTAL)} ve üzeri Hemen Al alışverişlerinde geçerlidir. Açık artırma, çekiliş ve bahşişlerde taksit yapılamaz. Vade farkı bankanız tarafından uygulanır.
+          Taksit seçenekleri yalnızca kredi kartlarında ve {formatTRY(MIN_INSTALLMENT_TOTAL)} ve üzeri Hemen Al alışverişlerinde geçerlidir. Açık artırma alımlarında ve çekilişlerde taksit yapılamaz. Vade farkı kartını veren banka tarafından uygulanır. Demo: tablodaki oranlar örnektir.
         </Text>
       </View>
     </Sheet>

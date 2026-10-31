@@ -128,7 +128,7 @@ export default function RewardsScreen() {
             <View style={styles.rowBetween}>
               <Text variant="title3">Günlük Görevler</Text>
               <PressableScale
-                onPress={() => toast('Görevler her gece 00:00’da yenilenir. Kazandığın puanların süresi hiç dolmaz.', 'information-circle')}
+                onPress={() => toast('Görevler her gece 00:00’da yenilenir. Demo: puanlar yalnızca bu cihazda tutulur; satılamaz ve paraya çevrilemez.', 'information-circle')}
                 style={styles.ends}
                 accessibilityRole="button">
                 <Text variant="footnote" weight="700" color="textSecondary">

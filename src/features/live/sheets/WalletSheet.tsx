@@ -65,7 +65,7 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
       />
       <ListRow
         title="Ödeme"
-        subtitle={payment ? `${BRAND_LABEL[payment.brand]} •••• ${payment.last4} · ${payment.bank}` : 'Kredi / banka kartı ekle'}
+        subtitle={payment ? `${BRAND_LABEL[payment.brand]} •••• ${payment.last4}` : 'Kredi / banka kartı ekle'}
         left={<IconCircle name="card-outline" />}
         onPress={() => onNavigate('/settings/payments')}
         style={styles.row}

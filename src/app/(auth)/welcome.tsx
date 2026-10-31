@@ -8,8 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
 import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { AuthOptionButton, withAlpha } from '@/features/auth/components';
-import { LegalFooter, useLegalSheet } from '@/features/auth/legal';
+import { useLegalSheet, type LegalDoc } from '@/features/auth/legal';
 import { cancelAuthGate, useAuthGate } from '@/features/auth/gate';
 import { startSignup } from '@/features/auth/session';
 import type { AuthProvider } from '@/features/auth/store';
@@ -44,13 +45,13 @@ function WelcomeScreen() {
     }, []),
   );
 
-  // Sahte OAuth: kısa bir bekleme sonrası hesap açılır ve "Kaydı Tamamla" (telefon) adımına geçilir
+  // Sahte OAuth (demo): kısa bir bekleme sonrası hesap açılır ve "Kaydı Tamamla" (telefon) adımına geçilir
   useEffect(() => {
     if (!pending) return;
     const t = setTimeout(() => {
       startSignup(pending);
       haptic.success();
-      toast.success(`${PROVIDER_LABEL[pending]} hesabınla bağlandın`, pending === 'apple' ? 'logo-apple' : pending === 'google' ? 'logo-google' : 'logo-facebook');
+      toast.success(DEMO_MODE ? `Demo: ${PROVIDER_LABEL[pending]} girişi simüle edildi` : `${PROVIDER_LABEL[pending]} hesabınla bağlandın`, pending === 'apple' ? 'logo-apple' : pending === 'google' ? 'logo-google' : 'logo-facebook');
       setPending(null);
       router.push({ pathname: '/(auth)/phone', params: { mode: 'finish' } });
     }, 1100);
@@ -64,6 +65,12 @@ function WelcomeScreen() {
   };
 
   const busy = pending !== null;
+
+  const legalLink = (doc: LegalDoc, label: string) => (
+    <Text variant="footnote" weight="700" color="textSecondary" style={styles.underline} onPress={() => legal.open(doc)} suppressHighlighting>
+      {label}
+    </Text>
+  );
 
   // Kolaj üstte görünür kalsın, butonların arkası tamamen koyulaşsın
   const fadeStart = Math.max(0.16, Math.min(0.9, (panelTop - 170) / height));
@@ -160,7 +167,17 @@ function WelcomeScreen() {
             />
           </View>
 
-          <LegalFooter onOpen={legal.open} />
+          <View style={styles.legal}>
+            <Text variant="footnote" color="textTertiary" align="center" style={styles.legalText}>
+              Kayıt sırasında {legalLink('terms', 'Kullanım Koşulları')} ve {legalLink('privacy', 'Gizlilik Politikası')} onayın istenecek. Kişisel verilerinin nasıl
+              işlendiğini {legalLink('kvkk', 'KVKK Aydınlatma Metni')}’nde bulabilirsin.
+            </Text>
+            {DEMO_MODE ? (
+              <Text variant="footnote" color="textTertiary" align="center" style={styles.legalText}>
+                {DEMO_COPY.banner}
+              </Text>
+            ) : null}
+          </View>
         </Animated.View>
       </ScrollView>
       {legal.sheet}
@@ -191,4 +208,6 @@ const styles = StyleSheet.create({
   phoneLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 6 },
   underline: { textDecorationLine: 'underline' },
   loginBlock: { gap: 10 },
+  legal: { gap: 6 },
+  legalText: { lineHeight: 18 },
 });
