@@ -13,7 +13,7 @@ import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { CATEGORIES, getCategory } from '@/data';
 import { formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { sellerFees, SHIPPING_PRICES, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
+import { SELLER_FEE_TEXT, sellerFees, SHIPPING_PRICES, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
 import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Condition, ListingFormat, Product, ShippingProfile } from '@/types';
@@ -117,7 +117,7 @@ export function ListingForm() {
   const category = getCategory(f.categoryId);
   const upcomingShows = shows.filter((s) => s.status !== 'ended');
   const shipping = SHIPPING_PRICES[f.shippingProfile];
-  const fees = sellerFees(f.format === 'giveaway' ? 0 : f.price, shipping);
+  const fees = sellerFees(f.format === 'giveaway' ? 0 : f.price);
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
 
   const errors = {
@@ -438,8 +438,8 @@ export function ListingForm() {
                 Tahmini kazancın {f.format === 'auction' ? '(başlangıç fiyatından satılırsa)' : ''}
               </Text>
               <KeyValue label="Satış fiyatı" value={formatTRY(f.price)} />
-              <KeyValue label="Komisyon (%8)" value={`-${formatTRY(fees.commission)}`} />
-              <KeyValue label="Ödeme işlem ücreti" value={`-${formatTRY(fees.processing)}`} />
+              <KeyValue label={SELLER_FEE_TEXT.commissionLabel} value={`-${formatTRY(fees.commission)}`} />
+              <KeyValue label={SELLER_FEE_TEXT.cardFeeLabel} value={`-${formatTRY(fees.cardFee)}`} />
               <View style={[styles.hr, { backgroundColor: colors.border }]} />
               <KeyValue label="Net kazanç" value={formatTRY(fees.net)} strong tone="success" />
             </Card>

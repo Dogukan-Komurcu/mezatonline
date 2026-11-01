@@ -7,7 +7,7 @@ import { BUYER_USERS, getMarketplaceProducts, getUser, getUserByUsername } from 
 import { districtsOf, neighborhoodsOf } from '@/data/turkey';
 import { TIP_PRESETS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
-import { sellerFees } from '@/lib/pricing';
+import { SELLER_COMMISSION_RATE, SELLER_FEE_TEXT, sellerFees } from '@/lib/pricing';
 import { createRng, random } from '@/lib/rng';
 import type { LiveSessionSummary } from '@/store/seller';
 import type { Carrier, ID, Order, Payout, Product, Show } from '@/types';
@@ -296,7 +296,7 @@ export const SELLER_ORDER_STATUS: Record<Order['status'], string> = {
 };
 
 export function orderNet(o: Order): number {
-  return sellerFees(o.itemPrice * o.quantity, o.shippingCost).net;
+  return sellerFees(o.itemPrice * o.quantity).net;
 }
 
 // ─── Envanter ────────────────────────────────────────────────────────────────
@@ -314,15 +314,15 @@ export function priceLabel(p: Product): string {
   return formatTRY(p.price);
 }
 
-// ─── Komisyon seviyeleri (28 günlük dönem) ───────────────────────────────────
+// ─── Satış komisyonu seviyeleri (28 günlük dönem; kart ücreti seviyeden etkilenmez) ───────────────────────────────────
 
 export type CommissionTier = { level: number; name: string; min: number; rate: number };
 
 export const COMMISSION_TIERS: CommissionTier[] = [
-  { level: 0, name: 'Standart', min: 0, rate: 0.08 },
-  { level: 1, name: 'Seviye 1', min: 100_000, rate: 0.065 },
-  { level: 2, name: 'Seviye 2', min: 250_000, rate: 0.055 },
-  { level: 3, name: 'Seviye 3', min: 500_000, rate: 0.045 },
+  { level: 0, name: 'Standart', min: 0, rate: SELLER_COMMISSION_RATE },
+  { level: 1, name: 'Seviye 1', min: 100_000, rate: 0.045 },
+  { level: 2, name: 'Seviye 2', min: 250_000, rate: 0.04 },
+  { level: 3, name: 'Seviye 3', min: 500_000, rate: 0.035 },
 ];
 
 export const PERIOD_DAYS = 28;
@@ -379,7 +379,7 @@ export function tierProgress(orders: Order[], anchorISO: string | undefined, now
   };
 }
 
-/** Yeni satıcı kampanyası: onaydan sonraki 30 gün komisyon iadesi */
+/** Yeni satıcı kampanyası: onaydan sonraki 30 gün satış komisyonu iadesi (kart ücreti iade edilmez) */
 export function inLaunchCampaign(approvedAt: string | undefined, at: string | number): boolean {
   if (!approvedAt) return false;
   const start = new Date(approvedAt).getTime();
@@ -400,7 +400,7 @@ export function payoutDisplay(p: Payout, now: number): { label: string; tone: 's
   return { label: 'İşleniyor', tone: 'warning', arrival };
 }
 
-export type LedgerKind = 'sale' | 'commission' | 'processing' | 'shipping_in' | 'shipping_out' | 'payout';
+export type LedgerKind = 'sale' | 'commission' | 'card_fee' | 'shipping_in' | 'shipping_out' | 'payout';
 
 export type LedgerEntry = {
   id: string;
@@ -420,11 +420,11 @@ export function buildLedger(orders: Order[], payouts: Payout[], labels: Record<I
     const t = new Date(o.createdAt).getTime();
     const status: LedgerEntry['status'] = orderBucket(o) === 'toship' ? 'processing' : 'completed';
     const gross = o.itemPrice * o.quantity;
-    const fees = sellerFees(gross, o.shippingCost);
+    const fees = sellerFees(gross);
     const sub = `${o.number} · ${o.productTitle}`;
     if (gross > 0) out.push({ id: `${o.id}_sale`, at: t, kind: 'sale', title: 'Satış', subtitle: sub, amount: gross, status, orderId: o.id });
-    if (fees.commission > 0) out.push({ id: `${o.id}_com`, at: t + 1, kind: 'commission', title: 'Satış komisyonu (%8)', subtitle: sub, amount: -fees.commission, status, orderId: o.id });
-    out.push({ id: `${o.id}_proc`, at: t + 2, kind: 'processing', title: 'Ödeme işlem ücreti', subtitle: sub, amount: -fees.processing, status, orderId: o.id });
+    if (fees.commission > 0) out.push({ id: `${o.id}_com`, at: t + 1, kind: 'commission', title: SELLER_FEE_TEXT.commissionLabel, subtitle: sub, amount: -fees.commission, status, orderId: o.id });
+    if (fees.cardFee > 0) out.push({ id: `${o.id}_card`, at: t + 2, kind: 'card_fee', title: SELLER_FEE_TEXT.cardFeeLabel, subtitle: sub, amount: -fees.cardFee, status, orderId: o.id });
     const label = labels[o.id];
     const shippedEvent = o.timeline.find((e) => e.status === 'shipped');
     if (o.shippingCost > 0 && (label || shippedEvent)) {
@@ -618,7 +618,7 @@ function demoData(now: number): { sales: SaleLike[]; sessions: SessionLike[] } {
     for (let i = 0; i < n; i++) {
       const p = rng.pick(products);
       const amount = Math.round(rng.float(0.5, 1.4) * Math.min(p.price, 4000));
-      sales.push({ at: now - d * DAY - rng.int(1, 20) * HOUR, amount, qty: 1, net: sellerFees(amount, p.shippingCost).net, productId: p.id, title: p.title, image: p.images[0] });
+      sales.push({ at: now - d * DAY - rng.int(1, 20) * HOUR, amount, qty: 1, net: sellerFees(amount).net, productId: p.id, title: p.title, image: p.images[0] });
     }
   }
   const sessions: SessionLike[] = DEMO_SHOW_TITLES.map((title, i) => ({

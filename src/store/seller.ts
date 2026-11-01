@@ -123,7 +123,7 @@ export const useSellerStore = create<SellerState>()(
           ),
         })),
       recordSale: ({ product, price, buyerUsername, showId, source }) => {
-        const fees = sellerFees(price, product.shippingCost);
+        const fees = sellerFees(price);
         const order: Order = {
           id: uid('so'),
           number: 'MZ-' + Math.floor(50000 + Math.random() * 40000),
@@ -155,7 +155,7 @@ export const useSellerStore = create<SellerState>()(
         set((s) => {
           const order = s.orders.find((o) => o.id === orderId);
           if (!order || order.status !== 'paid') return {};
-          const net = sellerFees(order.itemPrice, order.shippingCost).net;
+          const net = sellerFees(order.itemPrice).net;
           return {
             orders: s.orders.map((o) =>
               o.id === orderId
@@ -190,6 +190,24 @@ export const useSellerStore = create<SellerState>()(
       },
       setIban: (iban) => set({ iban }),
     }),
-    { name: storeKey('seller'), storage: persistStorage },
+    {
+      name: storeKey('seller'),
+      storage: persistStorage,
+      version: 1,
+      // v0: bakiyeler eski ücretlerle (%8 + %2,9 + ₺3) birikmişti → siparişlerden yeni ücretlerle yeniden hesapla
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as SellerState;
+        if (version < 1 && Array.isArray(s.orders)) {
+          const r2 = (n: number) => Math.round(n * 100) / 100;
+          const net = (o: Order) => sellerFees(o.itemPrice * o.quantity).net;
+          const toShip = s.orders.filter((o) => o.status === 'paid' || o.status === 'preparing');
+          const settled = s.orders.filter((o) => o.status !== 'paid' && o.status !== 'preparing' && o.status !== 'cancelled' && o.status !== 'refunded');
+          const paidOut = (s.payouts ?? []).reduce((t, p) => t + p.amount, 0);
+          s.pendingBalance = r2(toShip.reduce((t, o) => t + net(o), 0));
+          s.balance = Math.max(0, r2(settled.reduce((t, o) => t + net(o), 0) - paidOut));
+        }
+        return s;
+      },
+    },
   ),
 );

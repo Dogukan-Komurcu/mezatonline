@@ -199,7 +199,7 @@ export function SellerHub() {
                   Satıcı hesabın hazır, {me.displayName.split(' ')[0]}! 🎉
                 </Text>
                 <Text variant="callout" color={colors.onPrimary} style={{ opacity: 0.8 }}>
-                  Aşağıdaki adımları bitirdiğinde ilk canlı yayınına hazırsın. İlk 30 gününde komisyon %0.
+                  Aşağıdaki adımları bitirdiğinde ilk canlı yayınına hazırsın. İlk 30 gününde satış komisyonu %0.
                 </Text>
               </View>
               <IconButton name="close" size={30} color={colors.onPrimary} onPress={dismissWelcome} accessibilityLabel="Kapat" />
@@ -290,7 +290,7 @@ export function SellerHub() {
           <View style={styles.rowTop}>
             <View style={{ flex: 1 }}>
               <Text variant="footnote" weight="700" color="textSecondary">
-                KOMİSYON SEVİYEN
+                SATIŞ KOMİSYONUN
               </Text>
               <View style={styles.inline}>
                 <Text variant="title1">{formatRate(tier.current.rate)}</Text>

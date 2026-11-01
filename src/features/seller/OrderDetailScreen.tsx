@@ -10,7 +10,7 @@ import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Avatar, Button, Chip, EmptyState, Header, Icon, IconButton, Screen, Sheet, Text, TextField, toast, type IconName } from '@/components/ui';
 import { formatDate, formatDateTime, formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { sellerFees, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
+import { SELLER_FEE_TEXT, sellerFees, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
 import { useMe } from '@/store/auth';
 import { useInboxStore } from '@/store/inbox';
 import { ORDER_SOURCE_LABELS } from '@/store/orders';
@@ -79,7 +79,7 @@ export function OrderDetailScreen() {
   const address = buyerAddress(buyer);
   const bucket = orderBucket(order);
   const gross = order.itemPrice * order.quantity;
-  const fees = sellerFees(gross, order.shippingCost);
+  const fees = sellerFees(gross);
   const listing = listings.find((p) => p.id === order.productId);
   const show = order.showId ? shows.find((s) => s.id === order.showId) : undefined;
   const due = bucket === 'toship' ? deadlineInfo(order.createdAt, now) : undefined;
@@ -291,8 +291,8 @@ export function OrderDetailScreen() {
           </Text>
           <KeyValue label="Ürün bedeli" value={formatTRY(gross)} />
           <KeyValue label="Alıcının ödediği kargo" value={formatTRY(order.shippingCost)} hint="Kargo firmasına aktarılır" />
-          <KeyValue label="Komisyon (%8)" value={`-${formatTRY(fees.commission)}`} />
-          <KeyValue label="İşlem ücreti (%2,9 + ₺3)" value={`-${formatTRY(fees.processing)}`} />
+          <KeyValue label={SELLER_FEE_TEXT.commissionLabel} value={`-${formatTRY(fees.commission)}`} />
+          <KeyValue label={SELLER_FEE_TEXT.cardFeeLabel} value={`-${formatTRY(fees.cardFee)}`} />
           <View style={[styles.hr, { backgroundColor: colors.border, marginVertical: 6 }]} />
           <KeyValue label="Net kazanç" value={bucket === 'cancelled' ? formatTRY(0) : formatTRY(fees.net)} strong tone={bucket === 'cancelled' ? undefined : 'success'} />
           <StatusPill
@@ -303,12 +303,12 @@ export function OrderDetailScreen() {
           {campaign && bucket !== 'cancelled' && fees.commission > 0 ? (
             <View style={[styles.campaign, { backgroundColor: colors.primarySoft }]}>
               <Text variant="footnote" weight="600">
-                🎉 Yeni satıcı kampanyası: bu siparişin {formatTRY(fees.commission)} komisyonu 30. günün sonunda bakiyene iade edilir.
+                🎉 Yeni satıcı kampanyası: bu siparişin {formatTRY(fees.commission)} satış komisyonu 30. günün sonunda bakiyene iade edilir.
               </Text>
             </View>
           ) : null}
           <Text variant="footnote" color="textTertiary" style={{ marginTop: 6 }}>
-            Komisyon ve işlem ücretine %20 KDV dahildir. %1 e-ticaret stopajı aylık ekstrende gösterilir.
+            Satış komisyonu ve kredi kartı ücretine %20 KDV dahildir. %1 e-ticaret stopajı aylık ekstrende gösterilir.
           </Text>
         </Card>
 

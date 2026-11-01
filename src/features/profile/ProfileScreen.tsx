@@ -257,7 +257,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         key: 'become_seller',
         emoji: '🚀',
         title: 'Mezatonline’da satış yap',
-        message: 'Kendi canlı yayınını aç, ürünlerini takipçilerine mezatla sat. İlk ay komisyon %0.',
+        message: 'Kendi canlı yayınını aç, ürünlerini takipçilerine mezatla sat. İlk ay satış komisyonu %0.',
         actionLabel: 'Satıcı ol',
         onAction: () => router.push('/seller/apply'),
       });

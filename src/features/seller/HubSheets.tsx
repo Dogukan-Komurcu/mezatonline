@@ -11,7 +11,7 @@ import { DEMO_MODE, FEATURES } from '@/config/demo';
 import { emptyAddress } from '@/features/wallet/forms';
 import { formatTRY, timeAgoLong } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { SHIPPING_PRICES, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
+import { SELLER_FEE_TEXT, SHIPPING_PRICES, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
 import { random } from '@/lib/rng';
 import { useMe } from '@/store/auth';
 import { useSellerStore } from '@/store/seller';
@@ -618,7 +618,7 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
 export function TierSheet({ visible, onClose, currentLevel, earnedLevel }: { visible: boolean; onClose: () => void; currentLevel: number; earnedLevel: number }) {
   const { colors } = useTheme();
   return (
-    <Sheet visible={visible} onClose={onClose} title="Komisyon seviyeleri" subtitle="Her 28 günlük dönemin sonunda toplam satışına bakılır; ulaştığın basamak bir sonraki dönemde uygulanır" showClose>
+    <Sheet visible={visible} onClose={onClose} title="Satış komisyonu seviyeleri" subtitle="Her 28 günlük dönemin sonunda toplam satışına bakılır; ulaştığın basamak bir sonraki dönemde uygulanır" showClose>
       <Card padded={false}>
         {COMMISSION_TIERS.map((t, i) => {
           const active = t.level === currentLevel;
@@ -645,8 +645,9 @@ export function TierSheet({ visible, onClose, currentLevel, earnedLevel }: { vis
       <View style={{ gap: 8, marginTop: 14 }}>
         {[
           'Hesaplama ürün fiyatı üzerinden yapılır; alıcının ödediği kargo bedeli komisyona girmez.',
+          `Seviyeler yalnızca satış komisyonunu düşürür; kredi kartı ücreti (${SELLER_FEE_TEXT.cardFee}) her seviyede aynıdır.`,
           'İptal ya da iade edilen siparişler 28 günlük toplama eklenmez.',
-          'Yeni satıcı kampanyası süresince ilk 30 günün komisyonu bakiyene iade edilir.',
+          'Yeni satıcı kampanyası süresince ilk 30 günün satış komisyonu bakiyene iade edilir.',
         ].map((t) => (
           <View key={t} style={[styles.inline, { alignItems: 'flex-start' }]}>
             <Icon name="information-circle-outline" size={16} color="textSecondary" />

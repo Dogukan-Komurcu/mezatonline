@@ -332,5 +332,5 @@ export type PromoBanner = { id: string; title: string; subtitle: string; image: 
 export const PROMO_BANNERS: PromoBanner[] = [
   { id: 'bn1', title: '₺150 hoş geldin kredisi', subtitle: 'İlk alışverişinde otomatik uygulanır', image: BANNERS[0], href: '/wallet', tint: '#0B7C72' },
   { id: 'bn2', title: 'Arkadaşını davet et', subtitle: '₺250 sana, ₺250 arkadaşına', image: BANNERS[1 % BANNERS.length], href: '/wallet', tint: '#A85F31' },
-  { id: 'bn3', title: 'Satıcı ol, bu akşam canlı yayına çık', subtitle: 'İlk ay %0 komisyon', image: BANNERS[2 % BANNERS.length], href: '/seller/apply', tint: '#E0244F' },
+  { id: 'bn3', title: 'Satıcı ol, bu akşam canlı yayına çık', subtitle: 'İlk ay %0 satış komisyonu', image: BANNERS[2 % BANNERS.length], href: '/seller/apply', tint: '#E0244F' },
 ];

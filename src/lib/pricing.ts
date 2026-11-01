@@ -1,7 +1,8 @@
 /**
  * Alıcı ve satıcı ücret hesapları.
- * Fiyatlar KDV dahildir. Alıcıdan küçük bir "Alıcı Koruma" hizmet bedeli alınır,
- * satıcıdan komisyon + ödeme işlem ücreti kesilir.
+ * Fiyatlar KDV dahildir. Alıcıdan küçük bir "Alıcı Koruma" hizmet bedeli alınır.
+ * Satıcıdan toplam %8 komisyon kesilir: %5 satış komisyonu + %3 kredi kartı ücreti
+ * (sipariş başına ayrıca ₺5 sabit). Ayrı bir ödeme işlem ücreti yoktur.
  */
 
 /** Alıcı Koruma hizmet bedeli: ürün tutarının %2'si, min ₺2, maks ₺49 */
@@ -10,17 +11,37 @@ export function buyerServiceFee(itemPrice: number): number {
   return Math.round(Math.min(49, Math.max(2, itemPrice * 0.02)) * 100) / 100;
 }
 
-/** Satıcı komisyon oranı (ürün bedeli üzerinden) */
-export const SELLER_COMMISSION_RATE = 0.08;
-/** Ödeme işlem ücreti oranı (toplam tutar üzerinden) + sabit */
-export const PAYMENT_PROCESSING_RATE = 0.029;
-export const PAYMENT_PROCESSING_FIXED = 0.3 * 10; // ₺3
+/** Satış komisyonu oranı (ürün bedeli üzerinden) */
+export const SELLER_COMMISSION_RATE = 0.05;
+/** Kredi kartı ücreti: ürün bedelinin %3'ü + sipariş başına sabit ₺5 */
+export const CARD_FEE_RATE = 0.03;
+export const CARD_FEE_FIXED = 5;
+/** Toplam komisyon oranı (satış komisyonu + kart ücreti; sabit ₺5 hariç) */
+export const TOTAL_FEE_RATE = SELLER_COMMISSION_RATE + CARD_FEE_RATE;
 
-export function sellerFees(itemPrice: number, shippingCost: number) {
+/** 0.05 → "%5", 0.035 → "%3,5" */
+const pct = (rate: number) => '%' + String(Math.round(rate * 1000) / 10).replace('.', ',');
+
+/** Satıcı ekranlarındaki ücret adları; oranlar değişirse metinler de buradan güncellenir */
+export const SELLER_FEE_TEXT = {
+  commissionRate: pct(SELLER_COMMISSION_RATE),
+  cardFee: `${pct(CARD_FEE_RATE)} + ₺${CARD_FEE_FIXED}`,
+  totalRate: pct(TOTAL_FEE_RATE),
+  commissionLabel: `Satış komisyonu (${pct(SELLER_COMMISSION_RATE)})`,
+  cardFeeLabel: `Kredi kartı ücreti (${pct(CARD_FEE_RATE)} + ₺${CARD_FEE_FIXED})`,
+  /** "toplam %8 + sipariş başına ₺5" */
+  total: `toplam ${pct(TOTAL_FEE_RATE)} + sipariş başına ₺${CARD_FEE_FIXED}`,
+} as const;
+
+/**
+ * Satıcı kesintileri (ürün bedeli üzerinden; alıcının ödediği kargo hesaba girmez).
+ * Bedelsiz siparişte (ör. çekiliş) kart ücreti alınmaz.
+ */
+export function sellerFees(itemPrice: number) {
   const commission = Math.round(itemPrice * SELLER_COMMISSION_RATE * 100) / 100;
-  const processing = Math.round(((itemPrice + shippingCost) * PAYMENT_PROCESSING_RATE + PAYMENT_PROCESSING_FIXED) * 100) / 100;
-  const net = Math.round((itemPrice - commission - processing) * 100) / 100;
-  return { commission, processing, net };
+  const cardFee = itemPrice > 0 ? Math.round((itemPrice * CARD_FEE_RATE + CARD_FEE_FIXED) * 100) / 100 : 0;
+  const net = Math.round((itemPrice - commission - cardFee) * 100) / 100;
+  return { commission, cardFee, net };
 }
 
 /** Kargo profili → alıcı kargo ücreti (₺, KDV dahil, desi bazlı) */

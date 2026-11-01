@@ -17,7 +17,7 @@ import { getLiveShows, getSellers, getUser } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
+import { CARD_FEE_FIXED, SELLER_FEE_TEXT, sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
 import { brand, liveColors, radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Show } from '@/types';
 
@@ -25,7 +25,11 @@ import { useQaOffset } from './qaSeed';
 import { Card, KeyValue, StickyFooter } from './ui';
 
 const BENEFITS: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'pricetags-outline', title: "Komisyon %8, ilk ay %0", body: 'Komisyon yalnızca satılan ürünün bedelinden kesilir. Onaydan sonraki ilk 30 günde kesilen komisyon sana iade edilir.' },
+  {
+    icon: 'pricetags-outline',
+    title: `Toplam ${SELLER_FEE_TEXT.totalRate} + ₺${CARD_FEE_FIXED} komisyon, ayrı işlem ücreti yok`,
+    body: `${SELLER_FEE_TEXT.commissionRate} satış komisyonu ve ${SELLER_FEE_TEXT.cardFee} kredi kartı ücreti; ikisi de yalnızca satılan ürünün bedelinden kesilir. Onaydan sonraki ilk 30 günde satış komisyonu sana iade edilir.`,
+  },
   { icon: 'cube-outline', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
   { icon: 'card-outline', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
   { icon: 'people-outline', title: 'Takipçilerinle canlı bağ', body: 'Takipçilerin yayınını planladığın anda hatırlatma kurabilir; sohbette sorularını yayın sırasında yanıtlarsın.' },
@@ -91,7 +95,7 @@ export function SellLanding() {
   const [pastHero, setPastHero] = useState(false);
   const shows = getLiveShows().slice(0, 3);
   const sellers = getSellers().slice(0, 3);
-  const example = sellerFees(1000, SHIPPING_PRICES.small);
+  const example = sellerFees(1000);
 
   // Turkuaz hero üstünde durum çubuğu açık (beyaz); hero geçilince temaya göre
   useFocusEffect(
@@ -155,7 +159,7 @@ export function SellLanding() {
 
         <View style={[styles.stats, { borderColor: colors.border, backgroundColor: colors.card }]}>
           {[
-            ['%8', 'komisyon'],
+            [`${SELLER_FEE_TEXT.totalRate} + ₺${CARD_FEE_FIXED}`, 'toplam komisyon'],
             ['1-2 gün', "IBAN'a ödeme"],
             ['₺0', 'listeleme ücreti'],
           ].map(([v, l], i) => (
@@ -216,12 +220,13 @@ export function SellLanding() {
         <View style={styles.block}>
           <Text variant="title2">Ücretler</Text>
           <Text variant="callout" color="textSecondary">
-            Listeleme ücreti yok, aylık abonelik yok. Sadece sattığında öde.
+            Listeleme ücreti ve aylık abonelik yok. Yalnızca sattığında {SELLER_FEE_TEXT.total} ödersin.
           </Text>
           <Card padded={false}>
             {[
-              ['Satış komisyonu', '%8', 'Ürün bedeli üzerinden · ilk ay %0'],
-              ['Ödeme işlem ücreti', '%2,9 + ₺3', 'Alıcının ödediği toplam üzerinden'],
+              ['Satış komisyonu', SELLER_FEE_TEXT.commissionRate, 'Ürün bedeli üzerinden · ilk 30 gün iade edilir'],
+              ['Kredi kartı ücreti', SELLER_FEE_TEXT.cardFee, `Ürün bedeli üzerinden · ₺${CARD_FEE_FIXED} sipariş başına sabit`],
+              ['Ödeme işlem ücreti', 'Yok', 'Ayrıca işlem ücreti alınmaz'],
               ['Listeleme ve yayın', 'Ücretsiz', 'Sınırsız ürün, sınırsız yayın'],
               ['Kargo', 'Alıcı öder', `Desi bazlı, ${formatTRY(SHIPPING_PRICES.small)}'den başlar`],
               ...(FEATURES.tips ? [['Bahşişler', '%0', 'Bahşişlerin tamamı senin']] : []),
@@ -245,12 +250,12 @@ export function SellLanding() {
             <Text variant="subhead" weight="700" style={{ marginBottom: 6 }}>
               Örnek: {formatTRY(1000)}’lik satış
             </Text>
-            <KeyValue label="Satış komisyonu (%8)" value={`-${formatTRY(example.commission)}`} />
-            <KeyValue label="Ödeme işlem ücreti" value={`-${formatTRY(example.processing)}`} />
+            <KeyValue label={SELLER_FEE_TEXT.commissionLabel} value={`-${formatTRY(example.commission)}`} />
+            <KeyValue label={SELLER_FEE_TEXT.cardFeeLabel} value={`-${formatTRY(example.cardFee)}`} />
             <View style={[styles.hr, { backgroundColor: colors.border }]} />
             <KeyValue label="Eline geçen" value={formatTRY(example.net)} strong tone="success" />
             <Text variant="footnote" color="textSecondary" style={{ marginTop: 4 }}>
-              İlk ayında komisyon iadesiyle {formatTRY(example.net + example.commission)} kazanırsın.
+              İlk ayında satış komisyonu iadesiyle {formatTRY(example.net + example.commission)} kazanırsın.
             </Text>
           </Card>
         </View>

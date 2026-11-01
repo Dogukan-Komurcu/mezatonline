@@ -205,7 +205,7 @@ function MemberAccount() {
                 Mezatonline'da satış yap
               </Text>
               <Text variant="subhead" color={colors.onPrimary} style={{ opacity: 0.8, maxWidth: '78%' }}>
-                Ürünlerini canlı yayında açık artırmaya çıkar. İlk ay %0 komisyon.
+                Ürünlerini canlı yayında açık artırmaya çıkar. İlk ay satış komisyonu %0.
               </Text>
               <View style={[styles.sellCta, { backgroundColor: colors.onPrimary }]}>
                 <Text variant="subhead" weight="700" color={colors.primary}>
