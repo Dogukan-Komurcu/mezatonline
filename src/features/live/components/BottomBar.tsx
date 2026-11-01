@@ -14,6 +14,9 @@ export type BottomBarProps = {
   reactionEmoji: string;
   /** Misafir: sohbet alanı yerine giriş istemi (dokununca giriş kapısı açılır) */
   guest?: boolean;
+  /** Sohbet gizliyken mesaj kutusu yerine "Sohbet gizli · Göster" (dokununca sohbet geri açılır) */
+  chatHidden?: boolean;
+  onShowChat?: () => void;
   onCompose: () => void;
   onReact: () => void;
   onReactLong: () => void;
@@ -27,17 +30,34 @@ const H = 42;
  * (uzun basınca tepki seçici; puanla alınmış özel tepki seçiliyse köşesinde küçük emoji) +
  * çanta ikonlu cam "Mağaza · N" etiketi.
  */
-export function BottomBar({ shopCount, reactionEmoji, guest, onCompose, onReact, onReactLong, onShop }: BottomBarProps) {
+export function BottomBar({ shopCount, reactionEmoji, guest, chatHidden, onShowChat, onCompose, onReact, onReactLong, onShop }: BottomBarProps) {
   const placeholder = guest ? 'Mesaj yazmak için giriş yap' : 'Sohbete katıl…';
   const custom = reactionEmoji !== DEFAULT_REACTION;
   return (
     <View style={styles.row}>
-      <PressableScale scaleTo={0.98} onPress={onCompose} style={[liveStyles.glass, styles.input]} accessibilityRole="button" accessibilityLabel={placeholder}>
-        <Icon name="chatbubble-ellipses-outline" size={17} color={liveColors.textSecondary} />
-        <Text variant="callout" weight="500" color={liveColors.textSecondary} numberOfLines={1} style={styles.flex}>
-          {placeholder}
-        </Text>
-      </PressableScale>
+      {chatHidden ? (
+        <PressableScale
+          scaleTo={0.98}
+          onPress={onShowChat}
+          style={[liveStyles.glass, styles.input]}
+          accessibilityRole="button"
+          accessibilityLabel="Sohbet gizli. Sohbeti göster">
+          <Icon name="eye-off-outline" size={17} color={liveColors.textSecondary} />
+          <Text variant="callout" weight="500" color={liveColors.textSecondary} numberOfLines={1} style={styles.flex}>
+            Sohbet gizli
+          </Text>
+          <Text variant="footnote" weight="700" color={liveColors.accent}>
+            Göster
+          </Text>
+        </PressableScale>
+      ) : (
+        <PressableScale scaleTo={0.98} onPress={onCompose} style={[liveStyles.glass, styles.input]} accessibilityRole="button" accessibilityLabel={placeholder}>
+          <Icon name="chatbubble-ellipses-outline" size={17} color={liveColors.textSecondary} />
+          <Text variant="callout" weight="500" color={liveColors.textSecondary} numberOfLines={1} style={styles.flex}>
+            {placeholder}
+          </Text>
+        </PressableScale>
+      )}
       <PressableScale
         scaleTo={0.85}
         onPress={() => {

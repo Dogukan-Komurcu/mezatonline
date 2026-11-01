@@ -67,12 +67,15 @@ type LivePrefsState = {
   coupon?: Coupon;
   /** Satın almalarda Mezat kredisini otomatik kullan */
   useCredits: boolean;
+  /** Canlı yayında sohbeti gizle: yalnızca ürün ve teklif paneli görünür (cihaz tercihi, tüm yayınlarda geçerli) */
+  chatHidden: boolean;
   /** "Teklif kurallarını okudum, onaylıyorum" kutusu işaretlenip kaydedildi */
   acceptBidRules: () => void;
   hideShow: (id: string) => void;
   applyCoupon: (code: string) => ApplyCouponResult;
   clearCoupon: () => void;
   setUseCredits: (v: boolean) => void;
+  setChatHidden: (v: boolean) => void;
   /** Satın alma sırasında kuponu tüketir; uygulanan indirimi döner (indirim yoksa kupon korunur) */
   consumeCoupon: (price: number) => number;
 };
@@ -84,6 +87,7 @@ export const useLivePrefs = create<LivePrefsState>()(
       hiddenShowIds: [],
       coupon: undefined,
       useCredits: true,
+      chatHidden: false,
       acceptBidRules: () => set({ bidIntroAccepted: true, bidRulesAcceptance: { version: BID_RULES_VERSION, at: new Date().toISOString() } }),
       hideShow: (id) => set((s) => ({ hiddenShowIds: s.hiddenShowIds.includes(id) ? s.hiddenShowIds : [id, ...s.hiddenShowIds].slice(0, 50) })),
       applyCoupon: (raw) => {
@@ -99,6 +103,7 @@ export const useLivePrefs = create<LivePrefsState>()(
       },
       clearCoupon: () => set({ coupon: undefined }),
       setUseCredits: (useCredits) => set({ useCredits }),
+      setChatHidden: (chatHidden) => set({ chatHidden }),
       consumeCoupon: (price) => {
         const discount = couponDiscount(get().coupon, price);
         if (discount > 0) set({ coupon: undefined });
@@ -117,7 +122,7 @@ export const useLivePrefs = create<LivePrefsState>()(
         }
         return s as LivePrefsState;
       },
-      partialize: (s) => ({ bidIntroAccepted: s.bidIntroAccepted, bidRulesAcceptance: s.bidRulesAcceptance, hiddenShowIds: s.hiddenShowIds, coupon: s.coupon, useCredits: s.useCredits }),
+      partialize: (s) => ({ bidIntroAccepted: s.bidIntroAccepted, bidRulesAcceptance: s.bidRulesAcceptance, hiddenShowIds: s.hiddenShowIds, coupon: s.coupon, useCredits: s.useCredits, chatHidden: s.chatHidden }),
     },
   ),
 );

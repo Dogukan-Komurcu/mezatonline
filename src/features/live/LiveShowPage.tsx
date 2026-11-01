@@ -146,7 +146,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const [sheetProduct, setSheetProduct] = useState<Product | undefined>(undefined);
   const [chatUser, setChatUser] = useState<ChatUser | undefined>(undefined);
   const [composer, setComposer] = useState<{ open: boolean; text: string }>({ open: false, text: '' });
-  const [chatHidden, setChatHidden] = useState(false);
+  const chatHidden = useLivePrefs((s) => s.chatHidden);
   const [clipping, setClipping] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [boost, setBoost] = useState(() => ({ raised: 60 + (hashOf(show.id) % 280), goal: 500 }));
@@ -713,6 +713,12 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     setLiveSoundOn(!liveSoundOn);
   };
 
+  /** Sohbeti gizle / göster (tercih tüm yayınlarda geçerli). notify: ana ekrandan değiştirildiyse kısa bilgi göster */
+  const toggleChat = (hidden: boolean, notify = true) => {
+    useLivePrefs.getState().setChatHidden(hidden);
+    if (notify) toast(hidden ? 'Sohbet gizlendi · ürün ve teklif paneli görünüyor' : 'Sohbet açıldı', hidden ? 'eye-off-outline' : 'chatbubbles-outline');
+  };
+
   // Satıcıyı destekle: ücretli öne çıkarma ve bahşiş bayraklarla kapatılabilir
   const supportEnabled = FEATURES.paidBoost || FEATURES.tips;
   const openTip = () => withGate(() => openSheet('tip'), { reason: AUTH_REASONS.tip });
@@ -912,6 +918,16 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     ...(hasClub ? [{ key: 'club', label: 'Müdavim', accessibilityLabel: 'Müdavim Kartı', icon: 'id-card-outline' as const, tint: liveColors.copper, prio: 2, onPress: openClub }] : []),
     ...(supportEnabled ? [{ key: 'boost', label: 'Destekle', icon: 'flash-outline' as const, prio: 3, onPress: openSupport }] : []),
     { key: 'more', label: 'Diğer', icon: 'ellipsis-horizontal' as const, prio: 0, onPress: () => openSheet('more') },
+    // Sohbet açık/kapalı: kapsülden düşmesin diye öncelikli (ekran kısaysa önce diğerleri gizlenir)
+    {
+      key: 'chat',
+      label: chatHidden ? 'Gizli' : 'Sohbet',
+      accessibilityLabel: chatHidden ? 'Sohbet gizli. Sohbeti göster' : 'Sohbeti gizle',
+      icon: chatHidden ? ('eye-off-outline' as const) : ('chatbubbles-outline' as const),
+      active: !chatHidden,
+      prio: 0.5,
+      onPress: () => toggleChat(!chatHidden),
+    },
     { key: 'sound', label: muted ? 'Sesi aç' : 'Ses', icon: muted ? ('volume-mute-outline' as const) : ('volume-high-outline' as const), active: !muted, prio: 4, onPress: toggleMute },
   ];
   const railCompact = middleH > 0 && middleH < 330;
@@ -1036,6 +1052,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
               shopCount={shopCount}
               reactionEmoji={reactionEmoji}
               guest={guest}
+              chatHidden={chatHidden}
+              onShowChat={() => toggleChat(false)}
               onCompose={() => withAuth(() => setComposer({ open: true, text: '' }), AUTH_REASONS.chat)}
               onReact={sendReaction}
               onReactLong={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
@@ -1202,7 +1220,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         }}
         onClip={makeClip}
         onToggleMute={(m) => setLiveSoundOn(!m)}
-        onToggleChat={setChatHidden}
+        onToggleChat={(v) => toggleChat(v, false)}
         onReactions={() => withAuth(() => openSheet('reactions'), AUTH_REASONS.react)}
         onWallet={openWallet}
         onBoost={supportEnabled ? openSupport : undefined}
