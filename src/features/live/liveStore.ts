@@ -43,15 +43,32 @@ export function couponDiscount(coupon: Coupon | undefined, price: number): numbe
 
 export type ApplyCouponResult = { ok: true; coupon: Coupon } | { ok: false; error: string };
 
+/** Teklif kuralları metninin sürümü (onay kaydında saklanır; metin değişirse artırılır) */
+export const BID_RULES_VERSION = 'teklif-kurallari-2026-11';
+
+/** Teklif kurallarının onay kaydı (KVKK veri dışa aktarımında yer alır) */
+export type BidRulesAcceptance = { version: string; at: string };
+
+/**
+ * Teklif kuralları güncel sürümüyle onaylandı mı. Kaydı olmayan eski "Okudum, devam et" onayı
+ * ya da eski sürüm yeterli sayılmaz: kullanıcı kutuyu bir kez daha işaretler.
+ */
+export function hasAcceptedBidRules(s: { bidIntroAccepted: boolean; bidRulesAcceptance?: BidRulesAcceptance }): boolean {
+  return s.bidIntroAccepted && s.bidRulesAcceptance?.version === BID_RULES_VERSION;
+}
+
 type LivePrefsState = {
   /** İlk teklif öncesi tanıtım + "teklifler bağlayıcıdır" onayı verildi mi */
   bidIntroAccepted: boolean;
+  /** Teklif kuralları onayının sürümü ve zamanı */
+  bidRulesAcceptance?: BidRulesAcceptance;
   /** "Yayını gizle" ile gizlenen yayınlar */
   hiddenShowIds: string[];
   coupon?: Coupon;
   /** Satın almalarda Mezat kredisini otomatik kullan */
   useCredits: boolean;
-  acceptBidIntro: () => void;
+  /** "Teklif kurallarını okudum, onaylıyorum" kutusu işaretlenip kaydedildi */
+  acceptBidRules: () => void;
   hideShow: (id: string) => void;
   applyCoupon: (code: string) => ApplyCouponResult;
   clearCoupon: () => void;
@@ -67,7 +84,7 @@ export const useLivePrefs = create<LivePrefsState>()(
       hiddenShowIds: [],
       coupon: undefined,
       useCredits: true,
-      acceptBidIntro: () => set({ bidIntroAccepted: true }),
+      acceptBidRules: () => set({ bidIntroAccepted: true, bidRulesAcceptance: { version: BID_RULES_VERSION, at: new Date().toISOString() } }),
       hideShow: (id) => set((s) => ({ hiddenShowIds: s.hiddenShowIds.includes(id) ? s.hiddenShowIds : [id, ...s.hiddenShowIds].slice(0, 50) })),
       applyCoupon: (raw) => {
         const code = raw.trim().toLocaleUpperCase('tr-TR').replace(/İ/g, 'I');
@@ -100,7 +117,7 @@ export const useLivePrefs = create<LivePrefsState>()(
         }
         return s as LivePrefsState;
       },
-      partialize: (s) => ({ bidIntroAccepted: s.bidIntroAccepted, hiddenShowIds: s.hiddenShowIds, coupon: s.coupon, useCredits: s.useCredits }),
+      partialize: (s) => ({ bidIntroAccepted: s.bidIntroAccepted, bidRulesAcceptance: s.bidRulesAcceptance, hiddenShowIds: s.hiddenShowIds, coupon: s.coupon, useCredits: s.useCredits }),
     },
   ),
 );

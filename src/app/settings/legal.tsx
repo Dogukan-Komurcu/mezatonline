@@ -10,6 +10,7 @@ import { useAccountStore } from '@/features/account/store';
 import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
+import { useLivePrefs } from '@/features/live/liveStore';
 import { haptic } from '@/lib/haptics';
 import { LEGAL_VERSION, useAuthStore } from '@/store/auth';
 import { useModerationStore } from '@/store/moderation';
@@ -76,6 +77,7 @@ function buildDeviceExport(): string {
         profil: auth.me,
         ilgiAlanlari: auth.interests,
         kosullarOnayi: auth.termsAcceptance,
+        teklifKurallariOnayi: useLivePrefs.getState().bidRulesAcceptance,
       },
       hesapTercihleri: { ...account, pin: pin ? 'ayarlı (gösterilmez)' : undefined },
       uygulamaAyarlari: plain(useSettingsStore.getState()),

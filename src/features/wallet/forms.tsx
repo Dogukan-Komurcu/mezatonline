@@ -133,32 +133,47 @@ export function validateCard(c: CardDraft): Partial<Record<keyof CardDraft, stri
 
 const BRAND_LABEL = { visa: 'VISA', mastercard: 'Mastercard', troy: 'TROY', amex: 'AMEX' } as const;
 
-/** Kart formu: numara 4'lü gruplanır, SKT "AA/YY" biçimlenir */
-export function CardForm({ value, onChange, errors = {} }: { value: CardDraft; onChange: (v: CardDraft) => void; errors?: Partial<Record<keyof CardDraft, string>> }) {
+/**
+ * Kart formu: numara 4'lü gruplanır, SKT "AA/YY" biçimlenir.
+ * compact: kart önizlemesi ve 3D Secure satırı gizlenir (canlı yayındaki "Teklife hazırlan" sayfası)
+ */
+export function CardForm({
+  value,
+  onChange,
+  errors = {},
+  compact = false,
+}: {
+  value: CardDraft;
+  onChange: (v: CardDraft) => void;
+  errors?: Partial<Record<keyof CardDraft, string>>;
+  compact?: boolean;
+}) {
   const { colors } = useTheme();
   const digits = value.number.replace(/\D/g, '');
   const brand = digits.length >= 2 ? detectCardBrand(digits) : undefined;
   return (
-    <View style={styles.form}>
-      <View style={[styles.cardPreview, { backgroundColor: colors.inverse }]}>
-        <View style={styles.cardTop}>
-          <Icon name="card" size={26} color={colors.primary} />
-          <Text variant="headline" weight="800" color={colors.onInverse}>
-            {brand ? BRAND_LABEL[brand] : ''}
+    <View style={compact ? styles.formCompact : styles.form}>
+      {compact ? null : (
+        <View style={[styles.cardPreview, { backgroundColor: colors.inverse }]}>
+          <View style={styles.cardTop}>
+            <Icon name="card" size={26} color={colors.primary} />
+            <Text variant="headline" weight="800" color={colors.onInverse}>
+              {brand ? BRAND_LABEL[brand] : ''}
+            </Text>
+          </View>
+          <Text variant="title3" color={colors.onInverse} style={{ letterSpacing: 2 }} tabular>
+            {(digits + '•'.repeat(Math.max(0, 16 - digits.length))).replace(/(.{4})/g, '$1 ').trim()}
           </Text>
+          <View style={styles.cardTop}>
+            <Text variant="footnote" color={colors.onInverse} numberOfLines={1} style={{ flex: 1 }}>
+              {value.holder.toLocaleUpperCase('tr-TR') || 'AD SOYAD'}
+            </Text>
+            <Text variant="footnote" color={colors.onInverse}>
+              {value.expiry || 'AA/YY'}
+            </Text>
+          </View>
         </View>
-        <Text variant="title3" color={colors.onInverse} style={{ letterSpacing: 2 }} tabular>
-          {(digits + '•'.repeat(Math.max(0, 16 - digits.length))).replace(/(.{4})/g, '$1 ').trim()}
-        </Text>
-        <View style={styles.cardTop}>
-          <Text variant="footnote" color={colors.onInverse} numberOfLines={1} style={{ flex: 1 }}>
-            {value.holder.toLocaleUpperCase('tr-TR') || 'AD SOYAD'}
-          </Text>
-          <Text variant="footnote" color={colors.onInverse}>
-            {value.expiry || 'AA/YY'}
-          </Text>
-        </View>
-      </View>
+      )}
       <TextField
         label="Kart numarası"
         value={digits.replace(/(.{4})/g, '$1 ').trim()}
@@ -168,6 +183,13 @@ export function CardForm({ value, onChange, errors = {} }: { value: CardDraft; o
         textContentType="creditCardNumber"
         autoComplete="cc-number"
         error={errors.number}
+        right={
+          compact && brand ? (
+            <Text variant="footnote" weight="800" color="textSecondary">
+              {BRAND_LABEL[brand]}
+            </Text>
+          ) : undefined
+        }
       />
       <TextField label="Kart üzerindeki isim" value={value.holder} onChangeText={(v) => onChange({ ...value, holder: v })} autoCapitalize="characters" autoComplete="cc-name" error={errors.holder} />
       <View style={styles.row}>
@@ -196,7 +218,9 @@ export function CardForm({ value, onChange, errors = {} }: { value: CardDraft; o
           containerStyle={styles.flex}
         />
       </View>
-      <ListRow icon="shield-checkmark" title="3D Secure ile kayıt" subtitle={DEMO_MODE ? DEMO_COPY.payment : 'Kartın şifrelenerek saklanır; doğrulama için alınan ₺1 provizyon hemen iade edilir.'} subtitleLines={3} style={{ paddingHorizontal: 0 }} />
+      {compact ? null : (
+        <ListRow icon="shield-checkmark" title="3D Secure ile kayıt" subtitle={DEMO_MODE ? DEMO_COPY.payment : 'Kartın şifrelenerek saklanır; doğrulama için alınan ₺1 provizyon hemen iade edilir.'} subtitleLines={3} style={{ paddingHorizontal: 0 }} />
+      )}
     </View>
   );
 }
@@ -217,6 +241,7 @@ export function TestCardHint({ onUse }: { onUse: (c: CardDraft) => void }) {
 
 const styles = StyleSheet.create({
   form: { gap: 14 },
+  formCompact: { gap: 10 },
   row: { flexDirection: 'row', gap: 10 },
   flex: { flex: 1 },
   cardPreview: { borderRadius: radius.lg, padding: 18, gap: 16, aspectRatio: 1.7 },

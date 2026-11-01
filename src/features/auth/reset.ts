@@ -29,7 +29,7 @@ function reset<T>(store: ResettableStore<T>) {
 
 export function resetAccountData() {
   useSocialStore.setState({ followingIds: [], remindedShowIds: [], savedProductIds: [], followedCategoryIds: [], blockedIds: [] });
-  useLivePrefs.setState({ coupon: undefined, useCredits: true, bidIntroAccepted: false });
+  useLivePrefs.setState({ coupon: undefined, useCredits: true, bidIntroAccepted: false, bidRulesAcceptance: undefined });
   useBrowseStore.setState({ savedSearches: [] });
   reset(useWalletStore);
   reset(useOrdersStore);

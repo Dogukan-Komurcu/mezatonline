@@ -16,7 +16,6 @@ import { FEATURES } from '@/config/demo';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { nextMinBid } from '@/lib/auction';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -46,14 +45,15 @@ import { GiveawayCard } from './components/GiveawayCard';
 import { LiveHeader } from './components/LiveHeader';
 import { LiveVideo } from './components/LiveVideo';
 import { DEFAULT_REACTION, ReactionLayer, useReactions } from './components/Reactions';
+import { ReadyBanner } from './components/ReadyBanner';
 import { ShowEnded } from './components/ShowEnded';
 import { ShowNotes } from './components/ShowNotes';
 import { LIVE_RADIUS, liveStyles } from './components/styles';
-import type { LiveEvents, LiveViewer } from './engine';
-import { couponDiscount, MUDAVIM_COUPON_CODE, useLivePrefs } from './liveStore';
+import type { LiveEvents, LiveLot, LiveViewer } from './engine';
+import { couponDiscount, hasAcceptedBidRules, MUDAVIM_COUPON_CODE, useLivePrefs } from './liveStore';
 import { markPreBid } from './prebids';
 import { hasBundleInShow, purchaseInLive, useShowBundle } from './purchase';
-import { BidIntroSheet } from './sheets/BidIntroSheet';
+import { BidSetupSheet, type BidSetupIntent, type BidSetupRequest } from './sheets/BidSetupSheet';
 import { BoostSheet } from './sheets/BoostSheet';
 import { BuyNowSheet } from './sheets/BuyNowSheet';
 import { CustomBidSheet, type CustomBidSubmit } from './sheets/CustomBidSheet';
@@ -71,7 +71,7 @@ import { useLiveShow } from './useLiveShow';
 type SheetName =
   | 'custom'
   | 'prebid'
-  | 'intro'
+  | 'setup'
   | 'seller'
   | 'viewers'
   | 'user'
@@ -92,6 +92,9 @@ type SheetName =
 
 /** Aynı lot için "teklifin geçildi" bildirimini yalnızca bir kez gönder */
 const OUTBID_NOTIFIED = new Set<string>();
+/** "Mezata hazır ol" şeridi kapatılan yayınlar (oturum boyunca hatırlanır) */
+const READY_BANNER_DISMISSED = new Set<string>();
+const READY_TOAST = 'Hazırsın! Sıradaki üründe tek dokunuşla teklif verebilirsin.';
 const SHEET_SWAP_MS = 300;
 const CHAT_COOLDOWN_MS = 2500;
 /** AUTH_REASONS'ta karşılığı olmayan, yayına özgü giriş gerekçeleri */
@@ -134,6 +137,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const coupon = useLivePrefs((s) => s.coupon);
   const orders = useOrdersStore((s) => s.orders);
   const bundled = useShowBundle(show.id, show.sellerId) && !guest;
+  const hasCard = useWalletStore((s) => s.paymentMethods.length > 0);
+  const hasAddress = useWalletStore((s) => s.addresses.length > 0);
+  const rulesAccepted = useLivePrefs(hasAcceptedBidRules);
   const reactionEmoji = (!guest && POINTS_SHOP.find((i) => i.id === activeReactionId)?.emoji) || DEFAULT_REACTION;
 
   const [sheet, setSheet] = useState<SheetName | null>(null);
@@ -153,9 +159,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const [muteHint, setMuteHint] = useState(false);
   const [viewerSample, setViewerSample] = useState<LiveViewer[]>([]);
   const [clubMinutes, setClubMinutes] = useState(0);
+  /** "Teklife hazırlan" sayfasının isteği ve kaydedince sürecek işlem */
+  const [setup, setSetup] = useState<{ req: BidSetupRequest; action?: () => void } | null>(null);
+  const [readyDismissed, setReadyDismissed] = useState(() => READY_BANNER_DISMISSED.has(show.id));
   const reactions = useReactions();
 
-  const pendingAction = useRef<(() => void) | null>(null);
   const lastTapAt = useRef(0);
   const lastChatAt = useRef(0);
   const seenCrowdLikes = useRef(-1);
@@ -331,37 +339,75 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     return w.addresses.length > 0 && w.paymentMethods.length > 0;
   };
 
+  /** Teklif / satın alma için eksikler (rules: teklif kuralları onayı da gerekli mi) */
+  const setupNeeds = (rules: boolean) => {
+    const w = useWalletStore.getState();
+    return { needCard: w.paymentMethods.length === 0, needAddress: w.addresses.length === 0, needRules: rules && !hasAcceptedBidRules(useLivePrefs.getState()) };
+  };
+
+  /** Lotun motordaki son hâli: sahnedeyse güncel, bittiyse sonucu (SATILDI / SATILMADI ve son fiyat) */
+  const latestLot = (target: LiveLot): LiveLot => {
+    const s = engine.getSnapshot();
+    if (s.lot?.id === target.id) return s.lot;
+    if (s.lastResult?.lot.id === target.id) return s.lastResult.lot;
+    const sold = s.sold.find((x) => x.via === 'auction' && x.product.id === target.product.id);
+    return { ...target, status: sold ? 'sold' : 'unsold', currentBid: sold?.price ?? target.currentBid };
+  };
+
+  /** Tek sayfalık "Teklife hazırlan" kurulumunu aç; kaydedilince `action` sürer */
+  const openSetup = (req: Omit<BidSetupRequest, 'id'>, action?: () => void) => {
+    setSetup({ req: { ...req, id: Date.now() }, action });
+    openSheet('setup');
+  };
+
   /**
-   * Giriş + kart/adres zorunluluğu (requireTransactSetup) ve istenirse ilk teklif tanıtımı.
-   * Her şey hazırsa eylem hemen çalışır; değilse açık sayfa kapatılıp giriş / kurulum gösterilir.
+   * Giriş + kart/adres zorunluluğu ve (intro ile) teklif kuralları onayı.
+   * Her şey hazırsa eylem hemen çalışır; değilse açık sayfa kapatılıp eksikler tek sayfada
+   * ("Teklife hazırlan") istenir. Misafir önce kaydolur, ardından sayfa hemen açılır.
    */
-  const withGate = (action: () => void, opts: { intro?: boolean; reason?: string } = {}) => {
+  const withGate = (action: () => void, opts: { intro?: boolean; reason?: string; intent?: BidSetupIntent; bid?: BidSetupRequest['bid'] } = {}) => {
     // Misafir: önce giriş; tamamlanınca kontrol kaldığı yerden sürer
     if (!isSignedIn()) {
       withAuth(() => withGate(action, opts), opts.reason ?? AUTH_REASONS.generic);
       return;
     }
-    const needIntro = !!opts.intro && !useLivePrefs.getState().bidIntroAccepted;
-    if (isReady() && !needIntro) {
+    const need = setupNeeds(!!opts.intro);
+    if (!need.needCard && !need.needAddress && !need.needRules) {
       action();
       return;
     }
-    const run = () =>
-      requireTransactSetup(
-        () => {
-          if (needIntro && !useLivePrefs.getState().bidIntroAccepted) {
-            pendingAction.current = action;
-            setSheet('intro');
-            return;
-          }
-          action();
-        },
-        { dark: true },
-      );
-    if (sheet) {
-      setSheet(null);
-      setTimeout(run, SHEET_SWAP_MS);
-    } else run();
+    // Giriş sırasında lot bitmiş olabilir: sayfa lotun son hâliyle (SATILDI…) açılır
+    const bid = opts.bid ? { ...opts.bid, lot: latestLot(opts.bid.lot) } : undefined;
+    openSetup({ intent: opts.intent ?? (opts.intro ? 'bidFlow' : 'other'), bid, ...need }, action);
+  };
+
+  const onSetupSaved = () => {
+    const pending = setup;
+    setSheet(null);
+    setSetup((s) => (s ? { req: s.req } : s));
+    if (pending?.action) {
+      // Basılı tutarak verilen teklif hemen gider (sayfa açmaz); diğerleri sayfa kapanınca sürer
+      if (pending.req.intent === 'bid') pending.action();
+      else setTimeout(pending.action, SHEET_SWAP_MS);
+      return;
+    }
+    toast.success(READY_TOAST, 'checkmark-circle-outline');
+  };
+
+  /** "Mezata hazır ol": misafirse önce kayıt, sonra eksikler için kurulum (bekleyen teklif yok) */
+  const prepareToBid = () =>
+    withAuth(() => {
+      const need = setupNeeds(true);
+      if (!need.needCard && !need.needAddress && !need.needRules) {
+        toast.success(READY_TOAST, 'checkmark-circle-outline');
+        return;
+      }
+      openSetup({ intent: 'setup', ...need });
+    }, AUTH_REASONS.bid);
+
+  const dismissReadyBanner = () => {
+    READY_BANNER_DISMISSED.add(show.id);
+    setReadyDismissed(true);
   };
 
   const doFollow = () => {
@@ -424,7 +470,26 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     toast.success(`${text}${pts ? ` · +${pts} puan` : ''}`, 'hammer-outline');
   };
 
-  const quickBid = (shown: number, immediate: boolean) => {
+  /**
+   * Giriş/kurulumdan sonra sürdürülen işlemin lotu sahneden indiyse "sıradaki üründe hazırsın"
+   * bildirimi gösterilir ve true döner (başka bir ürüne teklif verilmez).
+   */
+  const missedLot = (target?: LiveLot) => {
+    if (!target) return false;
+    const l = engine.getSnapshot().lot;
+    if (l && l.id === target.id && l.status === 'running') return false;
+    haptic.warning();
+    const sold = latestLot(target).status === 'sold';
+    toast(`${sold ? 'Bu ürün satıldı.' : 'Bu ürünün açık artırması sona erdi.'} Artık hazırsın; sıradaki üründe tek dokunuşla teklif verebilirsin.`, 'checkmark-circle-outline');
+    return true;
+  };
+
+  /**
+   * Hızlı teklif. `target`: giriş/kurulumdan sonra sürdürülen teklifin lotu; o lot bittiyse
+   * başka bir ürüne teklif verilmez, "sıradaki üründe hazırsın" bildirimi gösterilir.
+   */
+  const quickBid = (shown: number, immediate: boolean, target?: LiveLot) => {
+    if (missedLot(target)) return;
     const l = engine.getSnapshot().lot;
     if (!l || l.status !== 'running') {
       toast('Bu açık artırma sona erdi', 'time-outline');
@@ -451,9 +516,28 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   };
 
   const onSwipe = (shown: number) => {
-    // Misafir giriş yapana kadar fiyat değişebilir: o durumda güncel en düşük teklif verilir
-    const immediate = isSignedIn() && isReady() && useLivePrefs.getState().bidIntroAccepted;
-    withGate(() => quickBid(shown, immediate), { intro: true, reason: AUTH_REASONS.bid });
+    // Misafir giriş yapana / kurulum bitene kadar fiyat değişebilir: o durumda güncel en düşük teklif verilir
+    const immediate = isSignedIn() && isReady() && hasAcceptedBidRules(useLivePrefs.getState());
+    const target = engine.getSnapshot().lot;
+    withGate(() => quickBid(shown, immediate, immediate ? undefined : target), {
+      intro: true,
+      reason: AUTH_REASONS.bid,
+      intent: 'bid',
+      bid: target ? { amount: shown, lot: target } : undefined,
+    });
+  };
+
+  /** Özel tutar: kurulum sırasında lot bittiyse sayfa açılıp kapanmaz, "hazırsın" bildirimi çıkar */
+  const onCustom = () => {
+    const ready = isSignedIn() && isReady() && hasAcceptedBidRules(useLivePrefs.getState());
+    const target = engine.getSnapshot().lot;
+    withGate(
+      () => {
+        if (!ready && missedLot(target)) return;
+        openSheet('custom');
+      },
+      { intro: true, reason: AUTH_REASONS.bid, bid: target ? { lot: target } : undefined },
+    );
   };
 
   const onCustomSubmit = ({ amount, max }: CustomBidSubmit): boolean => {
@@ -534,17 +618,12 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     const p = sheetProduct;
     if (!p) return;
     if (!isSignedIn() || !isReady()) {
-      setSheet(null);
-      setTimeout(
-        () =>
-          requireTransactSetup(
-            () => {
-              toast.success('Bilgilerin kaydedildi, şimdi satın alabilirsin', 'checkmark-circle-outline');
-              setSheet('buy');
-            },
-            { dark: true },
-          ),
-        SHEET_SWAP_MS,
+      withGate(
+        () => {
+          toast.success('Bilgilerin kaydedildi, şimdi satın alabilirsin', 'checkmark-circle-outline');
+          openSheet('buy');
+        },
+        { reason: AUTH_REASONS.buy, intent: 'buy' },
       );
       return;
     }
@@ -727,11 +806,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   useEffect(() => {
     if (!__DEV__ || !qa || qaDone || !visible) return;
     setQaDone(true);
-    const sheetNames: SheetName[] = (['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'intro', 'reactions', 'tip', 'giveawayInfo'] as SheetName[]).filter(
+    const sheetNames: SheetName[] = (['custom', 'shop', 'wallet', 'seller', 'more', 'boost', 'club', 'reactions', 'tip', 'giveawayInfo'] as SheetName[]).filter(
       (n) => (n !== 'boost' || FEATURES.paidBoost) && (n !== 'tip' || FEATURES.tips),
     );
     // Lot isteyen durumlar: en az 8 sn'si kalan, süren bir açık artırma bekle (en fazla ~30 sn)
-    const needsLot = ['custom', 'product', 'won', 'sold', 'leading'].includes(qa);
+    const needsLot = ['custom', 'product', 'won', 'sold', 'leading', 'intro'].includes(qa);
     let tries = 0;
     // Temizlenmez: setQaDone sonrası yeniden render bu zamanlayıcıyı iptal etmemeli (yalnızca __DEV__)
     const attempt = () => {
@@ -759,7 +838,13 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       else if (qa === 'giveawayWon') engine.startGiveaway(undefined, 2, false);
       else if (qa === 'flash' && shopItem) engine.startFlashSale(shopItem, 0.3, 120);
       else if (qa === 'sold') engine.endAuctionNow();
-      else if (qa === 'ended') engine.endShow();
+      // setup: tüm bölümler; intro: yalnızca kural onayı (teklif tutarıyla)
+      else if (qa === 'setup') openSetup({ intent: 'setup', needCard: true, needAddress: true, needRules: true });
+      else if (qa === 'intro' && s.lot) {
+        const target = s.lot;
+        const amount = nextMinBid(target.currentBid, target.bidCount > 0);
+        openSetup({ intent: 'bid', bid: { amount, lot: target }, needCard: false, needAddress: false, needRules: true }, () => quickBid(amount, false, target));
+      } else if (qa === 'ended') engine.endShow();
       else if (qa === 'won' && s.lot) {
         setCelebration({ id: Date.now(), kind: 'won', product: s.lot.product, price: s.lot.currentBid, quantity: 1, discount: 0, bundled: false });
       } else if ((sheetNames as string[]).includes(qa)) setSheet(qa as SheetName);
@@ -786,6 +871,9 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const bottomPad = Math.max(insets.bottom, 10) + 2;
   const ended = state.ended || endedShow;
   const giveaway = FEATURES.giveaways && state.giveaway && state.giveaway.id !== dismissedGiveaway ? state.giveaway : undefined;
+  // Hemen teklif veremeyen izleyiciye (misafir / kart, adres ya da kural onayı eksik) "Mezata hazır ol"
+  const bidReady = !guest && hasCard && hasAddress && rulesAccepted;
+  const showReadyBanner = !bidReady && !readyDismissed;
   // Sohbet: sol altta, ekran yüksekliğinin en fazla ~%38'i; üstündeki çekiliş şeridiyle birlikte orta bölgeye sığmazsa küçülür
   const chatH = Math.max(0, Math.min(Math.round(height * 0.38), middleH - 8 - (giveaway ? giveawayH + 6 : 0)));
   const mentionables = [
@@ -830,7 +918,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       nextBid={nextBid}
       leading={leading}
       lotId={lot?.id}
-      onCustom={() => withGate(() => openSheet('custom'), { intro: true, reason: AUTH_REASONS.bid })}
+      onCustom={onCustom}
       onSwipe={onSwipe}
       onTapHint={(amount) => toast(`Teklif vermek için düğmeyi basılı tut · ${formatTRY(amount)}`, 'hand-left-outline')}
     />
@@ -879,6 +967,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
                 ) : null}
               </View>
             ) : null}
+            {showReadyBanner ? (
+              <View style={styles.readyRow} pointerEvents="box-none">
+                <ReadyBanner guest={guest} needCard={!hasCard} needAddress={!hasAddress} onPrepare={prepareToBid} onDismiss={dismissReadyBanner} />
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.middle} pointerEvents="box-none" onLayout={(e) => setMiddleH(Math.round(e.nativeEvent.layout.height))}>
@@ -906,7 +999,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
                 flash={flash}
                 onBuy={() => {
                   const p = state.shop.find((x) => x.id === flash.product.id) ?? flash.product;
-                  withGate(() => openBuy(p), { reason: AUTH_REASONS.buy });
+                  withGate(() => openBuy(p), { reason: AUTH_REASONS.buy, intent: 'buy' });
                 }}
               />
             ) : null}
@@ -1008,20 +1101,17 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onClose={() => setComposer({ open: false, text: '' })}
         onSend={onSend}
       />
-      <BidIntroSheet
-        visible={sheet === 'intro'}
-        onClose={() => {
-          pendingAction.current = null;
-          setSheet(null);
-        }}
-        onAccept={() => {
-          useLivePrefs.getState().acceptBidIntro();
-          const action = pendingAction.current;
-          pendingAction.current = null;
-          setSheet(null);
-          if (action) setTimeout(action, SHEET_SWAP_MS);
-        }}
-      />
+      {setup ? (
+        <BidSetupSheet
+          key={setup.req.id}
+          visible={sheet === 'setup'}
+          request={setup.req}
+          lot={lot}
+          seller={seller}
+          onClose={closeAllSheets}
+          onSaved={onSetupSaved}
+        />
+      ) : null}
       <CustomBidSheet
         visible={sheet === 'custom'}
         onClose={closeAllSheets}
@@ -1152,7 +1242,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           setSheetProduct(p);
           openSheet('product');
         }}
-        onBuyNow={(p) => withGate(() => openBuy(p), { reason: AUTH_REASONS.buy })}
+        onBuyNow={(p) => withGate(() => openBuy(p), { reason: AUTH_REASONS.buy, intent: 'buy' })}
         onPreBid={(p) => {
           setSheetProduct(p);
           withGate(() => openSheet('prebid'), { intro: true, reason: AUTH_REASONS.bid });
@@ -1201,6 +1291,7 @@ const styles = StyleSheet.create({
   topSlot: { minHeight: 6 },
   notesRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: SCREEN_PADDING - 4, marginTop: 8, gap: 8 },
   muteHint: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 30, borderRadius: 999, paddingHorizontal: 12 },
+  readyRow: { paddingHorizontal: SCREEN_PADDING - 4, marginTop: 8 },
   middle: { flex: 1, minHeight: 0, flexDirection: 'row', alignItems: 'flex-end', paddingLeft: SCREEN_PADDING - 4, paddingRight: 6, paddingBottom: 8, gap: 6, overflow: 'hidden' },
   chatCol: { flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', maxWidth: '78%', gap: 6 },
   dock: { paddingHorizontal: SCREEN_PADDING - 4, gap: 8 },
