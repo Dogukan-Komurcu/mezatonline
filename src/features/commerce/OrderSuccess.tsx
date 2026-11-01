@@ -105,7 +105,7 @@ export function OrderSuccess({
               </Text>
             </View>
           ) : null}
-          {order.shippingCost === 0 ? <Line icon="layers-outline" label="Kargo" value="Aynı pakette · ₺0" /> : null}
+          {shippingLine(order)}
         </Animated.View>
 
         {points > 0 ? (
@@ -123,6 +123,14 @@ export function OrderSuccess({
       </View>
     </View>
   );
+}
+
+/** Kargo alınmadıysa ya da az alındıysa nedeni; notu olmayan eski siparişlerde eski davranış */
+function shippingLine(order: Order) {
+  if (order.shippingNote === 'included') return <Line icon="cube-outline" label="Kargo" value="Kargo dahil" />;
+  if (order.shippingNote === 'threshold') return <Line icon="gift-outline" label="Kargo · yayın kampanyası" value="Ücretsiz" />;
+  if (order.shippingNote === 'bundled' && order.shippingCost > 0) return <Line icon="layers-outline" label="Kargo · aynı pakette" value={`${formatTRY(order.shippingCost, { cents: !Number.isInteger(order.shippingCost) })} paket farkı`} />;
+  return order.shippingCost === 0 ? <Line icon="layers-outline" label="Kargo" value="Aynı pakette · ₺0" /> : null;
 }
 
 function Line({ icon, label, value }: { icon: IconName; label: string; value: string }) {

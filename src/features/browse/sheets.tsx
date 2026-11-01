@@ -126,7 +126,7 @@ export function ShowFilterSheet({
       ))}
       <Divider style={styles.divider} />
       <SectionLabel>Yayın özellikleri</SectionLabel>
-      <CheckRow label="Ücretsiz kargo" subtitle="Kargo ücretsiz ya da belirli tutar üstü bedava" checked={draft.freeShipping} onPress={() => flag('freeShipping')} />
+      <CheckRow label="Ücretsiz kargo" subtitle="Kargo dahil ürünler ya da belirli tutar üstü alımlarda ücretsiz kargo" checked={draft.freeShipping} onPress={() => flag('freeShipping')} />
       <CheckRow label="Çekiliş var" subtitle="Yayında ücretsiz çekilişler yapılıyor" checked={draft.giveaway} onPress={() => flag('giveaway')} />
       <CheckRow label="₺1 Başlangıç" subtitle="Açık artırmalar ₺1'den başlıyor" checked={draft.oneLira} onPress={() => flag('oneLira')} />
       <CheckRow label={SUDDEN_DEATH_LABEL} subtitle="Son saniyede gelen teklif süreyi uzatmaz" checked={draft.suddenDeath} onPress={() => flag('suddenDeath')} />

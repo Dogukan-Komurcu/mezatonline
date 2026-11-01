@@ -10,8 +10,6 @@ import { useOrdersStore } from '@/store/orders';
 import { useSellerStore } from '@/store/seller';
 import type { Product, Show, User } from '@/types';
 
-import { DAY_MS } from './utils';
-
 export function useProductById(id: string | undefined): Product | undefined {
   const local = useSellerStore((s) => (id ? s.listings.find((p) => p.id === id) : undefined));
   return getProduct(id) ?? local;
@@ -51,18 +49,6 @@ export function useRemainingStock(product: Product | undefined): number {
   const purchased = usePurchasedQty(product?.id);
   if (!product) return 0;
   return Math.max(0, product.quantity - product.sold - purchased);
-}
-
-/**
- * Kargo birleştirme: aynı yayından aynı satıcıya 24 saat içinde verilmiş sipariş varsa
- * yeni ürün aynı pakete eklenir ve kargo alınmaz (store/orders.createOrder ile aynı kural).
- */
-export function useIsBundled(sellerId: string | undefined, showId: string | undefined): boolean {
-  return useOrdersStore((s) => {
-    if (!showId || !sellerId) return false;
-    const now = Date.now();
-    return s.orders.some((o) => o.showId === showId && o.sellerId === sellerId && o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < DAY_MS);
-  });
 }
 
 /** Bu ürüne verilmiş en güncel ön teklif */

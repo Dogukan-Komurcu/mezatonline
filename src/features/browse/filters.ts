@@ -58,8 +58,9 @@ export function showHasSuddenDeath(show: Show): boolean {
   return show.highlights.some((h) => h === SUDDEN_DEATH_LABEL || h === 'Sudden Death' || h.startsWith('Ani Bitiş')) || getProductsByShow(show.id).some((p) => p.suddenDeath);
 }
 
+/** Ücretsiz kargo kampanyası (tek alımda eşik) ya da kargo dahil ürünü olan yayınlar */
 export function showHasFreeShipping(show: Show): boolean {
-  return show.highlights.includes('Ücretsiz Kargo') || show.freeShippingThreshold !== undefined;
+  return show.highlights.includes('Ücretsiz Kargo') || show.freeShippingThreshold !== undefined || getProductsByShow(show.id).some((p) => p.shippingIncluded);
 }
 
 export function showIsFresh(show: Show): boolean {

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { CARRIERS, makeSellerOrders, trackingNumber } from '@/data/seeds';
-import { sellerFees, SHIPPING_PRICES } from '@/lib/pricing';
+import { packageOf, quoteShipping, sellerOrderNet, SHIPPING_PRICES } from '@/lib/pricing';
 import { uid } from '@/lib/rng';
 import type { Carrier, ID, Order, Payout, Product, SellerApplication, Show } from '@/types';
 
@@ -76,7 +76,7 @@ export const useSellerStore = create<SellerState>()(
           sold: 0,
           saves: 0,
           createdAt: new Date().toISOString(),
-          shippingCost: input.shippingCost ?? SHIPPING_PRICES[input.shippingProfile],
+          shippingCost: input.shippingIncluded ? 0 : (input.shippingCost ?? SHIPPING_PRICES[input.shippingProfile]),
         };
         set((s) => {
           const listings = [product, ...s.listings];
@@ -123,7 +123,16 @@ export const useSellerStore = create<SellerState>()(
           ),
         })),
       recordSale: ({ product, price, buyerUsername, showId, source }) => {
-        const fees = sellerFees(price);
+        const now = Date.now();
+        // Aynı alıcıya aynı yayından son 24 saatte satılanlar tek pakette gider; çekiliş ödülünün kargosunu satıcı öder
+        const bundle = showId
+          ? get().orders.filter((o) => o.showId === showId && o.buyerId === buyerUsername && o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < 86_400_000)
+          : [];
+        const ship = quoteShipping(source === 'giveaway' ? { ...product, shippingIncluded: true } : product, {
+          pkg: packageOf(bundle),
+          itemTotal: price,
+          freeShippingThreshold: get().shows.find((sh) => sh.id === showId)?.freeShippingThreshold,
+        });
         const order: Order = {
           id: uid('so'),
           number: 'MZ-' + Math.floor(50000 + Math.random() * 40000),
@@ -136,10 +145,12 @@ export const useSellerStore = create<SellerState>()(
           source,
           showId,
           itemPrice: price,
-          shippingCost: product.shippingCost,
+          shippingCost: ship.buyer,
+          sellerShippingCost: ship.seller || undefined,
+          shippingNote: ship.note,
           serviceFee: 0,
           creditUsed: 0,
-          total: price + product.shippingCost,
+          total: price + ship.buyer,
           status: 'paid',
           timeline: [{ status: 'paid', at: new Date().toISOString() }],
           createdAt: new Date().toISOString(),
@@ -147,7 +158,7 @@ export const useSellerStore = create<SellerState>()(
         };
         set((s) => ({
           orders: [order, ...s.orders],
-          pendingBalance: Math.round((s.pendingBalance + fees.net) * 100) / 100,
+          pendingBalance: Math.round((s.pendingBalance + sellerOrderNet(order)) * 100) / 100,
           listings: s.listings.map((p) => (p.id === product.id ? { ...p, sold: Math.min(p.quantity, p.sold + 1) } : p)),
         }));
       },
@@ -155,7 +166,7 @@ export const useSellerStore = create<SellerState>()(
         set((s) => {
           const order = s.orders.find((o) => o.id === orderId);
           if (!order || order.status !== 'paid') return {};
-          const net = sellerFees(order.itemPrice).net;
+          const net = sellerOrderNet(order);
           return {
             orders: s.orders.map((o) =>
               o.id === orderId
@@ -169,7 +180,8 @@ export const useSellerStore = create<SellerState>()(
                 : o,
             ),
             // Kargolanınca bekleyen bakiye çekilebilir bakiyeye geçer (demo)
-            pendingBalance: Math.max(0, Math.round((s.pendingBalance - net) * 100) / 100),
+            // Kırpılmaz: satıcının karşıladığı kargo (ör. çekiliş ödülü) siparişin netini eksiye düşürebilir
+            pendingBalance: Math.round((s.pendingBalance - net) * 100) / 100,
             balance: Math.round((s.balance + net) * 100) / 100,
           };
         }),
@@ -199,7 +211,7 @@ export const useSellerStore = create<SellerState>()(
         const s = (persisted ?? {}) as SellerState;
         if (version < 1 && Array.isArray(s.orders)) {
           const r2 = (n: number) => Math.round(n * 100) / 100;
-          const net = (o: Order) => sellerFees(o.itemPrice * o.quantity).net;
+          const net = (o: Order) => sellerOrderNet(o);
           const toShip = s.orders.filter((o) => o.status === 'paid' || o.status === 'preparing');
           const settled = s.orders.filter((o) => o.status !== 'paid' && o.status !== 'preparing' && o.status !== 'cancelled' && o.status !== 'refunded');
           const paidOut = (s.payouts ?? []).reduce((t, p) => t + p.amount, 0);

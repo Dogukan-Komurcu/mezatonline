@@ -14,7 +14,7 @@ import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { districtsOf, neighborhoodsOf, PROVINCES } from '@/data/turkey';
 import { LEGAL_DOCS } from '@/features/account/content';
 import { contractSections } from '@/features/commerce/infoSheets';
-import { BINDING_BID_SHORT, BINDING_BID_TEXT, ESCROW_TEXT, WIN_COST_NOTE } from '@/features/commerce/utils';
+import { BINDING_BID_SHORT, BINDING_BID_TEXT, ESCROW_TEXT } from '@/features/commerce/utils';
 import { CardForm, emptyAddress, emptyCard, TestCardHint, validateAddress, validateCard, type AddressDraft, type CardDraft } from '@/features/wallet/forms';
 import { nextMinBid } from '@/lib/auction';
 import { formatCountdown, formatTRY } from '@/lib/format';
@@ -60,10 +60,13 @@ export type BidSetupSheetProps = {
 
 type Rule = { icon: IconName; tint: string; text: string; note?: string };
 
+/** Genel maliyet kuralı: kargo dahil ilanda ve yayının ücretsiz kargo eşiğine ulaşan alımda alıcıdan kargo alınmaz */
+const WIN_COST_RULE = 'Kazanırsan: teklif + kargo + %2 Alıcı Koruması bedeli (en az ₺2, en çok ₺49). Kargo dahil ilanlarda ve yayının ücretsiz kargo eşiğine ulaşan alımlarda kargo alınmaz.';
+
 const RULES: Rule[] = [
   { icon: 'card-outline', tint: liveColors.primaryBright, text: 'Kazanırsan ödeme kayıtlı kartından otomatik alınır.', note: DEMO_MODE ? DEMO_COPY.payment : undefined },
   { icon: 'hammer-outline', tint: liveColors.copper, text: BINDING_BID_SHORT },
-  { icon: 'receipt-outline', tint: liveColors.accent, text: `${WIN_COST_NOTE}.` },
+  { icon: 'receipt-outline', tint: liveColors.accent, text: WIN_COST_RULE },
 ];
 
 const PROTECTION_TEXT = `Paket hiç gelmezse ya da ürün ilanda anlatılandan belirgin biçimde farklı çıkarsa iadeyi biz başlatırız; teslimattan sonraki 14 gün içinde sipariş detayından bize yazman yeterli. ${ESCROW_TEXT}`;

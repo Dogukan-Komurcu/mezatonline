@@ -96,7 +96,7 @@ export function ProductCard({ product, width, style, onPress, hideSave }: Produc
         {product.title}
       </Text>
       <Text variant="footnote" color="textSecondary" numberOfLines={1} style={{ marginTop: 2 }}>
-        {FORMAT_LABELS[product.format]} · {product.shippingCost > 0 ? `+${formatTRY(product.shippingCost)} kargo` : 'Ücretsiz kargo'}
+        {FORMAT_LABELS[product.format]} · {product.shippingIncluded ? 'Kargo dahil' : product.shippingCost > 0 ? `+${formatTRY(product.shippingCost)} kargo` : 'Ücretsiz kargo'}
       </Text>
     </PressableScale>
   );

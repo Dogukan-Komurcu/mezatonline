@@ -49,15 +49,14 @@ export type SellerKyc = {
   marketingConsent: boolean;
 };
 
-export type ShippingCostMode = 'buyer' | 'capped' | 'seller';
+/** Yeni ilanlarda varsayılan kargo ödeyeni: alıcı öder ya da kargo dahil (satıcı öder); her ilanda ayrıca seçilir */
+export type ShippingCostMode = 'buyer' | 'seller';
 
 export type ShippingSettings = {
   /** Satıcı kargo ayarlarını en az bir kez gözden geçirdi mi (kontrol listesi) */
   configured: boolean;
   carrier: Carrier;
   costMode: ShippingCostMode;
-  /** costMode = capped iken alıcının ödeyeceği en yüksek kargo ücreti */
-  cap: number;
   /** Hazırlama süresi (iş günü) */
   handlingDays: 1 | 2;
   freePickup: boolean;
@@ -111,7 +110,6 @@ const DEFAULT_SHIPPING: ShippingSettings = {
   configured: false,
   carrier: 'Yurtiçi Kargo',
   costMode: 'buyer',
-  cap: 49,
   handlingDays: 2,
   freePickup: false,
 };
@@ -166,11 +164,17 @@ export const useSellerExtras = create<SellerExtrasState>()(
       name: storeKey('seller-extras'),
       storage: persistStorage,
       partialize: (s) => ({ ...s, kyc: redactKyc(s.kyc) }),
-      version: 1,
-      // v0 TCKN ve doğum tarihini açık metin saklıyordu
+      version: 2,
+      // v0 TCKN ve doğum tarihini açık metin saklıyordu · v1'de üçüncü kargo seçeneği ("katkı ver", üst tutar) vardı
       migrate: (persisted, version) => {
-        const s = persisted as SellerExtrasState;
-        return version < 1 && s ? { ...s, kyc: redactKyc(s.kyc) } : s;
+        let s = persisted as SellerExtrasState;
+        if (!s) return s;
+        if (version < 1) s = { ...s, kyc: redactKyc(s.kyc) };
+        if (version < 2 && s.shipping) {
+          const { cap: _cap, ...shipping } = s.shipping as ShippingSettings & { cap?: number };
+          s = { ...s, shipping: { ...shipping, costMode: shipping.costMode === 'seller' ? 'seller' : 'buyer' } };
+        }
+        return s;
       },
     },
   ),

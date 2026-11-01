@@ -66,7 +66,7 @@ export const FAQS: Faq[] = [
     id: 'f6',
     topic: 'shipping',
     q: 'Kargo ücreti nasıl hesaplanır?',
-    a: 'Kargo ücretini paketin boyutu (desi) belirler; satıcı her ürün için küçük paketten büyük koliye kadar bir boyut seçer ve tutar ödeme özetinde ayrı satır olarak görünür. Bir yayında aynı satıcıdan birden fazla ürün alırsan ürünler aynı pakette gönderilir; ilk üründen sonrakilerde ödeme özetindeki kargo satırı “₺0 · aynı pakette” olarak görünür. Satıcı yayın için ücretsiz kargo sınırı belirlediyse bu bilgi yayın sayfasında yazar.',
+    a: 'Kargo ücretini paketin boyutu (desi) belirler; satıcı her ürün için küçük paketten büyük koliye kadar bir boyut seçer ve tutar ödeme özetinde ayrı satır olarak görünür. Bazı ilanlarda satıcı kargoyu üstlenir; bu ilanlarda “Kargo dahil” yazar ve kargo ücreti alınmaz. Bir yayında aynı satıcıdan birden fazla ürün alırsan ürünler aynı pakette gönderilir; sonraki alımlarda paket büyürse yalnızca aradaki farkı ödersin, büyümezse kargo satırı “₺0 · aynı pakette” görünür. Satıcı yayına ücretsiz kargo eşiği koyduysa (ör. ₺500 ve üzeri), tutarı eşiğe ulaşan her alımda kargo ücretsizdir; küçük alımlar toplanmaz.',
   },
   {
     id: 'f7',

@@ -252,10 +252,22 @@ export function Timeline({ items }: { items: TimelineItem[] }) {
 
 // ─── Ödeme özeti (makbuz) ────────────────────────────────────────────────────
 
+/** Siparişte alıcıdan kargo alınmamasının (ya da az alınmasının) nedeni; notu olmayan eski siparişlerde null */
+export function orderShippingReason(order: Pick<Order, 'shippingCost' | 'shippingNote'>): string | null {
+  if (order.shippingNote === 'included') return 'Kargo dahil';
+  if (order.shippingNote === 'threshold') return 'Ücretsiz kargo (yayın kampanyası)';
+  if (order.shippingNote === 'bundled') return order.shippingCost > 0 ? 'Aynı pakette · paket farkı' : 'Aynı pakette';
+  return null;
+}
+
 export function Receipt({ order, payment }: { order: Order; payment?: PaymentMethod }) {
   const { colors } = useTheme();
   const unit = order.quantity > 1 ? order.itemPrice / order.quantity : 0;
-  const shipping = order.shippingCost > 0 ? formatTRY(order.shippingCost, { cents: true }) : order.showId ? 'Aynı pakete eklendi' : 'Ücretsiz';
+  const reason = orderShippingReason(order);
+  const shipping =
+    order.shippingCost > 0
+      ? `${formatTRY(order.shippingCost, { cents: true })}${order.shippingNote === 'bundled' ? ' · paket farkı' : ''}`
+      : (reason ?? (order.showId ? 'Aynı pakete eklendi' : 'Ücretsiz'));
   const refunded = order.status === 'cancelled' || order.status === 'refunded';
   return (
     <View style={styles.receipt}>

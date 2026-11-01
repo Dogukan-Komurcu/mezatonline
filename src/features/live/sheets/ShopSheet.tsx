@@ -22,12 +22,14 @@ export type ShopSheetProps = {
   onBuyNow: (p: Product) => void;
   onPreBid: (p: Product) => void;
   onEnterGiveaway: () => void;
+  /** Satırdaki kargo metni (paket ve yayının ücretsiz kargo eşiği dahil); yoksa ilanın kargo ücreti */
+  shippingFor?: (p: Product) => string;
 };
 
 const VIA_LABEL: Record<SoldItem['via'], string> = { auction: 'Açık artırma', buy_now: 'Hemen Al', giveaway: 'Çekiliş', flash_sale: 'Flaş indirim' };
 
 /** S24: Yayın Mağazası — sekmeler yerine çipler: Sırada · Satın al · (Çekiliş) · Satıldı */
-export function ShopSheet({ visible, onClose, sellerName, state, onProductPress, onBuyNow, onPreBid, onEnterGiveaway }: ShopSheetProps) {
+export function ShopSheet({ visible, onClose, sellerName, state, onProductPress, onBuyNow, onPreBid, onEnterGiveaway, shippingFor }: ShopSheetProps) {
   const { colors } = useTheme();
   const [tab, setTab] = useState<TabKey>('auction');
   const [query, setQuery] = useState('');
@@ -59,7 +61,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
     const soldItem = state.sold.find((s) => s.via === 'auction' && s.product.id === p.id);
     const pre = state.myPreBids?.[p.id];
     return (
-      <Row
+      <Row shippingFor={shippingFor}
         key={p.id}
         product={p}
         onPress={() => onProductPress(p)}
@@ -119,7 +121,7 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
     const flash = state.flash && state.flash.status === 'running' && state.flash.product.id === p.id ? state.flash : undefined;
     const onStage = lot?.product.id === p.id && lot.status === 'running';
     return (
-      <Row key={p.id} product={p} onPress={() => onProductPress(p)} right={stock > 0 && !onStage ? <Button title="Hemen Al" size="sm" onPress={() => onBuyNow(p)} /> : undefined}>
+      <Row shippingFor={shippingFor} key={p.id} product={p} onPress={() => onProductPress(p)} right={stock > 0 && !onStage ? <Button title="Hemen Al" size="sm" onPress={() => onBuyNow(p)} /> : undefined}>
         <View style={styles.priceRow}>
           {flash ? (
             <>
@@ -197,8 +199,9 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
       {activeTab === 'auction' ? (auctions.length ? auctions.map(renderAuction) : empty('Açık artırma yok', 'Bu yayında henüz sırada ürün yok.')) : null}
       {activeTab === 'buy_now' ? (bins.length ? bins.map(renderBin) : empty('Hemen Al ürünü yok', 'Satıcı bu yayında Hemen Al ürünü eklemedi.')) : null}
       {activeTab === 'giveaway' && g ? (
-        <Row
+        <Row shippingFor={shippingFor}
           product={g.product}
+          shippingIncluded
           onPress={() => undefined}
           right={g.status === 'running' ? <Button title={g.entered ? 'Katıldın ✓' : 'Katıl'} size="sm" disabled={g.entered} onPress={onEnterGiveaway} /> : undefined}>
           <Text variant="subhead" weight="800" color={liveColors.copper}>
@@ -236,7 +239,23 @@ export function ShopSheet({ visible, onClose, sellerName, state, onProductPress,
   );
 }
 
-function Row({ product, onPress, right, children }: { product: Product; onPress: () => void; right?: ReactNode; children: ReactNode }) {
+/** shippingIncluded: kargoyu satıcı öder (kargo dahil ilan; çekiliş ödülünde her zaman) */
+function Row({
+  product,
+  shippingIncluded,
+  shippingFor,
+  onPress,
+  right,
+  children,
+}: {
+  product: Product;
+  shippingIncluded?: boolean;
+  shippingFor?: (p: Product) => string;
+  onPress: () => void;
+  right?: ReactNode;
+  children: ReactNode;
+}) {
+  const shipping = shippingIncluded || product.shippingIncluded ? 'Kargo dahil' : shippingFor ? shippingFor(product) : `Kargo ${formatTRY(product.shippingCost)}`;
   return (
     <PressableScale scaleTo={0.99} onPress={onPress} style={[styles.row, styles.rowCentered]}>
       <Image source={{ uri: product.images[0] }} style={styles.thumb} contentFit="cover" cachePolicy="memory-disk" recyclingKey={product.id} />
@@ -245,7 +264,7 @@ function Row({ product, onPress, right, children }: { product: Product; onPress:
           {product.title.replace(/^🎁\s*/, '')}
         </Text>
         <Text variant="caption" color="textSecondary" numberOfLines={1}>
-          {product.grade ?? CONDITION_LABELS[product.condition]} · Kargo {formatTRY(product.shippingCost)}
+          {product.grade ?? CONDITION_LABELS[product.condition]} · {shipping}
         </Text>
         <View style={styles.rowBody}>{children}</View>
       </View>

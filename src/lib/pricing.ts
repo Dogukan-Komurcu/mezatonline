@@ -1,9 +1,13 @@
+import type { Order, Product, ShippingNote } from '@/types';
+
 /**
  * Alıcı ve satıcı ücret hesapları.
  * Fiyatlar KDV dahildir. Alıcıdan küçük bir "Alıcı Koruma" hizmet bedeli alınır.
  * Satıcıdan toplam %8 komisyon kesilir: %5 satış komisyonu + %3 kredi kartı ücreti
  * (sipariş başına ayrıca ₺5 sabit). Ayrı bir ödeme işlem ücreti yoktur.
  */
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Alıcı Koruma hizmet bedeli: ürün tutarının %2'si, min ₺2, maks ₺49 */
 export function buyerServiceFee(itemPrice: number): number {
@@ -59,9 +63,59 @@ export const SHIPPING_PROFILE_LABELS = {
   xlarge: 'Büyük koli (20 desi) — halı, mobilya',
 } as const;
 
-/** Aynı yayında sonraki ürünler aynı pakete eklenir: kargo farkı */
-export function bundledShipping(previousMax: number, current: number): number {
-  return Math.max(0, Math.round((current - previousMax) * 100) / 100);
+/** Kargo etiketi bedeli: kargo dahil ilanda alıcıdan alınmaz ama satıcı yine öder */
+export function labelPrice(p: Pick<Product, 'shippingCost' | 'shippingProfile' | 'shippingIncluded'>): number {
+  return p.shippingIncluded ? (SHIPPING_PRICES[p.shippingProfile] ?? 0) : p.shippingCost;
+}
+
+/** Aynı yayın paketinde şimdiye kadar: alıcının ödediği kargo ve toplam etiket bedeli */
+export type PackageSoFar = { buyerPaid: number; label: number };
+
+/** Bir paketin siparişlerinden PackageSoFar (etiket payı = alıcı + satıcı kısmı) */
+export function packageOf(orders: Pick<Order, 'shippingCost' | 'sellerShippingCost'>[]): PackageSoFar | null {
+  if (!orders.length) return null;
+  const buyerPaid = orders.reduce((t, o) => t + o.shippingCost, 0);
+  const label = orders.reduce((t, o) => t + o.shippingCost + (o.sellerShippingCost ?? 0), 0);
+  return { buyerPaid: round2(buyerPaid), label: round2(label) };
+}
+
+export type ShippingQuote = {
+  /** Alıcıdan alınacak kargo */
+  buyer: number;
+  /** Etiket bedelinin satıcının karşılayacağı kısmı */
+  seller: number;
+  /** Alıcıdan tam kargo alınmamasının nedeni */
+  note?: ShippingNote;
+};
+
+/**
+ * Bir alımın kargo payı. Aynı yayından aynı satıcıya alınanlar tek pakette gider:
+ * paketin etiket bedeli en büyük ürünün etiketidir; alıcı yalnızca "alıcı öder" ürünlerin en yüksek
+ * kargo ücretine kadar, o alımın paketi büyüttüğü kadarını öder. Kalan etiket bedelini satıcı karşılar
+ * (kargo dahil ilan ya da yayının ücretsiz kargo eşiği).
+ */
+export function quoteShipping(
+  p: Pick<Product, 'shippingCost' | 'shippingProfile' | 'shippingIncluded'>,
+  opts: { pkg?: PackageSoFar | null; itemTotal?: number; freeShippingThreshold?: number } = {},
+): ShippingQuote {
+  const label = labelPrice(p);
+  const soFar = opts.pkg ?? { buyerPaid: 0, label: 0 };
+  const delta = round2(Math.max(soFar.label, label) - soFar.label);
+  const waived: ShippingNote | undefined = p.shippingIncluded
+    ? 'included'
+    : opts.freeShippingThreshold && (opts.itemTotal ?? 0) >= opts.freeShippingThreshold
+      ? 'threshold'
+      : undefined;
+  const target = waived ? soFar.buyerPaid : Math.max(soFar.buyerPaid, label);
+  const buyer = Math.min(delta, Math.max(0, round2(target - soFar.buyerPaid)));
+  const seller = round2(delta - buyer);
+  const note = waived ?? (opts.pkg && buyer < label ? 'bundled' : undefined);
+  return { buyer, seller, note };
+}
+
+/** Satıcının siparişten net kazancı: komisyon ve kart ücreti + karşıladığı kargo düşülür */
+export function sellerOrderNet(o: Pick<Order, 'itemPrice' | 'quantity' | 'sellerShippingCost'>): number {
+  return round2(sellerFees(o.itemPrice * o.quantity).net - (o.sellerShippingCost ?? 0));
 }
 
 export type CheckoutBreakdown = {

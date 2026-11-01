@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { CARRIERS, orderNumber, SEED_ORDERS, trackingNumber } from '@/data/seeds';
-import { buyerServiceFee } from '@/lib/pricing';
+import { getShow } from '@/data';
+import { buyerServiceFee, packageOf, quoteShipping } from '@/lib/pricing';
 import { random, uid } from '@/lib/rng';
 import type { ID, Offer, Order, OrderSource, OrderStatus, Product } from '@/types';
 
@@ -39,8 +40,9 @@ type OrdersState = {
   /** Ön teklif ver ya da mevcut ön teklifi yükselt (düşürülemez) */
   placePreBid: (productId: ID, showId: ID, maxAmount: number) => PreBid;
   /**
-   * Yeni sipariş oluşturur. Aynı yayından 24 saat içinde aynı satıcıya ait başka bir
-   * sipariş varsa kargo ücreti alınmaz ("Kargo birleştirildi").
+   * Yeni sipariş oluşturur. Kargo payı lib/pricing quoteShipping ile hesaplanır: aynı yayından 24 saat
+   * içinde aynı satıcıya verilen siparişler tek pakete girer ("Kargo birleştirildi"), kargo dahil ilanda
+   * ve yayının ücretsiz kargo eşiğini geçen alımda alıcıdan kargo alınmaz.
    */
   createOrder: (input: CreateOrderInput) => Order;
   cancelOrder: (id: ID) => void;
@@ -53,6 +55,11 @@ type OrdersState = {
 };
 
 const MIN = 60_000;
+
+/** Aynı yayından aynı satıcıya son 24 saatte verilmiş, iptal edilmemiş siparişler (tek paket) */
+export function packageOrders(orders: Order[], showId: ID, sellerId: ID, now = Date.now()): Order[] {
+  return orders.filter((o) => o.showId === showId && o.sellerId === sellerId && o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < 24 * 60 * MIN);
+}
 /** Simülasyon: sipariş durumları bu sürelerden sonra ilerler */
 const PROGRESS: { after: number; status: OrderStatus }[] = [
   { after: 2 * MIN, status: 'preparing' },
@@ -81,13 +88,11 @@ export const useOrdersStore = create<OrdersState>()(
       },
       createOrder: ({ product, price, source, showId, quantity = 1, addressId, paymentMethodId, creditUsed = 0 }) => {
         const now = Date.now();
-        const combined =
-          !!showId &&
-          get().orders.some(
-            (o) => o.showId === showId && o.sellerId === product.sellerId && o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < 24 * 60 * MIN,
-          );
         const itemPrice = price * quantity;
-        const shippingCost = combined ? 0 : product.shippingCost;
+        // Aynı yayından aynı satıcıya alınanlar tek pakette gider; kargo dahil ilan ve yayının ücretsiz kargo eşiği de burada uygulanır
+        const bundle = showId ? packageOrders(get().orders, showId, product.sellerId, now) : [];
+        const ship = quoteShipping(product, { pkg: packageOf(bundle), itemTotal: itemPrice, freeShippingThreshold: getShow(showId)?.freeShippingThreshold });
+        const shippingCost = ship.buyer;
         const serviceFee = buyerServiceFee(itemPrice);
         const order: Order = {
           id: uid('o'),
@@ -102,13 +107,15 @@ export const useOrdersStore = create<OrdersState>()(
           showId,
           itemPrice,
           shippingCost,
+          sellerShippingCost: ship.seller || undefined,
+          shippingNote: ship.note,
           serviceFee,
           creditUsed,
           total: Math.max(0, Math.round((itemPrice + shippingCost + serviceFee - creditUsed) * 100) / 100),
           status: 'paid',
           addressId,
           paymentMethodId,
-          timeline: [{ status: 'paid', at: new Date(now).toISOString(), note: combined ? 'Kargo aynı yayındaki siparişinle birleştirildi' : undefined }],
+          timeline: [{ status: 'paid', at: new Date(now).toISOString(), note: ship.note === 'bundled' ? 'Kargo aynı yayındaki siparişinle birleştirildi' : undefined }],
           createdAt: new Date(now).toISOString(),
           reviewed: false,
         };

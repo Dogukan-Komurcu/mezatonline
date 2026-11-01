@@ -8,13 +8,14 @@ import { DEMO_COPY } from '@/config/demo';
 import { Checkbox } from '@/features/commerce/components';
 import { useSellerOf } from '@/features/commerce/hooks';
 import { contractSections } from '@/features/commerce/infoSheets';
+import { thresholdText, useShippingQuote } from '@/features/shared/shipping';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { buyerServiceFee } from '@/lib/pricing';
 import { useMe } from '@/store/auth';
 import { selectDefaultAddress, selectDefaultPayment, useWalletStore } from '@/store/wallet';
 import { liveColors, useTheme } from '@/theme';
-import type { Product } from '@/types';
+import type { ID, Product } from '@/types';
 
 import { alpha } from '../components/styles';
 import { couponDiscount, useLivePrefs } from '../liveStore';
@@ -29,14 +30,17 @@ export type BuyNowSheetProps = {
   originalPrice?: number;
   flash: boolean;
   stock: number;
-  bundled: boolean;
+  /** Kargo payı bu yayına göre hesaplanır (aynı paket, kargo dahil ilan, ücretsiz kargo eşiği) */
+  showId: ID;
+  /** Yayının ücretsiz kargo eşiği (varsa; eşiğe ulaşılmadıysa ipucu gösterilir) */
+  freeShippingThreshold?: number;
   processing: boolean;
   onNavigate: (href: string) => void;
   onConfirm: (quantity: number) => void;
 };
 
 /** S25: Hemen Al ödeme sayfası (canlı yayın üstünde, koyu) */
-export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPrice, flash, stock, bundled, processing, onNavigate, onConfirm }: BuyNowSheetProps) {
+export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPrice, flash, stock, showId, freeShippingThreshold, processing, onNavigate, onConfirm }: BuyNowSheetProps) {
   const { colors } = useTheme();
   const address = useWalletStore(selectDefaultAddress);
   const payment = useWalletStore(selectDefaultPayment);
@@ -59,11 +63,27 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
     }
   }, [visible]);
 
-  if (!product) return null;
-  const maxQty = Math.max(1, Math.min(stock, flash ? 2 : 5));
+  // Kupon yalnızca tek adetlik alımda (bkz. purchaseInLive); sipariş tutarı kupon düşülmüş birim fiyat × adet
   const discount = qty === 1 ? couponDiscount(coupon, unitPrice) : 0;
   const itemTotal = Math.max(0, unitPrice - discount) * qty;
-  const shipping = bundled ? 0 : product.shippingCost;
+  // createOrder ile aynı hesap: paket kuralı ve ücretsiz kargo eşiği bu alımın ürün tutarına göre
+  const ship = useShippingQuote(product, showId, itemTotal);
+
+  if (!product) return null;
+  const maxQty = Math.max(1, Math.min(stock, flash ? 2 : 5));
+  const shipping = ship.buyer;
+  const shippingValue =
+    shipping > 0
+      ? `${formatTRY(shipping, { cents: true })}${ship.note === 'bundled' ? ' · paket farkı' : ''}`
+      : ship.note === 'included'
+        ? '₺0 · kargo dahil'
+        : ship.note === 'threshold'
+          ? 'Ücretsiz · yayın kampanyası'
+          : ship.note === 'bundled'
+            ? '₺0 · aynı pakette'
+            : 'Ücretsiz';
+  // Eşiğe ulaşılmadıysa (alıcı kargo ödüyorsa) kampanyayı hatırlat
+  const thresholdHint = freeShippingThreshold && shipping > 0 ? thresholdText(freeShippingThreshold) : undefined;
   const fee = buyerServiceFee(itemTotal);
   const creditUsed = useCredits ? Math.min(credits, itemTotal) : 0;
   const total = Math.max(0, Math.round((itemTotal + shipping + fee - creditUsed) * 100) / 100);
@@ -221,7 +241,12 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
 
           <Line label={`Ara toplam${qty > 1 ? ` (${qty} adet)` : ''}`} value={formatTRY(unitPrice * qty, { cents: true })} strike={originalPrice && originalPrice > unitPrice ? formatTRY(originalPrice * qty) : undefined} />
           {discount > 0 ? <Line label="Kupon indirimi" value={`-${formatTRY(discount, { cents: true })}`} positive /> : null}
-          <Line label="Kargo" value={bundled ? '₺0 · aynı pakette' : formatTRY(shipping, { cents: true })} positive={bundled} />
+          <Line label="Kargo" value={shippingValue} positive={shipping === 0 && !!ship.note} />
+          {thresholdHint ? (
+            <Text variant="caption" color="textTertiary" style={styles.hint}>
+              {thresholdHint}
+            </Text>
+          ) : null}
           <Line label="Alıcı Koruması hizmet bedeli" value={formatTRY(fee, { cents: true })} />
           {creditUsed > 0 ? <Line label="Mezat kredisi" value={`-${formatTRY(creditUsed, { cents: true })}`} positive /> : null}
           <View style={styles.totalRow}>
@@ -313,6 +338,7 @@ const styles = StyleSheet.create({
   section: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   line: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   strike: { textDecorationLine: 'line-through' },
+  hint: { marginTop: -2, marginBottom: 2 },
   totalRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 8 },
   totalRight: { alignItems: 'flex-end' },
   protect: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, marginBottom: 4 },

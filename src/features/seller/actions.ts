@@ -6,10 +6,11 @@ import { useEffect, useState } from 'react';
 
 import { toast } from '@/components/ui';
 import { haptic } from '@/lib/haptics';
+import { labelPrice, packageOf } from '@/lib/pricing';
 import { useAuthStore } from '@/store/auth';
 import { useInboxStore } from '@/store/inbox';
 import { useSellerStore, type NewListingInput } from '@/store/seller';
-import type { Carrier, ID, Product } from '@/types';
+import type { Carrier, ID, Order, Product } from '@/types';
 
 import { makeLabelCode, orderNet, type IncomingOffer } from './logic';
 import { useSellerExtras, type ListingStatus } from './store';
@@ -86,7 +87,7 @@ export function shipOrder(orderId: ID, carrier: Carrier) {
           ? { ...o, status: 'shipped', carrier, trackingNumber: String(Math.floor(1e11 + Math.random() * 9e11)), timeline: [...o.timeline, { status: 'shipped', at: new Date().toISOString() }] }
           : o,
       ),
-      pendingBalance: Math.max(0, Math.round((s.pendingBalance - net) * 100) / 100),
+      pendingBalance: Math.round((s.pendingBalance - net) * 100) / 100,
       balance: Math.round((s.balance + net) * 100) / 100,
     }));
   }
@@ -94,16 +95,52 @@ export function shipOrder(orderId: ID, carrier: Carrier) {
   useSellerStore.setState((s) => ({ orders: s.orders.map((o) => (o.id === orderId ? { ...o, carrier } : o)) }));
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * İptal edilen sipariş bir paketin etiketini taşıyorsa kalan siparişlerin etiketi eksik kalır.
+ * Alıcıdan sonradan ek kargo alınmaz; eksik etiket payı paketteki en büyük siparişe satıcı payı olarak yazılır.
+ */
+function packageShortfall(s: { orders: Order[]; listings: Product[] }, cancelled: Order): { orderId: ID; amount: number; pending: boolean } | null {
+  if (!cancelled.showId) return null;
+  const at = new Date(cancelled.createdAt).getTime();
+  const rest = s.orders.filter(
+    (o) =>
+      o.id !== cancelled.id &&
+      o.showId === cancelled.showId &&
+      o.buyerId === cancelled.buyerId &&
+      o.status !== 'cancelled' &&
+      o.status !== 'refunded' &&
+      Math.abs(new Date(o.createdAt).getTime() - at) < 86_400_000,
+  );
+  if (!rest.length) return null;
+  const labelOf = (o: Order) => {
+    const p = s.listings.find((l) => l.id === o.productId);
+    return p ? labelPrice(o.source === 'giveaway' ? { ...p, shippingIncluded: true } : p) : o.shippingCost + (o.sellerShippingCost ?? 0);
+  };
+  const amount = round2(Math.max(...rest.map(labelOf)) - (packageOf(rest)?.label ?? 0));
+  if (amount <= 0) return null;
+  const target = rest.reduce((a, b) => (labelOf(b) > labelOf(a) ? b : a));
+  return { orderId: target.id, amount, pending: target.status === 'paid' || target.status === 'preparing' };
+}
+
 /** Satıcı kaynaklı iptal: sipariş iptal edilir, bekleyen bakiyeden düşülür, ürün stoğa döner */
 export function cancelSellerOrder(orderId: ID, reason: string) {
-  const order = useSellerStore.getState().orders.find((o) => o.id === orderId);
+  const state = useSellerStore.getState();
+  const order = state.orders.find((o) => o.id === orderId);
   if (!order || (order.status !== 'paid' && order.status !== 'preparing')) return;
   const net = orderNet(order);
+  const shortfall = packageShortfall(state, order);
   useSellerStore.setState((s) => ({
     orders: s.orders.map((o) =>
-      o.id === orderId ? { ...o, status: 'cancelled', timeline: [...o.timeline, { status: 'cancelled', at: new Date().toISOString(), note: reason }] } : o,
+      o.id === orderId
+        ? { ...o, status: 'cancelled', timeline: [...o.timeline, { status: 'cancelled', at: new Date().toISOString(), note: reason }] }
+        : shortfall && o.id === shortfall.orderId
+          ? { ...o, sellerShippingCost: round2((o.sellerShippingCost ?? 0) + shortfall.amount) }
+          : o,
     ),
-    pendingBalance: Math.max(0, Math.round((s.pendingBalance - net) * 100) / 100),
+    pendingBalance: round2(s.pendingBalance - net - (shortfall?.pending ? shortfall.amount : 0)),
+    balance: shortfall && !shortfall.pending ? round2(s.balance - shortfall.amount) : s.balance,
     listings: s.listings.map((p) => (p.id === order.productId ? { ...p, sold: Math.max(0, p.sold - order.quantity) } : p)),
   }));
   useSellerExtras.getState().setCancelReason(orderId, reason);

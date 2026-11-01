@@ -13,7 +13,7 @@ import { Button, Divider, EmptyState, Header, Icon, ListRow, PressableScale, Scr
 import { DEMO_COPY } from '@/config/demo';
 import { BlockTitle, CardBrandMark, Checkbox, NoticeBox, QtyStepper } from '@/features/commerce/components';
 import { checkCoupon, couponDiscount, useCouponStore, type Coupon } from '@/features/commerce/coupons';
-import { useIsBundled, useProductById, useRemainingStock, useSellerOf } from '@/features/commerce/hooks';
+import { useProductById, useRemainingStock, useSellerOf } from '@/features/commerce/hooks';
 import { BuyerProtectionSheet, ContractSheet, InstallmentTableSheet } from '@/features/commerce/infoSheets';
 import { installmentPlan, installmentsAllowed, MIN_INSTALLMENT_TOTAL, plansFor, programOf, type InstallmentCount } from '@/features/commerce/installments';
 import { OrderSuccess } from '@/features/commerce/OrderSuccess';
@@ -21,6 +21,7 @@ import { AddressPickerSheet, PaymentPickerSheet } from '@/features/commerce/pick
 import { ThreeDSecure } from '@/features/commerce/ThreeDSecure';
 import { addressLine, deliveryWindow } from '@/features/commerce/utils';
 import { completePurchase } from '@/features/shared/purchase';
+import { shippingQuoteFor, type ShippingQuote } from '@/features/shared/shipping';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { formatPhone, formatRating, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -68,7 +69,8 @@ export default function CheckoutScreen() {
         ? 'giveaway'
         : 'buy_now';
   const showId = params.showId || product?.showId;
-  const bundled = useIsBundled(product?.sellerId, showId);
+  // Aynı yayın paketi hesabı için siparişler (yeni sipariş verilince kargo satırı güncellenir)
+  const orders = useOrdersStore((s) => s.orders);
 
   const [addressId, setAddressId] = useState<string | undefined>();
   const [cardId, setCardId] = useState<string | undefined>();
@@ -153,7 +155,9 @@ export default function CheckoutScreen() {
   const maxQty = canChangeQty ? Math.min(remaining, 10) : 1;
   const quantity = Math.min(qty, maxQty);
   const itemSubtotal = unitPrice * quantity;
-  const shipping = bundled ? 0 : product.shippingCost;
+  // createOrder ile aynı hesap: paket, kargo dahil ilan ve yayının ücretsiz kargo eşiği (ürün tutarı üzerinden)
+  const ship = shippingQuoteFor(product, showId, itemSubtotal, orders);
+  const shipping = ship.buyer;
   const base = checkoutBreakdown(itemSubtotal, shipping);
   const couponValid = !!coupon && (!coupon.minSubtotal || itemSubtotal >= coupon.minSubtotal);
   const couponOff = coupon && couponValid ? couponDiscount(coupon, itemSubtotal) : 0;
@@ -506,7 +510,7 @@ export default function CheckoutScreen() {
         <View style={styles.block}>
           <BlockTitle title="Sipariş özeti" style={styles.noMargin} />
           <SummaryRow label={`Ürün tutarı (KDV dahil)${quantity > 1 ? ` · ${quantity} adet` : ''}`} value={money(itemSubtotal)} />
-          <SummaryRow label="Kargo" value={bundled ? '₺0 · aynı pakette' : shipping > 0 ? money(shipping) : 'Ücretsiz'} tone={bundled || shipping === 0 ? 'success' : undefined} />
+          <SummaryRow label="Kargo" value={shippingValue(ship)} tone={shipping === 0 ? 'success' : undefined} />
           <SummaryRow label="Alıcı Koruması hizmet bedeli" value={money(base.serviceFee)} info={() => setProtectionOpen(true)} />
           {couponOff > 0 ? <SummaryRow label={`İndirim (${coupon?.code})`} value={`-${money(couponOff)}`} tone="success" /> : null}
           {creditUsed > 0 ? <SummaryRow label="Mezat Kredisi" value={`-${money(creditUsed)}`} tone="success" /> : null}
@@ -637,6 +641,15 @@ function AddRow({ icon, title, subtitle, onPress }: { icon: 'location-outline' |
       <Icon name="add-circle" size={22} color="text" />
     </PressableScale>
   );
+}
+
+/** Özetteki kargo değeri: ücret ya da alınmama nedeni */
+function shippingValue(q: ShippingQuote): string {
+  if (q.buyer > 0) return q.note === 'bundled' ? `${money(q.buyer)} · paket farkı` : money(q.buyer);
+  if (q.note === 'included') return '₺0 · kargo dahil';
+  if (q.note === 'threshold') return 'Ücretsiz · yayın kampanyası';
+  if (q.note === 'bundled') return '₺0 · aynı pakette';
+  return 'Ücretsiz';
 }
 
 function SummaryRow({ label, value, tone, info }: { label: string; value: string; tone?: 'success'; info?: () => void }) {

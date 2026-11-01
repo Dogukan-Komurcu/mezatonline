@@ -8,7 +8,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Chip, Icon, IconButton, Stars, Text, type IconName } from '@/components/ui';
 import { getCategory, getUser, getRatingBreakdown, getReviewsForSeller } from '@/data';
-import { formatCompact, formatDate, formatMonthYear, formatRating, formatTRY } from '@/lib/format';
+import { thresholdText } from '@/features/shared/shipping';
+import { formatCompact, formatDate, formatMonthYear, formatRating } from '@/lib/format';
 import { radius, SCREEN_PADDING, useTheme, type ColorTokens } from '@/theme';
 import type { Show, User, UserBadge } from '@/types';
 
@@ -277,8 +278,8 @@ export function AboutSection({
           <View style={styles.aboutBlock}>
             <Text variant="headline">Kargo politikası</Text>
             <Text variant="callout" color="textSecondary">
-              Siparişler ortalama {shipTimeLabel(user.avgShipDays)} içinde kargoya verilir (en geç 2 iş günü). Aynı yayında aldığın ürünler tek pakette gönderilir; kargo ücretini bir kez ödersin, sonraki ürünler “aynı pakete eklendi” olarak gelir.
-              {nextShow?.freeShippingThreshold ? ` ${formatTRY(nextShow.freeShippingThreshold)} ve üzeri alışverişlerde kargo ücretsiz.` : ''}
+              Siparişler ortalama {shipTimeLabel(user.avgShipDays)} içinde kargoya verilir (en geç 2 iş günü). Aynı yayında aldığın ürünler tek pakette gönderilir; kargoyu bir kez, paketteki en büyük ürünün ücreti kadar ödersin; koliyi büyütmeyen sonraki ürünlerde kargo “₺0 · aynı pakette” görünür, büyütenlerde yalnızca aradaki farkı ödersin. “Kargo dahil” ilanlarda kargo ücreti alınmaz.
+              {nextShow?.freeShippingThreshold ? ` Sıradaki yayında ${thresholdText(nextShow.freeShippingThreshold)}.` : ''}
             </Text>
           </View>
           <View style={styles.aboutBlock}>

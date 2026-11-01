@@ -1,7 +1,8 @@
 /**
  * S83 — Ürün Oluştur / Düzenle (modal). ?id= düzenleme, ?showId= yayını önceden seç.
  * Fotoğraflar (8'e kadar), başlık, açıklama, kategori, durum, satış formatı ve fiyat, adet,
- * Uzatmasız (suddenDeath) / Fiyat önerisi, kargo profili, yayına ekle; Taslak / Yayınla / Sil.
+ * Uzatmasız (suddenDeath) / Fiyat önerisi, kargo profili ve kargoyu kim öder (alıcı öder / kargo dahil),
+ * yayına ekle; Taslak / Yayınla / Sil. Yeni ilanda kargo seçimi Kargo Ayarları'ndaki varsayılandan gelir.
  *
  * Sahte ürün önlemleri (features/trust): başlık ve açıklamada yasaklı ifade ("replika", "A kalite"…)
  * yazıldığı anda uyarılır, yayımlama engellenir (taslak serbest). Riskli kategori / marka geçen
@@ -31,7 +32,7 @@ import { useQaOffset, useQaParam } from './qaSeed';
 import { assignListingsToShow, createListingWithStatus, deleteListings } from './actions';
 import { pickFromLibrary, SamplePhotoSheet, takePhoto } from './media';
 import { useSellerExtras } from './store';
-import { ActionSheet, Card, CheckRow, FormSection, KeyValue, MoneyField, StatusPill, Stepper, StickyFooter, Thumb, tint, MODAL_SAFE_TOP } from './ui';
+import { ActionSheet, Card, CheckRow, FormSection, KeyValue, MoneyField, OptionCard, StatusPill, Stepper, StickyFooter, Thumb, tint, MODAL_SAFE_TOP } from './ui';
 
 const MAX_PHOTOS = 8;
 const MAX_DOCS = 5;
@@ -57,6 +58,8 @@ type FormState = {
   suddenDeath: boolean;
   acceptsOffers: boolean;
   shippingProfile: ShippingProfile;
+  /** Kargo dahil: alıcıdan kargo alınmaz, etiket bedelini satıcı öder (çekilişte her zaman) */
+  shippingIncluded: boolean;
   showId?: string;
   /** Orijinallik belgesi (alıcıya gösterilmez) */
   proofKind?: ProofKind;
@@ -71,7 +74,7 @@ function qaPreset(qa: string | undefined): Partial<FormState> {
   return {};
 }
 
-function initialState(p: Product | undefined, presetShow: string | undefined, qa?: string): FormState {
+function initialState(p: Product | undefined, presetShow: string | undefined, defaultIncluded: boolean, qa?: string): FormState {
   if (p) {
     return {
       images: p.images.filter(Boolean),
@@ -88,6 +91,7 @@ function initialState(p: Product | undefined, presetShow: string | undefined, qa
       suddenDeath: p.suddenDeath,
       acceptsOffers: p.acceptsOffers,
       shippingProfile: p.shippingProfile,
+      shippingIncluded: !!p.shippingIncluded,
       showId: p.showId,
       proofKind: p.authenticity?.kind,
       proofDocs: p.authenticity?.docs ?? [],
@@ -107,6 +111,7 @@ function initialState(p: Product | undefined, presetShow: string | undefined, qa
     suddenDeath: false,
     acceptsOffers: true,
     shippingProfile: 'small',
+    shippingIncluded: defaultIncluded,
     showId: presetShow,
     proofDocs: [],
     proofDeclared: false,
@@ -128,10 +133,12 @@ export function ListingForm() {
   const updateListing = useSellerStore((s) => s.updateListing);
   const listingStatus = useSellerExtras((s) => s.listingStatus);
   const setListingStatus = useSellerExtras((s) => s.setListingStatus);
+  // Yeni ilanda kargo seçimi Kargo Ayarları'ndaki varsayılandan gelir
+  const defaultIncluded = useSellerExtras((s) => s.shipping.costMode === 'seller');
   const ipCase = useTrustStore((s) => (params.id ? s.cases[params.id] : undefined));
   const qa = useQaParam();
   const existing = params.id ? listings.find((p) => p.id === params.id) : undefined;
-  const [initial] = useState(() => initialState(existing, params.showId, qa));
+  const [initial] = useState(() => initialState(existing, params.showId, defaultIncluded, qa));
   const [f, setF] = useState<FormState>(initial);
   const [submitted, setSubmitted] = useState<'draft' | 'publish' | null>(null);
   const [saving, setSaving] = useState(false);
@@ -157,7 +164,11 @@ export function ListingForm() {
   const category = getCategory(f.categoryId);
   const upcomingShows = shows.filter((s) => s.status !== 'ended');
   const shipping = SHIPPING_PRICES[f.shippingProfile];
-  const fees = sellerFees(f.format === 'giveaway' ? 0 : f.price);
+  // Çekiliş ödülünün kargosunu her zaman satıcı öder
+  const giveaway = f.format === 'giveaway';
+  const included = giveaway || f.shippingIncluded;
+  const fees = sellerFees(giveaway ? 0 : f.price);
+  const net = included ? Math.round((fees.net - shipping) * 100) / 100 : fees.net;
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
   // Hak sahibi şikâyeti dosyası açıkken ilan aktif olamaz (düzenleme serbest)
   const ipLocked = isIpLocked(ipCase);
@@ -225,7 +236,9 @@ export function ListingForm() {
     compareAtPrice: f.format === 'buy_now' && f.compareAt > f.price ? f.compareAt : undefined,
     quantity: f.quantity,
     shippingProfile: f.shippingProfile,
-    shippingCost: SHIPPING_PRICES[f.shippingProfile],
+    // Kargo dahil ilanda alıcıya kargo ücreti yansımaz; etiket bedeli satıcının kazancından düşer
+    shippingIncluded: included,
+    shippingCost: included ? 0 : SHIPPING_PRICES[f.shippingProfile],
     suddenDeath: f.format === 'auction' && f.suddenDeath,
     acceptsOffers: f.format === 'buy_now' && f.acceptsOffers,
     // Şikâyet dosyası açıkken ya da yasaklı ifade / eksik belge varken yayına eklenemez
@@ -592,11 +605,37 @@ export function ListingForm() {
             <SelectField
               label="Paket boyutu"
               value={f.shippingProfile}
-              options={(Object.keys(SHIPPING_PROFILE_LABELS) as ShippingProfile[]).map((k) => ({ value: k, label: SHIPPING_PROFILE_LABELS[k], subtitle: `Alıcı öder: ${formatTRY(SHIPPING_PRICES[k])}` }))}
+              options={(Object.keys(SHIPPING_PROFILE_LABELS) as ShippingProfile[]).map((k) => ({ value: k, label: SHIPPING_PROFILE_LABELS[k], subtitle: `Kargo bedeli: ${formatTRY(SHIPPING_PRICES[k])}` }))}
               onChange={(v) => set({ shippingProfile: v as ShippingProfile })}
             />
+            {giveaway ? null : (
+              <View style={{ gap: 8 }}>
+                <Text variant="subhead" weight="600" color="textSecondary">
+                  Kargoyu kim öder?
+                </Text>
+                <OptionCard
+                  icon="person-outline"
+                  title="Alıcı öder"
+                  subtitle={`+${formatTRY(shipping)} alıcının siparişine eklenir`}
+                  selected={!f.shippingIncluded}
+                  onPress={() => set({ shippingIncluded: false })}
+                />
+                <OptionCard
+                  icon="gift-outline"
+                  title="Kargo dahil (ben öderim)"
+                  subtitle={`Alıcıdan kargo alınmaz; ${formatTRY(shipping)} etiket bedeli kazancından düşer`}
+                  selected={f.shippingIncluded}
+                  onPress={() => set({ shippingIncluded: true })}
+                />
+              </View>
+            )}
             <Text variant="footnote" color="textSecondary">
-              Alıcının ödeyeceği kargo: <Text variant="footnote" weight="700">{formatTRY(shipping)}</Text> (KDV dahil). Alıcı aynı yayından başka ürün de alırsa hepsi tek pakete girer.
+              {giveaway
+                ? `Çekiliş ödülünün kargosunu sen ödersin (${formatTRY(shipping)}, KDV dahil); kazanandan kargo ücreti alınmaz.`
+                : f.shippingIncluded
+                  ? `Ürün sayfasında “Kargo dahil” yazar; ${formatTRY(shipping)} KDV dahildir.`
+                  : `Kargo ücreti ${formatTRY(shipping)}, KDV dahildir. Yayına ücretsiz kargo eşiği koyduysan eşik ve üzerindeki alımlarda kargoyu sen ödersin.`}{' '}
+              Alıcı aynı yayından başka ürün de alırsa hepsi tek pakete girer; paketin kargosunu en büyük ürün belirler.
             </Text>
           </FormSection>
 
@@ -635,8 +674,9 @@ export function ListingForm() {
               <KeyValue label="Satış fiyatı" value={formatTRY(f.price)} />
               <KeyValue label={SELLER_FEE_TEXT.commissionLabel} value={`-${formatTRY(fees.commission)}`} />
               <KeyValue label={SELLER_FEE_TEXT.cardFeeLabel} value={`-${formatTRY(fees.cardFee)}`} />
+              {included ? <KeyValue label="Kargo (sen ödersin)" value={`-${formatTRY(shipping)}`} /> : null}
               <View style={[styles.hr, { backgroundColor: colors.border }]} />
-              <KeyValue label="Net kazanç" value={formatTRY(fees.net)} strong tone="success" />
+              <KeyValue label="Net kazanç" value={formatTRY(net)} strong tone={net >= 0 ? 'success' : 'danger'} />
             </Card>
           ) : null}
 

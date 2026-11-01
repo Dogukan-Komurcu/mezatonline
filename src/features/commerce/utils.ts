@@ -20,9 +20,6 @@ export const BINDING_BID_TEXT =
 /** Bağlayıcı teklif (kısa: teklif satırları, küçük notlar) */
 export const BINDING_BID_SHORT = 'Teklifin bağlayıcıdır; kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır.';
 
-/** Teklif öncesi ücret bilgisi (bkz. lib/pricing.ts buyerServiceFee) */
-export const WIN_COST_NOTE = 'Kazanırsan: teklif + kargo + %2 Alıcı Koruması bedeli (en az ₺2, en çok ₺49)';
-
 /** Ödemenin bekletilmesi: Mezatonline parayı kendisi tutmaz */
 export const ESCROW_TEXT = 'Gerçek sürümde ödemen, lisanslı bir ödeme kuruluşu tarafından ürün sana ulaşana kadar bekletilir.';
 

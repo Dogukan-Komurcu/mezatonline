@@ -1,7 +1,8 @@
 /**
  * S82 — Yayın Planla / Düzenle (modal, ?id= düzenleme).
  * Başlık, 9:16 kapak, kategori, gün + saat çipleri, açıklama, etiketler, yayın formatı,
- * ücretsiz kargo eşiği, ürünler, moderatörler, görünürlük → Planla + paylaş.
+ * ücretsiz kargo eşiği (alım başına: eşik ve üzerindeki alımlarda kargoyu satıcı öder), ürünler,
+ * moderatörler, görünürlük → Planla + paylaş.
  * "Kutu Açılışı (Break)" formatı şans oyunu riski nedeniyle FEATURES.breaks ile kapatılır.
  */
 import { router, useLocalSearchParams } from 'expo-router';
@@ -220,7 +221,8 @@ export function ScheduleForm() {
       const iso = new Date(scheduledAt).toISOString();
       const cover = s.cover ?? categoryPhotos(s.categoryId!)[0];
       const highlights = [
-        ...(s.freeShip ? [`${formatTRY(s.freeShip)} üzeri ücretsiz kargo`] : []),
+        // Yayın kartındaki tek satırlık etikete sığsın: anlam önde, tutar sonda (kural ayrıntısı yayın sayfasında)
+        ...(s.freeShip ? [`Ücretsiz kargo ${formatTRY(s.freeShip)}+`] : []),
         ...(s.format === 'breaks' && FEATURES.breaks ? ['Kutu açılışı'] : s.format === 'buy_now' ? ['Hemen Al'] : []),
         ...(s.visibility === 'private' ? ['Özel yayın'] : []),
       ];
@@ -460,12 +462,17 @@ export function ScheduleForm() {
             ) : null}
           </FormSection>
 
-          <FormSection title="Ücretsiz kargo" subtitle="Bu tutarın üzerindeki alışverişlerde kargo ücretini sen karşılarsın">
+          <FormSection title="Ücretsiz kargo" subtitle="Bu yayında bu tutar ve üzerindeki alımlarda alıcıdan kargo alınmaz; etiket bedelini sen ödersin">
             <View style={styles.wrap}>
               {FREE_SHIP.map((v) => (
-                <Chip key={String(v)} label={v === null ? 'Yok' : `${formatTRY(v)} üzeri`} selected={s.freeShip === v} onPress={() => set({ freeShip: v })} />
+                <Chip key={String(v)} label={v === null ? 'Yok' : `${formatTRY(v)} ve üzeri`} selected={s.freeShip === v} onPress={() => set({ freeShip: v })} />
               ))}
             </View>
+            <Text variant="footnote" color="textSecondary">
+              {s.freeShip
+                ? `Her alım ayrı sayılır: tutarı ${formatTRY(s.freeShip)} ve üzerinde olan mezat ya da Hemen Al alımında kargo ücretsizdir; küçük alımların toplamı eşiği doldurmaz.`
+                : 'Eşik koymazsan kargoyu her ilanda seçtiğin şekilde alıcı öder ya da kargo dahildir.'}
+            </Text>
           </FormSection>
 
           <FormSection

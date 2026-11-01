@@ -56,7 +56,7 @@ const FAQ: { q: string; a: string }[] = [
     a: `Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Replika, taklit ya da hak sahibinin izni olmadan üretilmiş ürünler, silah ve şans oyunları yasaktır. Taklidi yaygın kategorilerdeki (${RISKY_AREAS}) ve taklidi yaygın markaların geçtiği ilanlara orijinallik belgesi (fatura, sertifika ya da tedarik belgesi) eklemen gerekir.`,
   },
   { q: 'Ödemelerimi nasıl alırım?', a: 'Siparişi kargoya verdiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
-  { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini kargo firmasının şubesine bırakıp kodu göstermen yeterli. Kargo ücretini alıcı öder.' },
+  { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini kargo firmasının şubesine bırakıp kodu göstermen yeterli. Kargo ücretini her ilanda seçtiğin şekilde alıcı öder ya da ilan “kargo dahil” olur ve bedeli kazancından düşer.' },
   { q: 'Yayın için ekipman gerekir mi?', a: 'Hayır. Telefonun yeterli. İyi ışık ve sabit bir tripod yayın kaliteni artırır.' },
   { q: 'Fatura kesmem gerekiyor mu?', a: 'Bireysel satıcılar ara sıra yaptıkları satışlar için fatura kesmek zorunda değildir. Şirketler her satış için e-Arşiv fatura düzenler.' },
 ];
@@ -232,7 +232,7 @@ export function SellLanding() {
               ['Kredi kartı ücreti', SELLER_FEE_TEXT.cardFee, `Ürün bedeli üzerinden · ₺${CARD_FEE_FIXED} sipariş başına sabit`],
               ['Ödeme işlem ücreti', 'Yok', 'Ayrıca işlem ücreti alınmaz'],
               ['Listeleme ve yayın', 'Ücretsiz', 'Sınırsız ürün, sınırsız yayın'],
-              ['Kargo', 'Alıcı öder', `Desi bazlı, ${formatTRY(SHIPPING_PRICES.small)}'den başlar`],
+              ['Kargo', 'Alıcı ya da sen', `Her ilanda seçersin: alıcı öder ya da kargo dahil · desi bazlı, ${formatTRY(SHIPPING_PRICES.small)}’ten başlar`],
               ...(FEATURES.tips ? [['Bahşişler', '%0', 'Bahşişlerin tamamı senin']] : []),
             ].map(([label, value, hint], i) => (
               <View key={label} style={[styles.feeRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>

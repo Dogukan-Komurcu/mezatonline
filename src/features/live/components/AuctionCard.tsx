@@ -5,7 +5,7 @@ import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withTiming,
 
 import { Avatar, Icon, PressableScale, Text } from '@/components/ui';
 import { CONDITION_LABELS } from '@/components/cards/ProductCard';
-import { WIN_COST_NOTE } from '@/features/commerce/utils';
+import { shippingText, thresholdText, winCostNote, type ShippingQuote } from '@/features/shared/shipping';
 import { auctionFormatLabel } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { liveColors } from '@/theme';
@@ -17,8 +17,10 @@ import { alpha, PANEL, textShadow } from './styles';
 
 export type AuctionCardProps = {
   lot: LiveLot;
-  shippingCost: number;
-  bundled: boolean;
+  /** Kazanırsan alıcının kargo payı (features/shared/shipping; paket, kargo dahil ilan ve yayın eşiği uygulanmış) */
+  shipping: ShippingQuote;
+  /** Yayının ücretsiz kargo eşiği (varsa) */
+  freeShippingThreshold?: number;
   couponDiscount: number;
   onPress: () => void;
   /** Kartın altındaki teklif paneli (tutar seçici + basılı tut / "Sıradaki ürün bekleniyor") */
@@ -136,12 +138,17 @@ function LeaderLine({ lot }: { lot: LiveLot }) {
  * üst kenarda kalan süre çizgisi, biçim çipi + saat ikonlu sayaç, ürün görseli ve başlık,
  * "Güncel teklif" ile büyük fiyat ve kartın içinde lider bilgisi. Ayrı "önde" etiketi yoktur.
  */
-export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPress, children }: AuctionCardProps) {
+export function AuctionCard({ lot, shipping, freeShippingThreshold, couponDiscount, onPress, children }: AuctionCardProps) {
   const running = lot.status === 'running';
   const leading = !!lot.leader?.isMe;
   const outbid = running && lot.iBid && !leading;
   const product = lot.product;
-  const shippingLine = bundled ? 'Kargo: ₺0 · aynı pakette' : shippingCost > 0 ? `Kargo: ${formatTRY(shippingCost)}` : 'Ücretsiz kargo';
+  // Kartta tek satır: kampanya bağlamı ürün sayfasında; "Ücretsiz kargo" yalnızca yayın eşiğinde kullanılır
+  const shippingLine = shipping.note === 'threshold' ? 'Ücretsiz kargo' : shippingText(shipping);
+  // Kargo dahil / aynı paket / yayın kampanyası: alıcıdan kargo alınmıyor
+  const shippingWaived = shipping.buyer === 0 && !!shipping.note;
+  // Fiyat henüz yayının ücretsiz kargo eşiğine ulaşmadıysa maliyet notunun sonunda kısa ipucu
+  const costNote = `${winCostNote(shipping)}${freeShippingThreshold && shipping.buyer > 0 ? ` · ${thresholdText(freeShippingThreshold)}` : ''}`;
   const condition = product.grade ?? CONDITION_LABELS[product.condition];
   const priceLabel = lot.status === 'sold' ? 'Satış fiyatı' : lot.bidCount === 0 ? 'Açılış fiyatı' : 'Güncel teklif';
   const priceColor = running ? liveColors.text : lot.status === 'sold' ? liveColors.live : liveColors.textSecondary;
@@ -160,7 +167,7 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
             <Text variant="subhead" weight="700" color={liveColors.text} numberOfLines={2} style={textShadow}>
               {product.title}
             </Text>
-            <Text variant="caption" weight="500" color={bundled ? liveColors.success : liveColors.textSecondary} numberOfLines={1}>
+            <Text variant="caption" weight="500" color={shippingWaived ? liveColors.success : liveColors.textSecondary} numberOfLines={1}>
               {shippingLine} · {condition}
             </Text>
           </View>
@@ -184,7 +191,7 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
         ) : null}
         {running ? (
           <Text variant="caption" weight="500" color={liveColors.textTertiary} numberOfLines={2} style={[styles.small, styles.costNote]}>
-            {WIN_COST_NOTE}
+            {costNote}
           </Text>
         ) : null}
       </PressableScale>

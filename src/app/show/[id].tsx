@@ -25,6 +25,7 @@ import { PreBidSheet } from '@/features/commerce/PreBidSheet';
 import { ShowItemRow } from '@/features/commerce/ShowItemRow';
 import { ablativeSuffix, countdownParts, pad2 } from '@/features/commerce/utils';
 import { APP_URL, ReportSheet, shareLink } from '@/features/shared/sheets';
+import { thresholdText } from '@/features/shared/shipping';
 import { formatClock, formatCompact, formatDate, formatDayLong, formatRating, formatShowTime, formatTimeUntil, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { ME_ID } from '@/store/auth';
@@ -121,8 +122,9 @@ export default function ShowScreen() {
   ];
   const listed = tab === 'auction' ? auctions : tab === 'buy_now' ? buyNow : giveaways;
 
+  // Eşik tek alım için geçerlidir (sepet toplamı değil); bkz. lib/pricing quoteShipping
   const shippingLine = `Bu yayında aldıkların tek pakette gönderilir · ${formatTRY(show.shippingCost)}'${ablativeSuffix(show.shippingCost)} başlayan kargo${
-    show.freeShippingThreshold ? ` · ${formatTRY(show.freeShippingThreshold)} ve üzeri ücretsiz` : ''
+    show.freeShippingThreshold ? ` · ${thresholdText(show.freeShippingThreshold)}` : ''
   }`;
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {

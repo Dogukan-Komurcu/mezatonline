@@ -4,7 +4,8 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, PressableScale, Sheet, Text } from '@/components/ui';
-import { BINDING_BID_SHORT, WIN_COST_NOTE } from '@/features/commerce/utils';
+import { BINDING_BID_SHORT } from '@/features/commerce/utils';
+import { shippingText, thresholdText, winCostNote, type ShippingQuote } from '@/features/shared/shipping';
 import { nextMinBid, quickIncrements } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -42,7 +43,10 @@ export type CustomBidSheetProps = {
   /** Ön teklif: açılış fiyatı ve varsa mevcut ön teklif */
   startPrice?: number;
   existingPreBid?: number;
-  shippingLine: string;
+  /** Ürün bu tutara kazanılırsa alıcının kargo payı (paket, kargo dahil ilan ve yayın eşiği uygulanmış) */
+  shippingFor: (price: number) => ShippingQuote;
+  /** Yayının ücretsiz kargo eşiği (varsa) */
+  freeShippingThreshold?: number;
   onSubmit: (v: CustomBidSubmit) => boolean;
 };
 
@@ -56,7 +60,7 @@ const BUTTON_RADIUS = 14;
  * ve "Otomatik teklif (en fazla)" seçeneği (varsayılan kapalı; açıkken tutar gizli üst sınır olur).
  * Ön teklif modunda ve öndeyken tutar her zaman otomatik teklif üst sınırı olarak kaydedilir.
  */
-export function CustomBidSheet({ visible, onClose, mode, product, lot, startPrice = 1, existingPreBid, shippingLine, onSubmit }: CustomBidSheetProps) {
+export function CustomBidSheet({ visible, onClose, mode, product, lot, startPrice = 1, existingPreBid, shippingFor, freeShippingThreshold, onSubmit }: CustomBidSheetProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
@@ -91,6 +95,9 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
   const amount = parseInt(text.replace(/\D/g, ''), 10) || 0;
   // Öndeyken yalnızca otomatik teklif üst sınırı yükseltilebilir (kendi teklifini geçemezsin)
   const isMax = mode === 'prebid' || leading ? true : autoOn;
+  // Kargo payı kazanma fiyatına göre: tek teklifte girilen tutar, üst sınırda en düşük olası fiyat
+  const ship = shippingFor(isMax ? min : Math.max(amount, min));
+  const costNote = `${winCostNote(ship)}.${freeShippingThreshold && ship.buyer > 0 ? ` ${thresholdText(freeShippingThreshold)}.` : ''}`;
 
   const setAmount = (v: number) => {
     haptic.tap();
@@ -198,7 +205,7 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
         />
       </View>
       <Text variant="footnote" color={error ? 'danger' : 'textSecondary'} align="center" style={styles.helper}>
-        {error ?? `En az ${formatTRY(min)} · ${shippingLine}`}
+        {error ?? `En az ${formatTRY(min)} · ${shippingText(ship)}`}
       </Text>
 
       <View style={styles.quick}>
@@ -243,7 +250,7 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
       <View style={styles.legal}>
         <Icon name="receipt-outline" size={14} color="textSecondary" />
         <Text variant="caption" weight="600" color="textSecondary" style={styles.flex}>
-          {WIN_COST_NOTE}.
+          {costNote}
         </Text>
       </View>
       <View style={styles.legalNext}>

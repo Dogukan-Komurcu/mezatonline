@@ -19,7 +19,7 @@ import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, Pressabl
 import { getCategory, getLiveShowOf, getShopProducts, getSimilarProducts, getSubcategory } from '@/data';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { BlockTitle, InfoLine, KeyValueTable, NoticeBox } from '@/features/commerce/components';
-import { useIsBundled, useMyLatestOffer, useMyPreBid, useNow, useProductById, useRemainingStock, useSellerOf, useShowById } from '@/features/commerce/hooks';
+import { useMyLatestOffer, useMyPreBid, useNow, useProductById, useRemainingStock, useSellerOf, useShowById } from '@/features/commerce/hooks';
 import { ImageViewer } from '@/features/commerce/ImageViewer';
 import { BuyerProtectionSheet } from '@/features/commerce/infoSheets';
 import { declineCounter } from '@/features/commerce/offers';
@@ -27,6 +27,7 @@ import { OfferSheet } from '@/features/commerce/OfferSheet';
 import { PreBidSheet } from '@/features/commerce/PreBidSheet';
 import { CARRIER_LINE, deliveryWindow, discountPercent } from '@/features/commerce/utils';
 import { APP_URL, ReportSheet, shareLink } from '@/features/shared/sheets';
+import { shippingQuoteFor, shippingText, thresholdText, useShippingQuote } from '@/features/shared/shipping';
 import { formatCompact, formatDate, formatRating, formatShowTime, formatTimeUntil, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
@@ -54,7 +55,8 @@ export default function ProductScreen() {
   const guest = useIsGuest();
   const preBid = useMyPreBid(guest ? undefined : product?.id);
   const offer = useMyLatestOffer(guest ? undefined : product?.id);
-  const bundled = useIsBundled(guest ? undefined : product?.sellerId, product?.showId);
+  // Kargo payı: aynı yayın paketi, kargo dahil ilan ve yayının ücretsiz kargo eşiği (bkz. features/shared/shipping)
+  const quote = useShippingQuote(product, product?.showId, product?.price);
   const saved = useSocialStore((s) => !!product && s.savedProductIds.includes(product.id));
   const toggleSave = useSocialStore((s) => s.toggleSaveProduct);
   const reminded = useSocialStore((s) => !!show && s.remindedShowIds.includes(show.id));
@@ -109,7 +111,9 @@ export default function ProductScreen() {
   const moreFromSeller = getShopProducts(product.sellerId).filter((p) => p.id !== product.id).slice(0, 12);
   const similar = getSimilarProducts(product, 10);
   const cardW = Math.floor((width - SCREEN_PADDING * 2 - GRID_GAP) / 2);
-  const shippingFree = product.shippingCost <= 0;
+  // Misafir hesaba bağlı siparişleri görmez; paket hesabı boş sipariş listesiyle yapılır
+  const ship = guest ? shippingQuoteFor(product, product.showId, product.price, []) : quote;
+  const freeShipThreshold = show?.freeShippingThreshold;
   const avgShip = seller && seller.avgShipDays > 0 ? (seller.avgShipDays < 1 ? '<1 gün' : `${Math.round(seller.avgShipDays)} gün`) : '1–2 gün';
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -368,16 +372,12 @@ export default function ProductScreen() {
             </View>
           )}
           <Text variant="subhead" color="textSecondary">
-            {bundled ? (
-              <Text variant="subhead" weight="700" color="success">
-                Kargo ₺0 · aynı pakette
-              </Text>
-            ) : shippingFree ? (
-              <Text variant="subhead" weight="700" color="success">
-                Ücretsiz kargo
-              </Text>
+            {ship.buyer > 0 ? (
+              `+ ${formatTRY(ship.buyer)} kargo${ship.note === 'bundled' ? ' · paket farkı' : ''}`
             ) : (
-              `+ ${formatTRY(product.shippingCost)} kargo`
+              <Text variant="subhead" weight="700" color="success">
+                {shippingText(ship)}
+              </Text>
             )}
             {' · KDV dahil'}
           </Text>
@@ -467,9 +467,24 @@ export default function ProductScreen() {
           <BlockTitle title="Kargo ve teslimat" style={styles.noMargin} />
           <InfoLine
             icon="car-outline"
-            title={bundled ? 'Kargo: ₺0 · aynı pakette' : shippingFree ? 'Ücretsiz kargo' : `Kargo ücreti: ${formatTRY(product.shippingCost)}`}
-            subtitle={bundled ? 'Bu yayında daha önce aldığın ürünle aynı koliye konur.' : product.showId ? 'Bu yayından sonra alacakların da aynı koliye girer; onlar için ayrıca kargo ödemezsin.' : 'Fiyatlara KDV dahildir.'}
+            title={shippingText(ship)}
+            subtitle={
+              ship.note === 'bundled'
+                ? ship.buyer > 0
+                  ? 'Bu yayında daha önce aldığın ürünle aynı koliye konur; koli büyüdüğü için yalnızca aradaki farkı ödersin.'
+                  : 'Bu yayında daha önce aldığın ürünle aynı koliye konur.'
+                : ship.note === 'included'
+                  ? 'Gönderim bedelini satıcı karşılar; sana kargo ücreti yansımaz.'
+                  : ship.note === 'threshold' && freeShipThreshold
+                    ? `Bu yayında ${formatTRY(freeShipThreshold)} ve üzeri alımlarda kargoyu satıcı karşılar.`
+                    : product.showId
+                      ? 'Bu yayından sonra alacakların da aynı koliye girer; koli büyümedikçe ayrıca kargo ödemezsin.'
+                      : 'Fiyatlara KDV dahildir.'
+            }
           />
+          {freeShipThreshold && ship.note !== 'included' && ship.note !== 'threshold' ? (
+            <InfoLine icon="gift-outline" tint={colors.success} title={thresholdText(freeShipThreshold)} subtitle="Yayın kampanyası: tek bir alımın tutarı bu eşiğe ulaşırsa kargoyu satıcı öder." />
+          ) : null}
           <InfoLine icon="business-outline" title="Kargo firmaları" subtitle={CARRIER_LINE} />
           <InfoLine icon="time-outline" title="Kargoya veriliş: en geç 2 iş günü" subtitle={`Bu satıcının ortalama kargolama süresi: ${avgShip}`} />
           <InfoLine icon="calendar-outline" title="Tahmini varış (2–4 iş günü)" subtitle={delivery.label} />

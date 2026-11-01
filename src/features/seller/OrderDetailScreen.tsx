@@ -1,6 +1,6 @@
 /**
  * Satıcı sipariş detayı: durum, ürün, alıcı, teslimat adresi, kargo kodu (firma seçimi, barkod,
- * paket içerik fişi, "Kargoya verdim"), kazanç dökümü, zaman çizelgesi ve iptal.
+ * paket içerik fişi, "Kargoya verdim"), kazanç dökümü (satıcının karşıladığı kargo dahil), zaman çizelgesi ve iptal.
  */
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,17 +16,37 @@ import { useInboxStore } from '@/store/inbox';
 import { ORDER_SOURCE_LABELS } from '@/store/orders';
 import { useSellerStore } from '@/store/seller';
 import { ForceScheme, radius, SCREEN_PADDING, useTheme } from '@/theme';
-import type { Carrier } from '@/types';
+import type { Carrier, Order } from '@/types';
 
 import { useQaOffset } from './qaSeed';
 import { cancelSellerOrder, createLabel, shipOrder, useNow } from './actions';
-import { buyerAddress, deadlineInfo, inLaunchCampaign, orderBucket, resolveBuyer, SELLER_ORDER_STATUS, SHIP_CARRIERS } from './logic';
+import { buyerAddress, deadlineInfo, inLaunchCampaign, orderBucket, orderNet, resolveBuyer, SELLER_ORDER_STATUS, SHIP_CARRIERS } from './logic';
 import { useSellerExtras } from './store';
 import { ActionSheet, Barcode, Card, KeyValue, StatusPill, StickyFooter, Thumb, tint } from './ui';
 
 const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
 const CANCEL_REASONS = ['Ürün stokta kalmadı', 'Ürün hasarlı / kusurlu çıktı', 'Alıcı iptal talep etti', 'Yanlış fiyat ya da listeleme', 'Alıcıyla anlaştık', 'Diğer'];
+
+/** Satıcının karşıladığı kargonun nedeni (kazanç dökümündeki ipucu) */
+const OWN_SHIPPING_HINTS: Record<NonNullable<Order['shippingNote']>, string> = {
+  included: 'İlanda kargo dahil; alıcıdan kargo alınmadı',
+  threshold: 'Yayının ücretsiz kargo eşiği; alıcıdan kargo alınmadı',
+  bundled: 'Paket farkı; aynı paketin kargosunun alıcıdan alınmayan kısmı',
+};
+
+/** Kargo kodu oluştururken gösterilen ödeme notu */
+function shippingPaidNote(o: Pick<Order, 'shippingCost' | 'sellerShippingCost' | 'shippingNote' | 'source'>): string {
+  const own = o.sellerShippingCost ?? 0;
+  if (o.source === 'giveaway' && own > 0) return `Çekiliş ödülünün kargo bedeli (${formatTRY(own)}) kazancından düşer.`;
+  if (o.shippingCost > 0) return own > 0 ? `Kargonun ${formatTRY(o.shippingCost)} kısmı alıcıdan tahsil edildi; ${formatTRY(own)} kazancından düşer.` : `Kargo ücreti (${formatTRY(o.shippingCost)}) alıcıdan tahsil edildi.`;
+  if (own > 0) {
+    if (o.shippingNote === 'threshold') return `Yayının ücretsiz kargo eşiği uygulandı; kargo bedeli (${formatTRY(own)}) kazancından düşer.`;
+    if (o.shippingNote === 'included') return `İlanda kargo dahil; kargo bedeli (${formatTRY(own)}) kazancından düşer.`;
+    return `Paket farkı (${formatTRY(own)}) kazancından düşer.`;
+  }
+  return o.shippingNote === 'bundled' ? 'Aynı yayındaki başka bir siparişle aynı pakete girer; bu sipariş için ayrıca kargo ödenmez.' : 'Bu sipariş için kargo ücreti alınmadı.';
+}
 
 const EVENT_LABELS: Record<string, string> = {
   paid: 'Ödeme alındı',
@@ -80,6 +100,9 @@ export function OrderDetailScreen() {
   const bucket = orderBucket(order);
   const gross = order.itemPrice * order.quantity;
   const fees = sellerFees(gross);
+  // Bakiyelerle aynı hesap: komisyon, kart ücreti ve satıcının karşıladığı kargo düşülür
+  const net = orderNet(order);
+  const ownShipping = order.sellerShippingCost ?? 0;
   const listing = listings.find((p) => p.id === order.productId);
   const show = order.showId ? shows.find((s) => s.id === order.showId) : undefined;
   const due = bucket === 'toship' ? deadlineInfo(order.createdAt, now) : undefined;
@@ -230,7 +253,7 @@ export function OrderDetailScreen() {
                 ))}
               </View>
               <Text variant="footnote" color="textSecondary">
-                {listing ? `Paket: ${SHIPPING_PROFILE_LABELS[listing.shippingProfile]}. ` : ''}Kargo ücreti ({formatTRY(order.shippingCost)}) alıcıdan tahsil edildi.
+                {listing ? `Paket: ${SHIPPING_PROFILE_LABELS[listing.shippingProfile]}. ` : ''}{shippingPaidNote(order)}
               </Text>
               <Button title={changing ? 'Yeni kod oluştur' : 'Kargo kodu oluştur'} icon="barcode-outline" size="lg" fullWidth loading={busy === 'label'} onPress={makeLabel} />
               {changing ? <Button title="Vazgeç" variant="ghost" onPress={() => setChanging(false)} /> : null}
@@ -290,11 +313,18 @@ export function OrderDetailScreen() {
             Kazanç dökümü
           </Text>
           <KeyValue label="Ürün bedeli" value={formatTRY(gross)} />
-          <KeyValue label="Alıcının ödediği kargo" value={formatTRY(order.shippingCost)} hint="Kargo firmasına aktarılır" />
+          <KeyValue
+            label="Alıcının ödediği kargo"
+            value={formatTRY(order.shippingCost)}
+            hint={order.shippingCost > 0 ? 'Kargo firmasına aktarılır' : order.shippingNote === 'bundled' ? 'Alıcının aynı yayındaki paketine eklendi' : 'Alıcıdan kargo alınmadı'}
+          />
           <KeyValue label={SELLER_FEE_TEXT.commissionLabel} value={`-${formatTRY(fees.commission)}`} />
           <KeyValue label={SELLER_FEE_TEXT.cardFeeLabel} value={`-${formatTRY(fees.cardFee)}`} />
+          {ownShipping > 0 ? (
+            <KeyValue label="Senin karşıladığın kargo" value={`-${formatTRY(ownShipping)}`} hint={order.source === 'giveaway' ? 'Çekiliş ödülünün kargosu' : order.shippingNote ? OWN_SHIPPING_HINTS[order.shippingNote] : undefined} />
+          ) : null}
           <View style={[styles.hr, { backgroundColor: colors.border, marginVertical: 6 }]} />
-          <KeyValue label="Net kazanç" value={bucket === 'cancelled' ? formatTRY(0) : formatTRY(fees.net)} strong tone={bucket === 'cancelled' ? undefined : 'success'} />
+          <KeyValue label="Net kazanç" value={bucket === 'cancelled' ? formatTRY(0) : formatTRY(net)} strong tone={bucket === 'cancelled' ? undefined : net >= 0 ? 'success' : 'danger'} />
           <StatusPill
             label={bucket === 'cancelled' ? 'Kazanç iptal edildi' : bucket === 'toship' ? 'Bekleyen bakiye — kargolanınca çekilebilir' : 'Çekilebilir bakiyende'}
             tone={bucket === 'cancelled' ? 'neutral' : bucket === 'toship' ? 'warning' : 'success'}

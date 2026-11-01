@@ -143,7 +143,7 @@ export function ProductHeader({ product, right, subtitle }: { product: Product; 
           {product.title}
         </Text>
         <Text variant="footnote" color="textSecondary" numberOfLines={1}>
-          {subtitle ?? `${CONDITION_LABELS[product.condition]}${product.grade ? ' · ' + product.grade : ''} · ${formatTRY(product.shippingCost)} kargo`}
+          {subtitle ?? `${CONDITION_LABELS[product.condition]}${product.grade ? ' · ' + product.grade : ''} · ${product.shippingIncluded ? 'Kargo dahil' : `${formatTRY(product.shippingCost)} kargo`}`}
         </Text>
       </View>
       {right}

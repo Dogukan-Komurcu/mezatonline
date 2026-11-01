@@ -1,14 +1,12 @@
 /**
  * Canlı yayın içi satın alma yardımcıları: kupon + Mezat kredisi uygulayarak ortak
- * `completePurchase` akışını çağırır; aynı yayından paketleme (kargo birleştirme) kontrolü.
+ * `completePurchase` akışını çağırır. Kargo payı (aynı paket, kargo dahil, ücretsiz kargo eşiği)
+ * createOrder'da hesaplanır; gösterim için features/shared/shipping kullanılır.
  */
 import { completePurchase } from '@/features/shared/purchase';
-import { useOrdersStore } from '@/store/orders';
 import type { Order, OrderSource, Product } from '@/types';
 
 import { useLivePrefs } from './liveStore';
-
-const DAY = 86_400_000;
 
 export type LivePurchaseInput = {
   product: Product;
@@ -34,19 +32,4 @@ export function purchaseInLive({ product, price, source, showId, quantity = 1 }:
     applyCredits: prefs.useCredits && price > 0,
   });
   return { order, discount };
-}
-
-/** Bu yayından bu satıcıya ait son 24 saatte açık bir sipariş var mı (kargo tek sefer) */
-export function hasBundleInShow(showId: string, sellerId: string): boolean {
-  const now = Date.now();
-  return useOrdersStore
-    .getState()
-    .orders.some((o) => o.showId === showId && o.sellerId === sellerId && o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < DAY);
-}
-
-/** Reaktif sürüm: kartlarda "Kargo: +₺0 (aynı pakete eklendi)" göstermek için */
-export function useShowBundle(showId: string, sellerId: string): boolean {
-  return useOrdersStore((s) =>
-    s.orders.some((o) => o.showId === showId && o.sellerId === sellerId && o.status !== 'cancelled' && Date.now() - new Date(o.createdAt).getTime() < DAY),
-  );
 }

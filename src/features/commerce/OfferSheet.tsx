@@ -8,11 +8,13 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Chip, Divider, Icon, Sheet, Text, toast } from '@/components/ui';
+import { shippingQuoteFor } from '@/features/shared/shipping';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { buyerServiceFee } from '@/lib/pricing';
 import { ME_ID } from '@/store/auth';
+import { useOrdersStore } from '@/store/orders';
 import { selectDefaultAddress, selectDefaultPayment, useWalletStore } from '@/store/wallet';
 import { radius, useTheme } from '@/theme';
 import type { Product } from '@/types';
@@ -28,6 +30,7 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
   const { colors } = useTheme();
   const payment = useWalletStore(selectDefaultPayment);
   const address = useWalletStore(selectDefaultAddress);
+  const orders = useOrdersStore((s) => s.orders);
   const [preset, setPreset] = useState<Preset>(10);
   const [custom, setCustom] = useState(0);
   const [step, setStep] = useState<'amount' | 'review'>('amount');
@@ -58,7 +61,9 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
         : undefined;
   const discount = amount > 0 && amount < price ? Math.round((1 - amount / price) * 100) : 0;
   const fee = buyerServiceFee(amount);
-  const totalIfAccepted = amount + product.shippingCost + fee;
+  // Kabul edilirse ödemede uygulanacak kargo (kargo dahil ilan, aynı yayın paketi, ücretsiz kargo eşiği)
+  const ship = shippingQuoteFor(product, product.showId, amount, orders);
+  const totalIfAccepted = amount + ship.buyer + fee;
 
   const next = () => {
     if (product.sellerId === ME_ID) {
@@ -174,7 +179,7 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
           </View>
           <View style={[styles.summary, { borderColor: colors.border }]}>
             <SummaryRow label="Önerin" value={formatTRY(amount)} />
-            <SummaryRow label="Kargo" value={formatTRY(product.shippingCost)} />
+            <SummaryRow label="Kargo" value={ship.buyer > 0 ? formatTRY(ship.buyer, { cents: !Number.isInteger(ship.buyer) }) : ship.note === 'included' ? 'Kargo dahil' : ship.note === 'threshold' ? 'Ücretsiz · yayın kampanyası' : ship.note === 'bundled' ? '₺0 · aynı pakette' : 'Ücretsiz'} />
             <SummaryRow label="Alıcı Koruması hizmet bedeli" value={formatTRY(fee, { cents: true })} />
             <Divider />
             <SummaryRow label="Kabul edilirse ödenecek" value={formatTRY(totalIfAccepted, { cents: !Number.isInteger(totalIfAccepted) })} bold />

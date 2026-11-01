@@ -5,7 +5,9 @@ import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withRepeat
 
 import { Avatar, Button, Text } from '@/components/ui';
 import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
+import { shippingText } from '@/features/shared/shipping';
 import { formatTRY } from '@/lib/format';
+import { useOrdersStore } from '@/store/orders';
 import { liveColors } from '@/theme';
 import type { Product } from '@/types';
 
@@ -50,10 +52,17 @@ export function Celebration({ data, me, onViewOrder, onClose }: { data: Celebrat
   const imgStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
 
   const total = data.price * data.quantity;
+  // Siparişteki kargo payı: kargo dahil ilan, yayın kampanyası, aynı paket ya da paket farkı
+  const order = useOrdersStore((s) => (data.orderId ? s.orders.find((o) => o.id === data.orderId) : undefined));
+  const shippingLine = order
+    ? shippingText({ buyer: order.shippingCost, seller: order.sellerShippingCost ?? 0, note: order.shippingNote })
+    : data.bundled
+      ? 'Kargo ₺0 · aynı pakette'
+      : 'Kargo ücreti aynı yayın için tek sefer';
   const shippingNote =
     data.kind === 'giveaway'
       ? 'Kargo ücretini satıcı karşılar · Siparişlerinde görebilirsin'
-      : `${DEMO_MODE ? 'Demo: kartından ödeme alınmadı' : 'Ödemen kayıtlı kartından alındı'} · ${data.bundled ? 'Kargo ₺0 · aynı pakette' : 'Kargo ücreti aynı yayın için tek sefer'}`;
+      : `${DEMO_MODE ? 'Demo: kartından ödeme alınmadı' : 'Ödemen kayıtlı kartından alındı'} · ${shippingLine}`;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.overlay}>

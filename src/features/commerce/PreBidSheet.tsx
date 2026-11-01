@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Chip, Icon, Sheet, Text, toast } from '@/components/ui';
+import { shippingQuoteFor, thresholdText, winCostNote } from '@/features/shared/shipping';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { bidIncrement } from '@/lib/auction';
 import { formatDateTime, formatShowTime, formatTRY } from '@/lib/format';
@@ -22,7 +23,7 @@ import type { Product, Show } from '@/types';
 
 import { AmountInput, CardBrandMark, NoticeBox } from './components';
 import { useMyPreBid } from './hooks';
-import { DAY_MS, WIN_COST_NOTE } from './utils';
+import { DAY_MS } from './utils';
 
 export type PreBidSheetProps = {
   visible: boolean;
@@ -63,6 +64,9 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
   const error = amount < min ? `En az ${formatTRY(min)} olmalı` : undefined;
   const expiresAt = new Date(new Date(show.scheduledAt).getTime() + DAY_MS);
   const own = product.sellerId === ME_ID;
+  // Kazanç fiyatı ve paket henüz belli değil: yalnızca ilanın kargo tercihi (alıcı öder / kargo dahil) yansıtılır
+  const ship = shippingQuoteFor(product);
+  const freeShipNote = show.freeShippingThreshold && ship.buyer > 0 ? ` Bu yayında ${thresholdText(show.freeShippingThreshold)}.` : '';
 
   const submit = () => {
     if (own) {
@@ -149,7 +153,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
       </NoticeBox>
 
       <NoticeBox icon="alert-circle-outline" tone="warning" title="Teklifler bağlayıcıdır">
-        {`Ön teklifin geri çekilemez ve düşürülemez; kazanırsan kayıtlı kartından otomatik ödeme alınır. ${WIN_COST_NOTE}. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır.`}
+        {`Ön teklifin geri çekilemez ve düşürülemez; kazanırsan kayıtlı kartından otomatik ödeme alınır. ${winCostNote(ship)}.${freeShipNote} Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır.`}
       </NoticeBox>
 
       <View style={styles.metaRow}>
@@ -170,7 +174,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
           </Text>
         </View>
         <Text variant="caption" color="textSecondary" weight="500">
-          + {formatTRY(product.shippingCost)} kargo
+          {ship.buyer > 0 ? `+ ${formatTRY(ship.buyer)} kargo` : ship.note === 'included' ? 'Kargo dahil' : 'Ücretsiz kargo'}
         </Text>
       </View>
     </Sheet>

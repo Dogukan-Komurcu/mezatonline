@@ -162,7 +162,7 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
         </View>
         {bundleOpen ? (
           <Text variant="footnote" color="textSecondary" style={styles.bundleText}>
-            Bu yayında aynı satıcıdan birden çok ürün alırsan hepsi tek kolide yola çıkar. Kargo ücreti ilk üründe alınır; sonrakilerin ödeme özetinde “₺0 · aynı pakette” görürsün.
+            Bu yayında aynı satıcıdan birden çok ürün alırsan hepsi tek kolide yola çıkar. Kargoyu bir kez, paketteki en büyük ürünün ücreti kadar ödersin: sonraki ürün koliyi büyütmezse ödeme özetinde “₺0 · aynı pakette”, büyütürse yalnızca aradaki fark görünür.
           </Text>
         ) : null}
       </PressableScale>

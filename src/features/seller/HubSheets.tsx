@@ -96,7 +96,7 @@ export function HubMenuSheet({ visible, onClose, onOpen }: { visible: boolean; o
           </View>
         ))}
         <GroupLabel style={{ paddingTop: 8 }}>Ayarlar</GroupLabel>
-        <ListRow icon="car-outline" title="Kargo Ayarları" subtitle="Firma, kargo ücreti, hazırlama süresi" onPress={sheet('shipping')} />
+        <ListRow icon="car-outline" title="Kargo Ayarları" subtitle="Firma, kargoyu kim öder, hazırlama süresi" onPress={sheet('shipping')} />
         <ListRow
           icon="airplane-outline"
           title="Tatil Modu"
@@ -379,7 +379,7 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
       visible={visible}
       onClose={onClose}
       title="Kargo Ayarları"
-      subtitle="Yeni yayınlarına ve mağaza ürünlerine uygulanır"
+      subtitle="Yeni ilanların ve siparişlerin için varsayılanlar"
       height={0.9}
       showClose
       footer={
@@ -413,11 +413,17 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
           <Text variant="headline" weight="700">
             Kargo ücretini kim öder?
           </Text>
-          <OptionCard title="Alıcı öder" subtitle="Paket boyutuna göre çıkan ücretin tamamı siparişe eklenir" icon="person-outline" selected={draft.costMode === 'buyer'} onPress={() => mode('buyer')} />
-          <OptionCard title="Kargoya sen de katkı ver" subtitle="Alıcıdan en çok belirlediğin tutar alınır, aradaki fark senin kazancından düşülür" icon="trending-down-outline" selected={draft.costMode === 'capped'} onPress={() => mode('capped')}>
-            <MoneyField label="Alıcıdan alınacak üst tutar" value={draft.cap} onChange={(v) => setDraft((d) => ({ ...d, cap: v }))} />
-          </OptionCard>
-          <OptionCard title="Kargo benden" subtitle="Gönderim bedelini tamamen sen üstlenirsin; alıcı kargo için ödeme yapmaz" icon="gift-outline" selected={draft.costMode === 'seller'} onPress={() => mode('seller')} />
+          <OptionCard title="Alıcı öder" subtitle="Paket boyutuna göre çıkan kargo ücreti alıcının siparişine eklenir" icon="person-outline" selected={draft.costMode === 'buyer'} onPress={() => mode('buyer')} />
+          <OptionCard
+            title="Kargo dahil (ben öderim)"
+            subtitle="Alıcıdan kargo alınmaz; etiket bedeli satış kazancından düşer"
+            icon="gift-outline"
+            selected={draft.costMode === 'seller'}
+            onPress={() => mode('seller')}
+          />
+          <Text variant="footnote" color="textSecondary">
+            Bu seçim yeni ilanlarında varsayılan olarak gelir; her ilanın Kargo bölümünden ayrıca değiştirebilirsin. Mevcut ilanların değişmez.
+          </Text>
         </View>
         <View style={{ gap: 10 }}>
           <Text variant="headline" weight="700">
@@ -461,7 +467,7 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
             ))}
           </Card>
           <Text variant="footnote" color="textSecondary">
-            Bir alıcı aynı yayından birden fazla ürün alırsa hepsini tek pakette gönderirsin; ilk siparişten sonrakiler için alıcıdan ayrıca kargo ücreti alınmaz.
+            Bir alıcı aynı yayından 24 saat içinde birden fazla ürün alırsa hepsini tek pakette gönderirsin. Paketin kargosunu en büyük ürün belirler; alıcı yalnızca paketi büyüten farkı öder.
           </Text>
         </View>
       </View>

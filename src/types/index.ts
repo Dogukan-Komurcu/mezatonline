@@ -99,7 +99,10 @@ export interface Product {
   quantity: number;
   sold: number;
   shippingProfile: ShippingProfile;
+  /** Alıcının ödeyeceği kargo ücreti (kargo dahil ilanda 0) */
   shippingCost: number;
+  /** Kargo dahil: gönderim bedelini satıcı karşılar, alıcıdan kargo ücreti alınmaz */
+  shippingIncluded?: boolean;
   /** Sudden death: son teklifle süre uzamaz */
   suddenDeath: boolean;
   /** Teklif (pazarlık) kabul ediyor mu — mağaza ilanları için */
@@ -248,6 +251,9 @@ export interface OrderEvent {
   note?: string;
 }
 
+/** bundled: aynı yayın paketine eklendi · included: kargo dahil ilan · threshold: yayının ücretsiz kargo eşiği */
+export type ShippingNote = 'bundled' | 'included' | 'threshold';
+
 export interface Order {
   id: ID;
   /** Kısa sipariş no, ör. "MZ-48213" */
@@ -261,7 +267,15 @@ export interface Order {
   source: OrderSource;
   showId?: ID;
   itemPrice: number;
+  /** Alıcının ödediği kargo ücreti */
   shippingCost: number;
+  /**
+   * Bu siparişte kargo etiketinin satıcının karşıladığı kısmı (kargo dahil ilan, ücretsiz kargo eşiği
+   * ya da pakette alıcıdan alınmayan fark). Etiket payı = shippingCost + sellerShippingCost.
+   */
+  sellerShippingCost?: number;
+  /** Alıcıdan kargo ücreti (tamamı ya da bir kısmı) neden alınmadı */
+  shippingNote?: ShippingNote;
   /** Alıcı hizmet bedeli */
   serviceFee: number;
   /** Kullanılan Mezat kredisi (indirim) */

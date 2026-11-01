@@ -3,7 +3,7 @@
  * Store'lar ilk açılışta bunlarla doldurulur.
  */
 import { createRng } from '@/lib/rng';
-import { buyerServiceFee } from '@/lib/pricing';
+import { buyerServiceFee, labelPrice } from '@/lib/pricing';
 import type { AppNotification, Carrier, Conversation, Order, OrderEvent, OrderStatus, Payout, Product } from '@/types';
 
 import { BUYER_USERS, PRODUCTS, SELLER_USERS, SHOWS } from './mock';
@@ -52,6 +52,8 @@ function seedOrder(product: Product, status: OrderStatus, daysAgo: number, buyer
     showId: product.showId,
     itemPrice,
     shippingCost,
+    sellerShippingCost: product.shippingIncluded ? labelPrice(product) : undefined,
+    shippingNote: product.shippingIncluded ? 'included' : undefined,
     serviceFee,
     creditUsed: 0,
     total: Math.round((itemPrice + shippingCost + serviceFee) * 100) / 100,

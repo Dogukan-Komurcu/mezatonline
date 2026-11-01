@@ -19,6 +19,7 @@ import type { Address, Order } from '@/types';
 import { InfoBanner } from '../components';
 import { useActivityExtras } from '../store';
 import { addressLines, protectionLabel, type ProtectionInfo } from '../utils';
+import { orderShippingReason } from './sections';
 
 // ─── Teslimat adresini değiştir ─────────────────────────────────────────────
 
@@ -111,10 +112,12 @@ export function InvoiceSheet({ visible, onClose, order, address }: { visible: bo
   const kdv = Math.round((gross - base) * 100) / 100;
   const buyerName = address?.fullName ?? me.displayName;
   const cancelled = order.status === 'cancelled' || order.status === 'refunded';
+  // Kargo alınmadıysa nedeni (kargo dahil, yayın kampanyası, aynı paket)
+  const shipReason = orderShippingReason(order);
 
   const lines: { label: string; value: number }[] = [
     { label: `${order.productTitle} (${order.quantity} adet)`, value: order.itemPrice },
-    { label: 'Kargo bedeli', value: order.shippingCost },
+    { label: shipReason ? `Kargo bedeli · ${shipReason}` : 'Kargo bedeli', value: order.shippingCost },
     { label: 'Alıcı Koruması hizmet bedeli', value: order.serviceFee },
   ];
   if (order.creditUsed > 0) lines.push({ label: 'Mezat Kredisi indirimi', value: -order.creditUsed });

@@ -7,7 +7,7 @@ import { BUYER_USERS, getMarketplaceProducts, getUser, getUserByUsername } from 
 import { districtsOf, neighborhoodsOf } from '@/data/turkey';
 import { TIP_PRESETS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
-import { SELLER_COMMISSION_RATE, SELLER_FEE_TEXT, sellerFees } from '@/lib/pricing';
+import { SELLER_COMMISSION_RATE, SELLER_FEE_TEXT, sellerFees, sellerOrderNet } from '@/lib/pricing';
 import { createRng, random } from '@/lib/rng';
 import type { LiveSessionSummary } from '@/store/seller';
 import type { Carrier, ID, Order, Payout, Product, Show } from '@/types';
@@ -296,7 +296,7 @@ export const SELLER_ORDER_STATUS: Record<Order['status'], string> = {
 };
 
 export function orderNet(o: Order): number {
-  return sellerFees(o.itemPrice * o.quantity).net;
+  return sellerOrderNet(o);
 }
 
 // ─── Envanter ────────────────────────────────────────────────────────────────
@@ -431,6 +431,13 @@ export function buildLedger(orders: Order[], payouts: Payout[], labels: Record<I
       const at = label ? new Date(label.createdAt).getTime() : new Date(shippedEvent!.at).getTime();
       out.push({ id: `${o.id}_shin`, at, kind: 'shipping_in', title: 'Kargo ücreti (alıcıdan)', subtitle: sub, amount: o.shippingCost, status: 'completed', orderId: o.id });
       out.push({ id: `${o.id}_shout`, at: at + 1, kind: 'shipping_out', title: `Kargo etiketi · ${label?.carrier ?? o.carrier ?? 'Kargo'}`, subtitle: sub, amount: -o.shippingCost, status: 'completed', orderId: o.id });
+    }
+    // Satıcının karşıladığı kargo (kargo dahil ilan, ücretsiz kargo eşiği, çekiliş ödülü ya da paket farkı): satışla birlikte bakiyeden düşer
+    const ownShipping = o.sellerShippingCost ?? 0;
+    if (ownShipping > 0) {
+      const title =
+        o.source === 'giveaway' ? 'Kargo · çekiliş ödülü' : o.shippingNote === 'threshold' ? 'Kargo · ücretsiz kargo eşiği' : o.shippingNote === 'included' ? 'Kargo · ilanda kargo dahil' : 'Kargo · paket farkı';
+      out.push({ id: `${o.id}_shown`, at: t + 3, kind: 'shipping_out', title, subtitle: sub, amount: -ownShipping, status, orderId: o.id });
     }
   });
   payouts.forEach((p) => {

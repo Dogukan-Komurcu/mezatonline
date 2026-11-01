@@ -16,6 +16,7 @@ import { FEATURES } from '@/config/demo';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { ReportSheet, shareLink, TipSheet } from '@/features/shared/sheets';
+import { shippingQuoteFor, shippingText, thresholdText, type ShippingQuote } from '@/features/shared/shipping';
 import { nextMinBid } from '@/lib/auction';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -52,7 +53,7 @@ import { LIVE_RADIUS, liveStyles } from './components/styles';
 import type { LiveEvents, LiveLot, LiveViewer } from './engine';
 import { couponDiscount, hasAcceptedBidRules, MUDAVIM_COUPON_CODE, useLivePrefs } from './liveStore';
 import { markPreBid } from './prebids';
-import { hasBundleInShow, purchaseInLive, useShowBundle } from './purchase';
+import { purchaseInLive } from './purchase';
 import { BidSetupSheet, type BidSetupIntent, type BidSetupRequest } from './sheets/BidSetupSheet';
 import { BoostSheet } from './sheets/BoostSheet';
 import { BuyNowSheet } from './sheets/BuyNowSheet';
@@ -136,7 +137,6 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const activeReactionId = useRewardsStore((s) => s.activeReaction);
   const coupon = useLivePrefs((s) => s.coupon);
   const orders = useOrdersStore((s) => s.orders);
-  const bundled = useShowBundle(show.id, show.sellerId) && !guest;
   const hasCard = useWalletStore((s) => s.paymentMethods.length > 0);
   const hasAddress = useWalletStore((s) => s.addresses.length > 0);
   const rulesAccepted = useLivePrefs(hasAcceptedBidRules);
@@ -201,7 +201,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         quantity: 1,
         orderId: order.id,
         discount,
-        bundled: order.shippingCost === 0 && lot.product.shippingCost > 0,
+        // Yalnızca paket birleştirmesi "aynı pakette" sayılır (kargo dahil ilan / yayın kampanyası değil)
+        bundled: order.shippingNote === 'bundled' && order.shippingCost === 0,
       });
     },
     onLost: (lot) => {
@@ -210,8 +211,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     },
     onGiveawayWon: (g) => {
       haptic.success();
-      // Çekilişte kargo ücretini satıcı karşılar
-      const prize = { ...g.product, shippingCost: 0 };
+      // Çekilişte kargo ücretini satıcı karşılar (kargo dahil sayılır; etiket bedeli satıcıya yazılır)
+      const prize = { ...g.product, shippingIncluded: true, shippingCost: 0 };
       const { order } = purchaseInLive({ product: prize, price: 0, source: 'giveaway', showId: show.id });
       setCelebration({ id: Date.now(), kind: 'giveaway', product: prize, price: 0, quantity: 1, orderId: order.id, discount: 0, bundled: false });
     },
@@ -649,7 +650,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         quantity: qty,
         orderId: order.id,
         discount,
-        bundled: order.shippingCost === 0 && info.product.shippingCost > 0,
+        bundled: order.shippingNote === 'bundled' && order.shippingCost === 0,
       });
     }, 1000);
   };
@@ -856,8 +857,20 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
 
   const nextBid = lot ? nextMinBid(lot.currentBid, lot.bidCount > 0) : 0;
   const leading = !!lot?.leader?.isMe && running;
-  const shippingCost = lot ? lot.product.shippingCost : 0;
   const couponOff = lot && running && !guest ? couponDiscount(coupon, Math.max(lot.currentBid, nextBid)) : 0;
+  const freeShippingThreshold = show.freeShippingThreshold;
+  /**
+   * Ürün bu birim fiyata alınırsa alıcının kargo payı. Sipariş gibi kupon düşülmüş tutarla hesaplanır
+   * (yayının ücretsiz kargo eşiği bu tutara bakar); misafirin bu yayında paketi olmaz.
+   */
+  const quoteFor = (p: Product | undefined, price: number): ShippingQuote => {
+    if (!p) return { buyer: 0, seller: 0 };
+    const itemTotal = Math.max(0, price - (guest ? 0 : couponDiscount(coupon, price)));
+    return shippingQuoteFor(p, show.id, itemTotal, guest ? [] : orders);
+  };
+  // Kazanırsan ödenecek fiyat: öndeysen güncel teklif, değilsen en az sıradaki teklif
+  const winPrice = lot ? (running && !leading ? nextBid : lot.currentBid) : 0;
+  const lotShipping = quoteFor(lot?.product, winPrice);
   const flash = state.flash;
   const soldAuctionIds = new Set(state.sold.filter((s) => s.via === 'auction').map((s) => s.product.id));
   const shopCount = state.queue.filter((p) => !soldAuctionIds.has(p.id)).length + state.shop.filter((p) => p.quantity - p.sold > 0).length;
@@ -884,10 +897,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
       .reverse()
       .map((m) => ({ username: m.username, avatar: m.avatar })),
   ];
+  /** Ürün sayfasındaki kargo satırı: sahnedeki lotta kazanma fiyatına, diğerlerinde satış / açılış fiyatına göre */
   const shippingLine = (p?: Product) => {
     if (!p) return '';
-    const b = !guest && (bundled || hasBundleInShow(show.id, show.sellerId));
-    return b ? 'Kargo: ₺0 · aynı pakette' : `Kargo: ${formatTRY(p.shippingCost)}`;
+    const q = quoteFor(p, lot?.product.id === p.id ? winPrice : buyInfo(p).unitPrice);
+    return `${shippingText(q)}${freeShippingThreshold && q.buyer > 0 ? ` · ${thresholdText(freeShippingThreshold)}` : ''}`;
   };
   const buy = sheetProduct ? buyInfo(sheetProduct) : undefined;
 
@@ -1006,8 +1020,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
             {lot ? (
               <AuctionCard
                 lot={lot}
-                shippingCost={shippingCost}
-                bundled={bundled}
+                shipping={lotShipping}
+                freeShippingThreshold={freeShippingThreshold}
                 couponDiscount={couponOff}
                 onPress={() => {
                   setSheetProduct(lot.product);
@@ -1118,7 +1132,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         mode="live"
         product={lot?.product}
         lot={lot}
-        shippingLine={shippingLine(lot?.product)}
+        shippingFor={(price) => quoteFor(lot?.product, price)}
+        freeShippingThreshold={freeShippingThreshold}
         onSubmit={onCustomSubmit}
       />
       <CustomBidSheet
@@ -1128,7 +1143,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         product={sheetProduct}
         startPrice={sheetProduct?.price}
         existingPreBid={sheetProduct ? state.myPreBids?.[sheetProduct.id] : undefined}
-        shippingLine={shippingLine(sheetProduct)}
+        shippingFor={(price) => quoteFor(sheetProduct, price)}
+        freeShippingThreshold={freeShippingThreshold}
         onSubmit={onPreBidSubmit}
       />
       <SellerSheet
@@ -1243,6 +1259,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           openSheet('product');
         }}
         onBuyNow={(p) => withGate(() => openBuy(p), { reason: AUTH_REASONS.buy, intent: 'buy' })}
+        shippingFor={(p) => shippingText(quoteFor(p, buyInfo(p).unitPrice))}
         onPreBid={(p) => {
           setSheetProduct(p);
           withGate(() => openSheet('prebid'), { intro: true, reason: AUTH_REASONS.bid });
@@ -1257,7 +1274,8 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         originalPrice={buy?.originalPrice}
         flash={!!buy?.flash}
         stock={buy?.stock ?? 0}
-        bundled={bundled}
+        showId={show.id}
+        freeShippingThreshold={freeShippingThreshold}
         processing={processing}
         onNavigate={navigate}
         onConfirm={confirmBuy}
