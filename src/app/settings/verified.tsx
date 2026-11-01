@@ -5,6 +5,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Header, Icon, Screen, Sheet, Text, toast, type IconName } from '@/components/ui';
+import { DEMO_MODE } from '@/config/demo';
 import { useAccountStore } from '@/features/account/store';
 import { BottomBar, CardBrandBadge, IconCircle, InfoNote, MenuGroup, MenuRow, OutlineCard } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
@@ -17,16 +18,16 @@ import { SCREEN_PADDING, useTheme } from '@/theme';
 const HOLD_AMOUNT = 250;
 
 const BENEFITS: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'hammer-outline', title: 'Özel yayınlarda teklif ver', text: 'Bazı satıcılar yalnızca doğrulanmış alıcıların teklif vermesine izin verir.' },
-  { icon: 'gift-outline', title: 'Çekilişlere katıl', text: 'Doğrulanmış alıcılara özel çekilişlerde şansını dene.' },
-  { icon: 'ribbon-outline', title: 'Güvenilir alıcı rozeti', text: 'Satıcılar teklif verirken doğrulanmış olduğunu görür.' },
-  { icon: 'shield-checkmark-outline', title: 'Daha güvenli hesap', text: 'Hesabın sahte işlemlere karşı ek bir katmanla korunur.' },
+  { icon: 'hammer-outline', title: 'Kısıtlı mezatlara katıl', text: 'Satıcı teklifleri doğrulanmış hesaplarla sınırladığında da teklif verebilirsin.' },
+  { icon: 'gift-outline', title: 'Sınırlı çekilişler', text: 'Satıcının yalnızca doğrulanmış hesaplara açtığı çekilişlere de katılabilirsin.' },
+  { icon: 'ribbon-outline', title: 'Satıcıya güven ver', text: 'Satıcı, teklifin doğrulanmış bir hesaptan geldiğini bilir.' },
+  { icon: 'shield-checkmark-outline', title: 'Kartın baştan kontrol edilir', text: 'Kartının geçerli olduğu önceden teyit edilir; kazandığın mezatta ödeme sırasında kart sorunu çıkma ihtimali azalır.' },
 ];
 
 const STEPS = [
-  `Varsayılan kartından ${formatTRY(HOLD_AMOUNT)} geçici ön provizyon alınır; çekim yapılmaz.`,
-  'İşlemi bankanın 3D Secure ekranında onaylarsın.',
-  'Provizyon 24 saat içinde otomatik olarak iptal edilir ve limitine geri yansır.',
+  'Varsayılan kartın kullanılır; istersen aşağıdan başka bir kart seçebilirsin.',
+  `Bankanın 3D Secure ekranında ${formatTRY(HOLD_AMOUNT)} tutarındaki ön provizyonu onaylarsın. Bu bir ödeme değildir.`,
+  'Bloke en geç 24 saat içinde kalkar ve tutar kart limitine geri döner.',
 ];
 
 type Phase = 'confirm' | 'processing' | 'done';
@@ -49,8 +50,8 @@ export default function VerifiedBuyerScreen() {
         markVerified(payment?.last4);
         useInboxStore.getState().pushNotification({
           type: 'promo',
-          title: 'Artık Doğrulanmış Alıcısın ✅',
-          body: `${formatTRY(HOLD_AMOUNT)} ön provizyon 24 saat içinde iptal edilecek.`,
+          title: 'Hesabın doğrulandı ✅',
+          body: `Kartındaki ${formatTRY(HOLD_AMOUNT)} bloke en geç 24 saat içinde kalkacak.`,
           href: '/settings/verified',
         });
         haptic.success();
@@ -79,12 +80,12 @@ export default function VerifiedBuyerScreen() {
             <Icon name={verified ? 'shield-checkmark' : 'shield-half-outline'} size={44} color={verified ? '#FFFFFF' : colors.onPrimary} />
           </View>
           <Text variant="title2" align="center">
-            {verified ? 'Doğrulanmış Alıcısın' : 'Doğrulanmış Alıcı ol'}
+            {verified ? 'Hesabın doğrulandı' : 'Hesabını doğrula'}
           </Text>
           <Text variant="callout" color="textSecondary" align="center" style={{ maxWidth: 320 }}>
             {verified
-              ? `${verifiedAt ? formatDate(verifiedAt) : 'Bugün'} tarihinde doğrulandın. Bu durum tüm yayınlarda geçerlidir.`
-              : 'Bazı satıcılar yayınlarında yalnızca doğrulanmış alıcıların teklif vermesine izin verir. Bir kez doğrulan, tüm yayınlarda geçerli olsun.'}
+              ? `Doğrulama tarihi: ${verifiedAt ? formatDate(verifiedAt) : 'bugün'}. Başka bir işlem yapmana gerek yok; her yayında geçerli.`
+              : 'Satıcılar teklifleri yalnızca doğrulanmış hesaplara açabilir. Kartını bir kez onayla, bu kısıtlamanın olduğu her yayında teklif ver.'}
           </Text>
         </View>
 
@@ -96,7 +97,7 @@ export default function VerifiedBuyerScreen() {
                 <Text variant="headline">Kart ön provizyonu ile doğrulandı</Text>
                 <Text variant="footnote" color="textSecondary">
                   {verifiedCard ? `•••• ${verifiedCard} · ` : ''}
-                  {formatTRY(HOLD_AMOUNT)} provizyon 24 saat içinde iptal edilir
+                  {formatTRY(HOLD_AMOUNT)} bloke 24 saat içinde kalkar
                 </Text>
               </View>
             </OutlineCard>
@@ -150,9 +151,11 @@ export default function VerifiedBuyerScreen() {
                 <MenuRow icon="add" title="Kart ekle" subtitle="Doğrulama için kayıtlı bir kart gerekli" onPress={() => router.push('/settings/add-card')} />
               )}
             </MenuGroup>
-            <View style={[styles.pad, { marginTop: 16 }]}>
-              <InfoNote>Daha önce Mezatonline'da başarılı bir alışveriş yaptıysan bazı yayınlarda otomatik olarak doğrulanmış sayılırsın.</InfoNote>
-            </View>
+            {DEMO_MODE ? (
+              <View style={[styles.pad, { marginTop: 16 }]}>
+                <InfoNote>Demo sürüm: Bankaya bağlanılmaz ve kartında gerçek bir provizyon oluşturulmaz; doğrulama yalnızca bu cihazda işaretlenir.</InfoNote>
+              </View>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
@@ -171,7 +174,7 @@ export default function VerifiedBuyerScreen() {
               {formatTRY(HOLD_AMOUNT)} ön provizyonu onayla
             </Text>
             <Text variant="callout" color="textSecondary" align="center">
-              {payment.bank} •••• {payment.last4} kartından {formatTRY(HOLD_AMOUNT)} tutarında geçici provizyon alınacak. Kartından çekim yapılmaz; provizyon 24 saat içinde iptal edilir.
+              Onayladığında {payment.bank} •••• {payment.last4} kartında {formatTRY(HOLD_AMOUNT)} bloke edilir. Bu tutar hesabından düşmez; yalnızca kartın geçerli olduğunu teyit eder ve 24 saat içinde kendiliğinden kalkar.
             </Text>
             <View style={styles.sheetButtons}>
               <Button title="Onayla" size="lg" fullWidth onPress={() => setPhase('processing')} />
@@ -196,10 +199,10 @@ export default function VerifiedBuyerScreen() {
               <IconCircle name="checkmark" size={72} bg={colors.success} color="#FFFFFF" />
             </Animated.View>
             <Text variant="title3" align="center">
-              Doğrulama tamamlandı 🎉
+              Kartın onaylandı 🎉
             </Text>
             <Text variant="callout" color="textSecondary" align="center">
-              Artık doğrulanmış alıcılara özel yayınlarda teklif verebilir ve çekilişlere katılabilirsin.
+              Satıcının teklifleri doğrulanmış hesaplarla sınırladığı yayınlarda da artık mezata katılabilirsin.
             </Text>
             <View style={styles.sheetButtons}>
               <Button title="Harika!" size="lg" fullWidth onPress={() => setOpen(false)} />

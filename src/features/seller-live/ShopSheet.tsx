@@ -145,7 +145,7 @@ export function ShopSheet(props: ShopSheetProps) {
           <EmptyState
             icon="bag-handle-outline"
             title={q ? 'Sonuç yok' : 'Hemen Al ürünü yok'}
-            message={q ? 'Aramanı değiştirip tekrar dene.' : 'Sabit fiyatlı ürünler izleyicilerin her an satın alabileceği ürünlerdir.'}
+            message={q ? 'Aramanı değiştirip tekrar dene.' : 'Hemen Al ilanları, sabitlemeni beklemeden mağaza sekmesinden satın alınabilir.'}
           />
         }
       />

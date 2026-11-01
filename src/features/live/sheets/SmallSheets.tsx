@@ -22,7 +22,7 @@ export function FollowEnterSheet({ visible, onClose, seller, onConfirm }: { visi
       dark
       footer={
         <View style={styles.footer}>
-          <Button title="Takip et ve katıl" size="lg" fullWidth icon="gift" onPress={onConfirm} />
+          <Button title="Takip et, çekilişe gir" size="lg" fullWidth icon="gift" onPress={onConfirm} />
           <Button title="Vazgeç" variant="ghost" fullWidth onPress={onClose} />
         </View>
       }>

@@ -340,7 +340,7 @@ export function PayoutsScreen() {
             • 1 Ocak 2025’ten itibaren e-ticaret satışlarında %1 gelir vergisi stopajı (tevkifat) uygulanır. Tevkif edilen tutar aylık ekstrende gösterilir ve beyannamende mahsup edilebilir.
           </Text>
           <Text variant="footnote" color="textSecondary">
-            • Komisyon ve işlem ücretlerine %20 KDV dahildir. Bu ücretlerin e-Arşiv / e-Fatura’sı her ayın 10’unda hesabına yüklenir.
+            • Komisyon ve işlem ücretlerine %20 KDV dahildir. Gerçek sürümde bu ücretler için aylık e-Arşiv / e-Fatura düzenlenir ve hesabına yüklenir.
           </Text>
           <Text variant="footnote" color="textSecondary">
             • Şahıs şirketi ve kurumsal satıcılar her satış için alıcıya fatura düzenlemekle yükümlüdür.

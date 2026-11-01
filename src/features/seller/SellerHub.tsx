@@ -120,16 +120,16 @@ export function SellerHub() {
   const pendingOffers = deriveOffers(listings, listingStatus, resolutions, now).filter((o) => o.status === 'pending').length;
 
   const checklist = [
-    { key: 'show', title: 'Yayın planla', subtitle: 'Tarih, saat ve kapak seç', done: shows.length > 0 || sessions.length > 0, onPress: () => router.push('/seller/schedule') },
+    { key: 'verify', title: 'Kimlik ve IBAN bilgilerini onayla', subtitle: 'Kazancın bu hesaba aktarılır', done: !!kyc && (isValidTckn(kyc.tckn) || !!kyc.tcknMasked) && !!iban && isValidIban(iban), onPress: () => setSheet('verify') },
+    { key: 'shipping', title: 'Kargo tercihini belirle', subtitle: 'Firma ve kargo ücretini kimin ödeyeceği', done: shipping.configured, onPress: () => setSheet('shipping') },
     {
       key: 'products',
-      title: '3 ürün ekle',
-      subtitle: `${Math.min(3, listings.length)}/3 ürün eklendi`,
+      title: 'En az 3 ürün yükle',
+      subtitle: `${Math.min(3, listings.length)}/3 ürün hazır`,
       done: listings.length >= 3,
       onPress: () => router.push('/seller/listing'),
     },
-    { key: 'verify', title: 'Kimlik & IBAN doğrula', subtitle: 'Ödeme alabilmen için gerekli', done: !!kyc && (isValidTckn(kyc.tckn) || !!kyc.tcknMasked) && !!iban && isValidIban(iban), onPress: () => setSheet('verify') },
-    { key: 'shipping', title: 'Kargo ayarı', subtitle: 'Kargo firması ve ücret tercihi', done: shipping.configured, onPress: () => setSheet('shipping') },
+    { key: 'show', title: 'İlk yayın tarihini seç', subtitle: 'Gün, saat ve kapak görseli', done: shows.length > 0 || sessions.length > 0, onPress: () => router.push('/seller/schedule') },
   ];
   const doneCount = checklist.filter((c) => c.done).length;
   const allDone = doneCount === checklist.length;
@@ -161,7 +161,7 @@ export function SellerHub() {
                 Tatil modundasın 🌴
               </Text>
               <Text variant="footnote" color="textSecondary">
-                Hemen Al ürünlerin mağazanda gizli. Mevcut siparişlerin kargo süreleri değişmez.
+                Mağazandaki Hemen Al ilanları şu an alıcılara görünmüyor. Açık siparişlerini yine 2 iş günü içinde kargolaman gerekiyor.
               </Text>
             </View>
             <Button
@@ -199,7 +199,7 @@ export function SellerHub() {
                   Satıcı hesabın hazır, {me.displayName.split(' ')[0]}! 🎉
                 </Text>
                 <Text variant="callout" color={colors.onPrimary} style={{ opacity: 0.8 }}>
-                  Kontrol listesini tamamla, ilk canlı yayınına çık. Yeni satıcılara ilk 30 gün %0 komisyon.
+                  Aşağıdaki adımları bitirdiğinde ilk canlı yayınına hazırsın. İlk 30 gününde komisyon %0.
                 </Text>
               </View>
               <IconButton name="close" size={30} color={colors.onPrimary} onPress={dismissWelcome} accessibilityLabel="Kapat" />
@@ -254,7 +254,7 @@ export function SellerHub() {
             <View style={styles.cardHead}>
               <View style={{ flex: 1 }}>
                 <Text variant="headline" weight="700">
-                  {allDone ? 'Hazırsın! İlk yayınına çık 🚀' : 'İlk yayın kontrol listesi'}
+                  {allDone ? 'Hazırsın! İlk yayınına çık 🚀' : 'Yayına hazırlık'}
                 </Text>
                 <Text variant="footnote" color="textSecondary">
                   {doneCount}/{checklist.length} tamamlandı
@@ -302,7 +302,7 @@ export function SellerHub() {
           <ProgressBar value={tier.progress} color={colors.success} height={8} style={{ marginTop: 12 }} />
           <View style={[styles.inline, { justifyContent: 'space-between', marginTop: 8 }]}>
             <Text variant="footnote" color="textSecondary">
-              Bu dönem: <Text variant="footnote" weight="700">{formatTRY(tier.sales)}</Text>
+              28 günlük satışın: <Text variant="footnote" weight="700">{formatTRY(tier.sales)}</Text>
             </Text>
             <Text variant="footnote" color="textSecondary">
               {tier.next ? `${tier.next.name}: ${formatTRY(tier.next.min)}` : 'En yüksek seviye'}
@@ -311,17 +311,17 @@ export function SellerHub() {
           <Text variant="callout" style={{ marginTop: 10 }}>
             {tier.next ? (
               <>
-                {tier.next.name}’e <Text variant="callout" weight="800">{formatTRY(tier.remaining)}</Text> kaldı → sonraki dönem oranın{' '}
+                {tier.next.name} için <Text variant="callout" weight="800">{formatTRY(tier.remaining)}</Text> daha satış gerekiyor; ulaşırsan sonraki 28 günün oranı{' '}
                 <Text variant="callout" weight="800" color="success">
                   {formatRate(tier.next.rate)}
                 </Text>
               </>
             ) : (
-              'Tebrikler! En düşük komisyon oranındasın.'
+              'Seviye tablosunun son basamağındasın.'
             )}
           </Text>
           <Text variant="footnote" color="textTertiary" style={{ marginTop: 4 }}>
-            28 günün {tier.daysElapsed}. günü · {periodOrders} sipariş · tahmini dönem sonu {formatTRY(tier.projected)}
+            Dönemin {tier.daysElapsed}. günü · {periodOrders} sipariş · bu tempoyla dönem toplamı ≈ {formatTRY(tier.projected)}
           </Text>
         </Card>
 

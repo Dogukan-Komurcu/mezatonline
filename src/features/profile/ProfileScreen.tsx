@@ -190,7 +190,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
       key: 'blocked',
       emoji: '🚫',
       title: `@${user.username} engellendi`,
-      message: 'Engellediğin kişi seni takip edemez, mesaj gönderemez, yayınlarına katılamaz ve senden alışveriş yapamaz.',
+      message: 'Engel kalkana kadar bu kişi sana yazamaz, yayınlarına giremez ve mağazandan alışveriş yapamaz.',
       actionLabel: 'Engeli kaldır',
       onAction: () => {
         useSocialStore.getState().unblock(user.id);
@@ -239,7 +239,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
   } else if (activeTab === 'reviews') {
     if (reviewData.reviews.length) {
       rows.push({ kind: 'rating', key: 'rating' });
-      rows.push({ kind: 'title', key: 't_reviews', title: `Değerlendirmeler (${reviewData.reviews.length})`, subtitle: 'En yeniler önce · yalnızca yazılı değerlendirmeler' });
+      rows.push({ kind: 'title', key: 't_reviews', title: `Değerlendirmeler (${reviewData.reviews.length})`, subtitle: 'Yorum bırakılmış puanlar · yeniden eskiye' });
       reviewData.reviews.forEach((r) => rows.push({ kind: 'review', key: r.id, review: r }));
     } else
       rows.push({
@@ -257,7 +257,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         key: 'become_seller',
         emoji: '🚀',
         title: 'Mezatonline’da satış yap',
-        message: 'Canlı yayın aç, ürünlerini binlerce alıcıya mezatla sat. İlk ay komisyon %0.',
+        message: 'Kendi canlı yayınını aç, ürünlerini takipçilerine mezatla sat. İlk ay komisyon %0.',
         actionLabel: 'Satıcı ol',
         onAction: () => router.push('/seller/apply'),
       });
@@ -520,7 +520,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         icon="ban-outline"
         iconTone="danger"
         title={`@${user.username} engellensin mi?`}
-        message="Engellediğin kişi seni takip edemez, profilini göremez, sana mesaj gönderemez, yayınlarına katılamaz ve senden alışveriş yapamaz. Engellendiğini öğrenmez."
+        message="Engel sessizce uygulanır; karşı tarafa bildirim gitmez. Bundan sonra bu kişi profilini açamaz, sana yazamaz, yayınlarına giremez ve mağazandan alışveriş yapamaz. Engeli Hesap → Engellenen kullanıcılar listesinden kaldırabilirsin."
         actions={[
           { label: 'Engelle', variant: 'danger', onPress: confirmBlock },
           { label: 'Vazgeç', variant: 'outline', onPress: () => setSheet('none') },

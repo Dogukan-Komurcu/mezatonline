@@ -158,8 +158,8 @@ export const SEED_CONVERSATIONS: Conversation[] = [
 export const AUTO_REPLIES = [
   'Merhaba! Hemen bakıp dönüyorum 🙏',
   'Tabii, bir sonraki yayında gösterebilirim.',
-  'Evet, ürün orijinal ve faturalı ✅',
-  'Kargo genelde 24 saat içinde çıkıyor 📦',
+  'Faturası var, istersen fotoğrafını da atarım ✅',
+  'Kargoyu en geç 2 iş günü içinde veriyorum 📦',
   'Teşekkürler, iyi günler! ❤️',
   'Fotoğrafını atıyorum birazdan.',
   'Bu akşam 21:00’de canlıdayım, bekliyorum!',

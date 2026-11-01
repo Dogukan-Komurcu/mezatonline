@@ -71,7 +71,7 @@ export function ChatComposer({ visible, initialText = '', mentionables, onClose,
               <View style={styles.hint}>
                 <Icon name="hourglass-outline" size={14} color={liveColors.primary} />
                 <Text variant="footnote" weight="600" color={liveColors.text} style={styles.flex}>
-                  Heyecanını seviyoruz! Bir sonraki mesajın için birkaç saniye bekle.
+                  Sohbet yavaş modda: yeni mesaj için birkaç saniye beklemen gerekiyor.
                 </Text>
               </View>
             ) : null}
@@ -105,7 +105,7 @@ export function ChatComposer({ visible, initialText = '', mentionables, onClose,
                   ref={inputRef}
                   value={text}
                   onChangeText={(t) => setText(t.slice(0, 200))}
-                  placeholder="Bir şey yaz…"
+                  placeholder="Mesajını yaz"
                   placeholderTextColor={liveColors.textTertiary}
                   selectionColor={liveColors.primary}
                   style={styles.input}

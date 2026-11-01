@@ -42,7 +42,7 @@ export function ChangeAddressSheet({ visible, onClose, order, currentAddressId }
       visible={visible}
       onClose={close}
       title="Teslimat adresi"
-      subtitle="Satıcı henüz kargolamadığı için adresini değiştirebilirsin. Bu gönderideki tüm ürünler yeni adrese gönderilir."
+      subtitle="Paket henüz kargoya teslim edilmedi, yani adresi şimdi değiştirebilirsin. Seçtiğin adres bu paketteki her ürün için geçerli olur."
       showClose
       footer={<Button title="Güncelle" size="lg" fullWidth disabled={!selected || selected === currentAddressId} onPress={update} />}>
       {addresses.length === 0 ? (
@@ -61,7 +61,7 @@ export function ChangeAddressSheet({ visible, onClose, order, currentAddressId }
         }}
       />
       <Text variant="caption" color="textTertiary" style={styles.note}>
-        Kargo kodu oluşturulduktan sonra adres değiştirilemez. Satıcılar alıcı adresini değiştiremez.
+        Kargo kodu üretildiği anda adres kilitlenir. Adres değişikliğini yalnızca sen yapabilirsin; satıcının bu alana erişimi yoktur.
       </Text>
     </Sheet>
   );
@@ -201,8 +201,8 @@ function InvoiceMeta({ label, value }: { label: string; value: string }) {
 
 // ─── Alıcı Koruması ─────────────────────────────────────────────────────────
 
-const COVERED = ['Ürün hiç gelmedi ya da kargoda kayboldu', 'Hasarlı, kırık ya da çalışmıyor', 'Eksik veya yanlış ürün', 'Açıklamaya ve fotoğraflara uygun değil', 'Sahte / taklit ürün'];
-const NOT_COVERED = ['Fikir değişikliği (cayma hakkı ayrıca geçerlidir)', 'Açıklamada belirtilmiş kusurlar', 'Platform dışında yapılan ödemeler', 'Teslim alınmayan veya reddedilen paketler'];
+const COVERED = ['Paket yola çıkmadı ya da kargoda kayboldu', 'Ürün kırık, hasarlı ya da çalışmıyor', 'Koliden eksik ya da başka bir ürün çıktı', 'İlandaki fotoğraf ve açıklamayla örtüşmüyor', 'Taklit olduğundan şüpheleniyorsun'];
+const NOT_COVERED = ['Satıcının ilanda önceden yazdığı kusurlar', 'Mezatonline dışında konuşulan fiyat ve ödemeler', 'Kapıda geri çevrilen ya da şubeden zamanında alınmayan paketler', 'Yalnızca vazgeçtiğin alımlar (kurumsal satıcıda cayma hakkı ayrıca var)'];
 
 export function ProtectionSheet({ visible, onClose, info, onGetHelp }: { visible: boolean; onClose: () => void; info: ProtectionInfo; onGetHelp: () => void }) {
   const { colors } = useTheme();
@@ -211,13 +211,13 @@ export function ProtectionSheet({ visible, onClose, info, onGetHelp }: { visible
       visible={visible}
       onClose={onClose}
       title="Alıcı Koruması"
-      subtitle="Ürün ulaşmazsa ya da açıklandığı gibi çıkmazsa, ürün sana ulaştıktan sonra 14 gün içinde sorun bildirebilirsin."
+      subtitle="Paket hiç gelmezse ya da ürün ilandakinden belirgin biçimde farklı çıkarsa iade talep edebilirsin; farklılık için süre teslimattan sonra 14 gündür."
       showClose
       footer={<Button title="Bu siparişle ilgili yardım al" size="lg" fullWidth onPress={onGetHelp} disabled={!info.active} />}>
       <InfoBanner
         icon={info.active ? 'shield-checkmark' : 'shield-outline'}
         tone={info.active ? 'success' : 'neutral'}
-        text={info.delivered ? `${protectionLabel(info)} · Sorun bildirimi: ürün sana ulaştıktan sonra 14 gün içinde.` : `${protectionLabel(info)}. Ürün sana ulaşmazsa da talep oluşturabilirsin.`}
+        text={info.delivered ? `${protectionLabel(info)} · Bildirim süresi teslimattan itibaren 14 gün.` : `${protectionLabel(info)}. Paket gelmezse teslimatı beklemeden talep açabilirsin.`}
         style={styles.mbLg}
       />
       <Text variant="headline" style={styles.listTitle}>
@@ -243,7 +243,7 @@ export function ProtectionSheet({ visible, onClose, info, onGetHelp }: { visible
         </View>
       ))}
       <Text variant="caption" color="textTertiary" style={styles.note}>
-        Talebin incelenir; destek ekibimiz en kısa sürede yanıt verir. Onaylanan iadeler bankana bağlı olarak birkaç iş günü içinde kartına yansır.
+        Talebin incelenir; destek ekibimiz en kısa sürede yanıt verir. Onaylanan iadenin kartına yansıması bankaya göre birkaç iş günü sürebilir.
         {DEMO_MODE ? ` ${DEMO_COPY.banner}` : ''}
       </Text>
     </Sheet>

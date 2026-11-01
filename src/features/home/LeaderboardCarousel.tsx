@@ -53,7 +53,7 @@ export function LeaderboardCarousel({ scope }: { scope: LeaderboardScope }) {
     <View style={styles.wrap}>
       <SectionTitle
         title="En İyi Satıcılar"
-        subtitle={category ? `Şu an canlı · ${category.shortName}` : 'Şu an canlı olan en iyiler'}
+        subtitle={category ? `Şu an canlı · ${category.shortName}` : 'Şu an yayında olanların sıralaması'}
         onAction={() => router.push(`/top-sellers/${scope}`)}
         left={<Glyph3D name="trophy" size={40} />}
       />

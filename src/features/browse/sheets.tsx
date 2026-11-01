@@ -132,8 +132,8 @@ export function ShowFilterSheet({
       <CheckRow label={SUDDEN_DEATH_LABEL} subtitle="Son saniyede gelen teklif süreyi uzatmaz" checked={draft.suddenDeath} onPress={() => flag('suddenDeath')} />
       <Divider style={styles.divider} />
       <SectionLabel>Satıcı</SectionLabel>
-      <CheckRow label="En İyi Satıcılar" subtitle="Satış ve teslimat performansı en yüksekler" checked={draft.topSellers} onPress={() => flag('topSellers')} />
-      <CheckRow label="Yeni ve Dikkat Çekenler" subtitle="Yeni katılan ve öne çıkan satıcılar" checked={draft.fresh} onPress={() => flag('fresh')} />
+      <CheckRow label="En İyi Satıcılar" subtitle="Gözde Satıcı rozeti taşıyanlar" checked={draft.topSellers} onPress={() => flag('topSellers')} />
+      <CheckRow label="Yeni Yüzler" subtitle="Son altı ayda katılan satıcılar ve vitrindeki yayınlar" checked={draft.fresh} onPress={() => flag('fresh')} />
     </Sheet>
   );
 }

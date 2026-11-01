@@ -15,8 +15,8 @@ const ROWS: Row[] = [
   {
     icon: 'shield-checkmark-outline',
     tint: liveColors.primaryBright,
-    title: 'Mezatonline Alıcı Koruması',
-    body: 'Ürün sana ulaşmazsa ya da açıklamayla önemli ölçüde farklıysa paranı iade ederiz; sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli.',
+    title: 'Siparişin Alıcı Koruması altında',
+    body: 'Paket hiç gelmezse ya da ürün ilanda anlatılandan belirgin biçimde farklı çıkarsa iadeyi biz başlatırız. Bunun için teslimattan sonraki 14 gün içinde sipariş detayından bize yazman yeterli.',
     note: ESCROW_TEXT,
   },
   {
@@ -46,7 +46,7 @@ export function BidIntroSheet({ visible, onClose, onAccept }: { visible: boolean
       dark
       footer={
         <Button
-          title="Anladım"
+          title="Okudum, devam et"
           size="lg"
           fullWidth
           icon="checkmark"

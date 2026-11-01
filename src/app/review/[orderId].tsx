@@ -25,9 +25,9 @@ const MODAL_SAFE_TOP = Platform.OS !== 'ios';
 
 type SubKey = 'shipping' | 'packaging' | 'accuracy';
 const SUB_RATINGS: { key: SubKey; title: string; question: string; icon: 'rocket-outline' | 'cube-outline' | 'checkmark-done-outline' }[] = [
-  { key: 'shipping', title: 'Kargo hızı', question: 'Siparişin ne kadar hızlı geldi?', icon: 'rocket-outline' },
-  { key: 'packaging', title: 'Paketleme', question: 'Ürün ne durumda ulaştı?', icon: 'cube-outline' },
-  { key: 'accuracy', title: 'Açıklamaya uygunluk', question: 'Beklediğin ürünü mü aldın?', icon: 'checkmark-done-outline' },
+  { key: 'shipping', title: 'Kargo hızı', question: 'Paket beklediğin sürede eline ulaştı mı?', icon: 'rocket-outline' },
+  { key: 'packaging', title: 'Paketleme', question: 'Kutu ve koruma, ürünü sağlam getirdi mi?', icon: 'cube-outline' },
+  { key: 'accuracy', title: 'İlana uygunluk', question: 'Fotoğraflar ve açıklama, gelen ürünle örtüşüyor mu?', icon: 'checkmark-done-outline' },
 ];
 
 function StarPicker({ value, onChange, size }: { value: number; onChange: (v: number) => void; size: number }) {
@@ -92,8 +92,8 @@ export default function ReviewScreen() {
     const reason = !order
       ? { title: 'Sipariş bulunamadı', message: 'Bu sipariş artık mevcut değil.' }
       : order.reviewed
-        ? { title: 'Bu siparişi zaten değerlendirdin', message: 'Değerlendirmeler düzenlenemez. Geri bildirimin için teşekkürler! ❤️' }
-        : { title: 'Henüz değerlendirilemez', message: 'Siparişini teslim aldıktan sonra 30 gün içinde değerlendirebilirsin.' };
+        ? { title: 'Bu siparişi zaten değerlendirdin', message: 'Gönderilen puan ve yorum sonradan değiştirilemez. Katkın için teşekkürler! ❤️' }
+        : { title: 'Henüz değerlendirilemez', message: 'Puanlama, sipariş “Teslim edildi” olduktan sonra açılır ve 30 gün boyunca açık kalır.' };
     return (
       <Screen>
         <Header title="Değerlendir" back="close" onBack={close} safeTop={MODAL_SAFE_TOP} />
@@ -134,7 +134,7 @@ export default function ReviewScreen() {
 
   return (
     <Screen>
-      <Header title="Siparişini değerlendir" back="close" onBack={close} border safeTop={MODAL_SAFE_TOP} />
+      <Header title="Alışverişini puanla" back="close" onBack={close} border safeTop={MODAL_SAFE_TOP} />
       <View ref={bodyRef} style={styles.flex} onLayout={() => bodyRef.current?.measureInWindow((_x, y) => setKbOffset(Math.max(0, Math.round(y))))}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={kbOffset}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -180,7 +180,7 @@ export default function ReviewScreen() {
                 <Required done={rating > 0} />
               </View>
               <Text variant="callout" color="textSecondary">
-                Genel olarak ne kadar memnun kaldın?
+                Bu alışverişe kaç yıldız verirsin?
               </Text>
               <View style={styles.mainStars}>
                 <StarPicker value={rating} onChange={setRating} size={42} />
@@ -194,7 +194,7 @@ export default function ReviewScreen() {
             {needsSub ? (
               <Animated.View entering={FadeInDown.duration(220)} style={[styles.subCard, { borderColor: colors.border }]}>
                 <Text variant="footnote" color="textSecondary">
-                  Neyin daha iyi olabileceğini anlamamıza yardım et.
+                  Tam puan vermediysen, hangi aşamada aksadığını da puanla.
                 </Text>
                 {SUB_RATINGS.map((r) => (
                   <View key={r.key} style={styles.subRow}>
@@ -217,17 +217,17 @@ export default function ReviewScreen() {
             {/* Yorum */}
             <TextField
               ref={commentRef}
-              label="Biraz daha anlat (isteğe bağlı)"
+              label="Yorumun (isteğe bağlı)"
               placeholder="Ürün, paketleme ve satıcıyla ilgili deneyimini paylaş"
               value={comment}
               onChangeText={(t) => setComment(t.slice(0, MAX_COMMENT))}
               multiline
               maxLength={MAX_COMMENT}
-              helper={`Kalan karakter: ${MAX_COMMENT - comment.length}`}
+              helper={`${MAX_COMMENT - comment.length} karakter daha yazabilirsin`}
               containerStyle={styles.block}
             />
             <Text variant="caption" color="textTertiary" style={styles.note}>
-              Yorumun satıcının profilinde herkese açık görünür. Değerlendirmeler düzenlenemez, yalnızca silinebilir.
+              Yazdığın yorum satıcının profilinde herkese açık yayımlanır. Gönderdikten sonra metni değiştiremezsin; istersen değerlendirmeni tümüyle silebilirsin.
             </Text>
           </ScrollView>
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), borderTopColor: colors.border, backgroundColor: colors.bg }]}>

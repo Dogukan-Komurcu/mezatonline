@@ -549,7 +549,7 @@ export class LiveEngine {
     // Katılım mesajları
     if (now >= this.nextJoinAt) {
       const b = random.pick(this.bots);
-      this.pushMessage({ type: 'join', userId: b.id, username: b.username, avatar: b.avatar, text: 'katıldı 👋' });
+      this.pushMessage({ type: 'join', userId: b.id, username: b.username, avatar: b.avatar, text: 'yayına geldi 🙌' });
       this.nextJoinAt = now + random.int(3500, 9000);
       changed = true;
     }
@@ -721,7 +721,7 @@ export class LiveEngine {
     if (this.state.mode === 'viewer' && random.chance(0.45)) {
       setTimeout(() => {
         if (this.state.ended) return;
-        const replies = ['@' + this.me.username + ' hoş geldin ❤️', '@' + this.me.username + ' tabii, hemen gösteriyorum', '@' + this.me.username + ' evet orijinal ✅', '@' + this.me.username + ' kargo 24 saatte çıkıyor 📦', '@' + this.me.username + ' teşekkürler 🙏'];
+        const replies = ['@' + this.me.username + ' hoş geldin ❤️', '@' + this.me.username + ' tabii, hemen gösteriyorum', '@' + this.me.username + ' detayları yakından gösteriyorum 🔍', '@' + this.me.username + ' kargo en geç 2 iş gününde çıkıyor 📦', '@' + this.me.username + ' teşekkürler 🙏'];
         this.pushMessage({ type: 'chat', userId: this.opts.seller.id, username: this.opts.seller.username, avatar: this.opts.seller.avatar, text: random.pick(replies), isSeller: true });
         this.emit();
       }, random.int(1500, 4000));

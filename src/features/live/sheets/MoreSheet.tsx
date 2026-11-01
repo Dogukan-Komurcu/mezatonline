@@ -35,7 +35,7 @@ export function MoreSheet(p: MoreSheetProps) {
       <ListRow title="Yayını paylaş" icon="share-outline" onPress={p.onShare} style={styles.row} />
       <ListRow
         title={p.clipping ? 'Klip oluşturuluyor…' : 'Klip oluştur'}
-        subtitle="Son 60 saniyeyi profiline gizli olarak kaydet"
+        subtitle="Az önce olanlardan 1 dakikalık kısa video çıkar"
         icon="film-outline"
         onPress={p.clipping ? undefined : p.onClip}
         style={styles.row}

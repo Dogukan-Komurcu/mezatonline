@@ -22,9 +22,9 @@ import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 const PERIODS: LeaderboardPeriod[] = ['live', 'today', 'week'];
 
 const PERIOD_HINTS: Record<LeaderboardPeriod, string> = {
-  live: 'Şu an canlı olan satıcılar · son 4 saatteki performans',
-  today: 'Son 24 saatteki satış ve izlenme performansı',
-  week: 'Son 7 gündeki satış ve izlenme performansı',
+  live: 'Şu an yayında olanlar · anlık izleyici ve yayın içi satış',
+  today: 'Son 24 saat · satılan ürün, izleyici ve alıcı puanı',
+  week: 'Son 7 gün · satılan ürün, izleyici ve alıcı puanı',
 };
 
 function CircleButton({ icon, label, onPress, bg }: { icon: 'chevron-back' | 'information-circle-outline'; label: string; onPress: () => void; bg: string }) {
@@ -175,18 +175,18 @@ export default function TopSellersScreen() {
 
       <View style={[styles.nav, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
         <CircleButton icon="chevron-back" label="Geri" bg={cardBg} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
-        <CircleButton icon="information-circle-outline" label="En İyi Satıcılar hakkında" bg={cardBg} onPress={() => setInfoOpen(true)} />
+        <CircleButton icon="information-circle-outline" label="Sıralama nasıl hesaplanıyor?" bg={cardBg} onPress={() => setInfoOpen(true)} />
       </View>
 
-      <Sheet visible={infoOpen} onClose={() => setInfoOpen(false)} title="En İyi Satıcılar hakkında" showClose footer={<Button title="Anladım" fullWidth onPress={() => setInfoOpen(false)} />}>
+      <Sheet visible={infoOpen} onClose={() => setInfoOpen(false)} title="Sıralama nasıl hesaplanıyor?" showClose footer={<Button title="Tamam" fullWidth onPress={() => setInfoOpen(false)} />}>
         <View style={styles.infoBlock}>
           <View style={[styles.infoIcon, { backgroundColor: colors.surface }]}>
             <Icon name="podium-outline" size={20} color="text" />
           </View>
           <View style={styles.flex}>
-            <Text variant="headline">Satıcılar nasıl sıralanır?</Text>
+            <Text variant="headline">Puanı ne belirliyor?</Text>
             <Text variant="callout" color="textSecondary" style={styles.infoText}>
-              Satıcılar; satışlarına, yayınlarının izlenmesine ve siparişleri ne kadar güvenilir şekilde gönderdiklerine göre sıralanır.
+              Her satıcı için üç şeyi bir arada değerlendiriyoruz: seçilen dönemde kaç ürün sattığı, yayınlarına kaç kişinin geldiği ve alıcılardan aldığı ortalama puan. Demo sürümde bu sayılar örnek verilerden üretilir.
             </Text>
           </View>
         </View>
@@ -195,9 +195,9 @@ export default function TopSellersScreen() {
             <Icon name="time-outline" size={20} color="text" />
           </View>
           <View style={styles.flex}>
-            <Text variant="headline">Sıralamalar neden değişir?</Text>
+            <Text variant="headline">Üç ayrı tablo</Text>
             <Text variant="callout" color="textSecondary" style={styles.infoText}>
-              Canlı sıralama, son 4 saatteki performansa göre şu an yayında olan en iyi satıcıları gösterir. Günlük sıralama son 24 saati, haftalık sıralama ise son 7 günü kapsar.
+              “Şu An Canlı” tablosuna yalnızca o anda yayında olan satıcılar girer ve izleyici sayısıyla yayın içi satışlara bakılır. “Bugün” son 24 saati, “Bu Hafta” son 7 günü hesaba katar; bu yüzden sıralar gün içinde sık sık yer değiştirebilir.
             </Text>
           </View>
         </View>
@@ -206,7 +206,7 @@ export default function TopSellersScreen() {
             <Icon name="shield-checkmark-outline" size={20} color="text" />
           </View>
           <View style={styles.flex}>
-            <Text variant="headline">Herkes için aynı</Text>
+            <Text variant="headline">Kişiye göre değişmez</Text>
             <Text variant="callout" color="textSecondary" style={styles.infoText}>
               Sıralama Türkiye'deki tüm kullanıcılar için aynıdır; reklam ya da ücretli öne çıkarma sıralamayı etkilemez.
             </Text>

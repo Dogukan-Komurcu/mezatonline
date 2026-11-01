@@ -143,7 +143,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const registerSale = (item: SoldItem, source: Order['source']) => {
     if (!rehearsal) recordSale({ product: item.product, price: item.price, buyerUsername: item.winner.username, showId: show.id, source });
     haptic.success();
-    toast.success(`${rehearsal ? 'Prova satışı' : 'Satıldı!'} ${formatTRY(item.price)} · @${item.winner.username}`, 'pricetag');
+    toast.success(`${rehearsal ? 'Prova satışı' : 'Yeni satış'} · @${item.winner.username} · ${formatTRY(item.price)}`, 'pricetag');
   };
   const [engineInit] = useState(() => ({ show, products }));
   const { state, engine } = useLiveShow({
@@ -173,7 +173,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
             id: uid('le'),
             type: 'system',
             username: 'Mezatonline',
-            text: '🎓 Prova modundasın: yayının gizli, izleyiciler demo hesaplar ve satışlar kaydedilmez.',
+            text: '🎓 Bu bir prova: yayın herkese kapalı, izleyiciler sanal hesaplar ve hiçbir satış siparişe dönüşmez.',
             createdAt: Date.now(),
           },
         ]
@@ -425,7 +425,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
     }
     if (lotRunning) {
       haptic.warning();
-      toast.warning('Açık artırma sürerken ürün sabitleyemezsin');
+      toast.warning('Mezat bitmeden sahnedeki ürünü değiştiremezsin');
       return;
     }
     if (flashRunning) {
@@ -501,7 +501,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const requestGiveaway = (p?: Product) => {
     if (!FEATURES.giveaways) return;
     if (giveawayRunning) {
-      toast.warning('Aynı anda yalnızca bir çekiliş yapılabilir');
+      toast.warning('Önce açık olan çekilişin bitmesini bekle');
       return;
     }
     setGiveawayPrizeId(p?.id);
@@ -960,7 +960,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
         verifiedOnly={verifiedOnly}
         onVerifiedOnly={(v) => {
           setVerifiedOnly(v);
-          toast(v ? 'Artık yalnızca doğrulanmış alıcılar teklif verebilir' : 'Tüm alıcılar teklif verebilir', 'shield-checkmark-outline');
+          toast(v ? 'Teklif verme artık doğrulanmış hesaplarla sınırlı' : 'Kısıtlama kaldırıldı; herkes teklif verebilir', 'shield-checkmark-outline');
         }}
         slowMode={slowMode > 0}
         onSlowMode={(v) => {

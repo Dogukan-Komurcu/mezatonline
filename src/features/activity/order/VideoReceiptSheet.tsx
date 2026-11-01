@@ -32,7 +32,7 @@ export function VideoReceiptSheet({ visible, onClose, order }: { visible: boolea
       onClose={onClose}
       dark
       title="Satın alma videosu"
-      subtitle={daysLeft > 0 ? `${daysLeft} gün daha izlenebilir` : 'Bu videonun süresi doldu'}
+      subtitle={daysLeft > 0 ? `Silinmesine ${daysLeft} gün var` : 'Bu videonun süresi doldu'}
       showClose
       maxHeight={0.94}
       footer={

@@ -30,8 +30,6 @@ export const brand = {
   /** Nar kırmızısı — CANLI rozeti */
   live: '#E0244F',
   black: '#0A0A0A',
-  purple: '#7B4DFF',
-  blue: '#005AE1',
 } as const;
 
 export type ColorTokens = {

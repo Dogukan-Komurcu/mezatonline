@@ -17,7 +17,7 @@ import { useSellerExtras } from './store';
 import { Card, KeyValue, StatusPill, tint } from './ui';
 
 export const SELLER_TYPE_LABELS = { individual: 'Bireysel', sole_proprietor: 'Şahıs Şirketi', company: 'Kurumsal (Ltd. / A.Ş.)' } as const;
-export const EXPERIENCE_LABELS = { new: 'Hiç satış yapmadım', other_platforms: 'Başka platformlarda satıyorum', physical_store: 'Fiziksel mağazam var' } as const;
+export const EXPERIENCE_LABELS = { new: 'Hiç satış yapmadım', other_platforms: 'İnternette zaten satıyorum', physical_store: 'Dükkânım var' } as const;
 
 function PulseDot({ color }: { color: string }) {
   const v = useSharedValue(1);
@@ -71,7 +71,7 @@ export function ApplicationPending() {
             Başvurun inceleniyor
           </Text>
           <Text variant="callout" color="textSecondary" align="center" style={{ maxWidth: 300 }}>
-            Genellikle birkaç dakika içinde sonuçlanır. Onaylandığında sana bildirim göndereceğiz.
+            Demo sürümde inceleme kısa sürer ve başvuru otomatik onaylanır; sonucu bildirimlerinde de görürsün. Beklemek istemezsen aşağıdaki düğmeyle durumu hemen kontrol et.
           </Text>
         </Card>
 

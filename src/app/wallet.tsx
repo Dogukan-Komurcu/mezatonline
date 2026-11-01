@@ -26,7 +26,7 @@ const PROMO_CODES: Record<string, { amount: number; label: string }> = {
 const STEPS = [
   { icon: 'share-social-outline' as const, title: 'Davet kodunu paylaş', text: 'Arkadaşlarına kodunu ya da bağlantını gönder.' },
   { icon: 'person-add-outline' as const, title: 'Arkadaşın kaydolsun', text: 'Kodunla kaydolup telefon numarasını doğrulasın.' },
-  { icon: 'gift-outline' as const, title: 'İkiniz de kazanın', text: `İlk siparişi teslim edildiğinde ikinize de ${formatTRY(REFERRAL_REWARD)} kredi.` },
+  { icon: 'gift-outline' as const, title: 'Kredi ikinize birden', text: `Arkadaşının ilk siparişi teslim edildiği gün iki cüzdana da ${formatTRY(REFERRAL_REWARD)} yüklenir.` },
 ];
 
 export default function WalletScreen() {
@@ -52,7 +52,7 @@ export default function WalletScreen() {
     shareLink({
       title: "Mezatonline'a katıl",
       path: `/davet/${referralCode}`,
-      message: `Mezatonline'da canlı mezatlara katıl! ${referralCode} davet koduyla kaydol, ikimiz de ${formatTRY(REFERRAL_REWARD)} kazanalım 🎉`,
+      message: `Mezatonline'a ${referralCode} koduyla üye ol. İlk siparişin sana ulaştığında ikimizin cüzdanına da ${formatTRY(REFERRAL_REWARD)} Mezat Kredisi geçiyor 🎁`,
     });
   };
 
@@ -139,7 +139,7 @@ export default function WalletScreen() {
                 <View style={styles.refHead}>
                   <IconCircle name="people" size={44} bg={colors.primary} color={colors.onPrimary} />
                   <Text variant="title3" style={{ flex: 1 }}>
-                    Arkadaşını davet et, ikiniz de {formatTRY(REFERRAL_REWARD)} kazanın
+                    Davet et: {formatTRY(REFERRAL_REWARD)} sana, {formatTRY(REFERRAL_REWARD)} arkadaşına
                   </Text>
                 </View>
                 <Text variant="subhead" color="textSecondary">

@@ -42,7 +42,7 @@ export function ActionRow({ state, nextBid, leading, onCustom, onSwipe, onTapHin
       <View style={styles.waiting}>
         {state === 'waiting' ? <ActivityIndicator size="small" color={liveColors.textSecondary} /> : null}
         <Text variant="headline" weight="700" color={liveColors.textSecondary}>
-          {state === 'waiting' ? 'Sıradaki ürün bekleniyor' : 'Ürün tükendi'}
+          {state === 'waiting' ? 'Sıradaki ürün hazırlanıyor' : 'Ürün tükendi'}
         </Text>
       </View>
     );

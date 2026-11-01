@@ -9,6 +9,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } f
 
 import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard';
 import { Button, Chip, EmptyState, Header, Icon, ListRow, PressableScale, Screen, Segmented, SelectField, Text, TextField, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { CATEGORIES, getCategory } from '@/data';
 import { formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -120,7 +121,7 @@ export function ListingForm() {
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
 
   const errors = {
-    images: f.images.length === 0 ? 'En az 1 fotoğraf ekle — ürünün tamamı net görünmeli' : undefined,
+    images: f.images.length === 0 ? 'Yayınlamak için en az bir fotoğraf gerekli' : undefined,
     title: f.title.trim().length < 3 ? 'Başlık en az 3 karakter olmalı' : undefined,
     category: !f.categoryId ? 'Kategori seç' : undefined,
     subcategory: f.categoryId && !f.subcategoryId ? 'Alt kategori seç' : undefined,
@@ -271,7 +272,7 @@ export function ListingForm() {
               </Text>
             ) : (
               <Text variant="footnote" color="textSecondary">
-                Ürünün gerçek fotoğraflarını kullan. Kusurlar varsa yakından çek.
+                Katalog görseli yerine kendi çektiğin fotoğrafları kullan; çizik, leke gibi kusurları ayrı bir karede göster.
               </Text>
             )}
           </FormSection>
@@ -341,7 +342,7 @@ export function ListingForm() {
             />
             {f.format === 'auction' ? (
               <View style={{ gap: 10 }}>
-                <MoneyField label="Başlangıç fiyatı" value={f.price} onChange={(price) => set({ price })} helper="Kabul edebileceğin en düşük tutar. ₺1 başlangıç izleyici çeker 🔥" error={showErr('price')} />
+                <MoneyField label="Başlangıç fiyatı" value={f.price} onChange={(price) => set({ price })} helper="Mezat bu tutardan açılır, daha aşağıya satılmaz. Düşük bir açılış teklif yarışını hızlandırabilir." error={showErr('price')} />
                 <View style={styles.wrap}>
                   {[1, 10, 50, 100, 250].map((v) => (
                     <Chip key={v} label={formatTRY(v)} size="sm" selected={f.price === v} onPress={() => set({ price: v })} />
@@ -350,7 +351,7 @@ export function ListingForm() {
                 <ListRow
                   icon="flag-outline"
                   title="Uzatmasız"
-                  subtitle="Son saniyelerde gelen teklifler süreyi uzatmaz; süre dolduğunda en yüksek teklif kazanır"
+                  subtitle="Açıkken son anda gelen teklifler sayaca ek süre kazandırmaz; sayaç sıfırlandığında önde olan kazanır"
                   switchValue={f.suddenDeath}
                   onSwitch={(suddenDeath) => set({ suddenDeath })}
                   style={styles.flushRow}
@@ -382,7 +383,7 @@ export function ListingForm() {
                   </Text>
                 </View>
                 <Text variant="footnote" color="textSecondary">
-                  Çekilişler yalnızca canlı yayında, en fazla 5 dakika sürer. Kazananın kargo ücreti ({formatTRY(shipping)}) bakiyenden düşülür. Katılım için alışveriş şartı yoktur.
+                  Çekilişi yayın sırasında başlatırsın, 5 dakikaya kadar açık kalır. Ödülü kazanana gönderme bedelini ({formatTRY(shipping)}) sen karşılarsın; tutar satış kazancından mahsup edilir. Katılım için alışveriş şartı yoktur.{DEMO_MODE ? ` ${DEMO_COPY.giveaway}` : ''}
                 </Text>
               </Card>
             ) : null}
@@ -392,19 +393,19 @@ export function ListingForm() {
             <Text variant="footnote" color="textSecondary">
               {existing && existing.sold > 0
                 ? `${existing.sold} adet satıldı · stokta ${Math.max(0, f.quantity - existing.sold)} kaldı`
-                : 'Aynı üründen birden fazla varsa ayrı ilan açma, adedi artır.'}
+                : 'Elinde aynı üründen birkaç tane varsa hepsini bu ilanda topla; her satışta stok bir azalır.'}
             </Text>
           </FormSection>
 
           <FormSection title="Kargo">
             <SelectField
-              label="Kargo profili (paketli boyut)"
+              label="Paket boyutu"
               value={f.shippingProfile}
               options={(Object.keys(SHIPPING_PROFILE_LABELS) as ShippingProfile[]).map((k) => ({ value: k, label: SHIPPING_PROFILE_LABELS[k], subtitle: `Alıcı öder: ${formatTRY(SHIPPING_PRICES[k])}` }))}
               onChange={(v) => set({ shippingProfile: v as ShippingProfile })}
             />
             <Text variant="footnote" color="textSecondary">
-              Alıcının ödeyeceği kargo: <Text variant="footnote" weight="700">{formatTRY(shipping)}</Text> (KDV dahil). Aynı yayından alınan ürünler tek pakette birleşir.
+              Alıcının ödeyeceği kargo: <Text variant="footnote" weight="700">{formatTRY(shipping)}</Text> (KDV dahil). Alıcı aynı yayından başka ürün de alırsa hepsi tek pakete girer.
             </Text>
           </FormSection>
 

@@ -119,7 +119,7 @@ function WelcomeScreen() {
         <Animated.View entering={FadeInDown.duration(500).delay(120)} style={styles.panel} onLayout={(e) => setPanelTop(e.nativeEvent.layout.y)}>
           <View style={styles.headings}>
             <Text variant="subhead" weight="800" color="primary" align="center" style={styles.kicker}>
-              CANLI ALIŞVERİŞİN EN EĞLENCELİ HALİ
+              CANLI YAYINDA MEZAT, EKRANDAN TEKLİF
             </Text>
             <Text variant="title1" align="center" style={styles.title}>
               Mezatonline’a Kaydol

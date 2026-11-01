@@ -152,8 +152,8 @@ export default function OrderDetailScreen() {
           ) : null}
           <IconCircleRow
             icon="gift"
-            title="Arkadaşını davet et, ₺100 kazan!"
-            subtitle="Bir sonraki alışverişinde kullanabileceğin kredi kazan"
+            title="Davet kodunu paylaş"
+            subtitle="Arkadaşının ilk siparişi teslim edilince ikinizin cüzdanına ₺250 Mezat Kredisi"
             circleColor={colors.primary}
             iconColor={colors.onPrimary}
             onPress={() => router.push('/rewards')}
@@ -225,7 +225,7 @@ export default function OrderDetailScreen() {
             <IconCircleRow
               icon="videocam-outline"
               title="Satın alma videosu"
-              subtitle={videoDays > 0 ? `${videoDays} gün daha izlenebilir` : 'Süresi doldu'}
+              subtitle={videoDays > 0 ? `Silinmesine ${videoDays} gün var` : 'Süresi doldu'}
               onPress={() => setSheet('video')}
             />
           ) : null}

@@ -69,19 +69,19 @@ export function StartAuctionSheet({
       visible={visible}
       onClose={onClose}
       dark
-      title="Açık Artırmayı Başlat"
+      title="Mezata Çıkar"
       showClose
       footer={
         <View style={{ gap: 8 }}>
           <Text variant="caption" color="textSecondary" align="center">
-            Başladıktan sonra iptal edilemez. Teklifler bağlayıcıdır.
+            Geri sayım başladıktan sonra mezatı geri alamazsın. Kazanan teklif bağlayıcıdır ve satışa dönüşür.
           </Text>
           <Button title={valid ? `${formatTRY(amount)} ile başlat` : 'Başlat'} icon="hammer" size="lg" fullWidth onPress={submit} disabled={!valid} />
         </View>
       }>
       {product ? <ProductHeader product={product} /> : null}
 
-      <FieldLabel title="Açılış fiyatı" hint="İlk teklif bu tutardan başlar. Ön teklifler bu tutarın altındaysa silinir." />
+      <FieldLabel title="Açılış fiyatı" hint="Teklifler bu rakamdan açılır. Bu tutardan düşük ön teklifler mezata taşınmaz." />
       <TextField
         prefix="₺"
         keyboardType="number-pad"
@@ -110,17 +110,17 @@ export function StartAuctionSheet({
         ))}
       </View>
 
-      <FieldLabel title="Açık artırma süresi" hint="Minimum süre. Çoğu açık artırma 30 saniye ya da daha kısa sürer." />
+      <FieldLabel title="Açık artırma süresi" hint="Geri sayımın başlangıç uzunluğu; son anda gelen teklifler bunu uzatabilir. Canlı yayında kısa süreler tempoyu yüksek tutar." />
       <OptionChips options={AUCTION_DURATIONS.map((d) => ({ value: d as number, label: durationLabel(d) }))} value={duration} onChange={setDuration} />
 
       <FieldLabel
-        title="Karşı teklif süresi"
-        hint={sudden ? 'Uzatmasız açıkken süre uzamaz.' : `Son ${EXTEND_THRESHOLD_SEC} saniyede gelen her teklif süreyi bu değere sıfırlar.`}
+        title="Son saniye uzatması"
+        hint={sudden ? 'Uzatmasız seçiliyken bu ayar devre dışıdır.' : `Sayaç son ${EXTEND_THRESHOLD_SEC} saniyeye girdikten sonra teklif gelirse sayaç bu değere geri çekilir; böylece diğerleri de karşılık verebilir.`}
       />
       <OptionChips options={COUNTER_BID_OPTIONS.map((d) => ({ value: d as number, label: durationLabel(d) }))} value={counter} onChange={setCounter} disabled={sudden} />
 
       <View style={{ marginTop: 10 }}>
-        <SwitchRow icon="flag-outline" title="Uzatmasız" subtitle="Süre hiç uzamaz; sayaç bittiğinde en yüksek teklifi veren kazanır. İzleyiciler açık artırma kartında bayraklı “Uzatmasız” çipini görür." value={sudden} onChange={setSudden} />
+        <SwitchRow icon="flag-outline" title="Uzatmasız" subtitle="Son saniye uzatması kapanır; sayaç sıfıra indiği an önde olan kazanır. Kural izleyicilere mezat kartındaki bayraklı “Uzatmasız” etiketiyle gösterilir." value={sudden} onChange={setSudden} />
       </View>
     </Sheet>
   );
@@ -154,7 +154,7 @@ export function FlashSaleSheet({
       dark
       title="Flaş İndirim"
       showClose
-      footer={<Button title="Flaş İndirimi Başlat" icon="flash" size="lg" fullWidth onPress={() => onStart(discount / 100, duration)} disabled={!product || remaining <= 0} />}>
+      footer={<Button title="İndirimi başlat" icon="flash" size="lg" fullWidth onPress={() => onStart(discount / 100, duration)} disabled={!product || remaining <= 0} />}>
       {product ? (
         <ProductHeader
           product={product}
@@ -173,10 +173,10 @@ export function FlashSaleSheet({
       ) : null}
       <FieldLabel title="İndirim oranı" hint={product ? `İzleyiciler ${formatTRY(product.price - price)} indirimle ${formatTRY(price)} öder.` : undefined} />
       <OptionChips options={DISCOUNTS.map((d) => ({ value: d, label: `%${d}` }))} value={discount} onChange={setDiscount} wrap />
-      <FieldLabel title="Süre" hint="En az 30 saniye öneriyoruz." />
+      <FieldLabel title="Süre" hint="İzleyicilerin indirimi fark edip karar verebileceği kadar uzun tut." />
       <OptionChips options={FLASH_SALE_DURATIONS.map((d) => ({ value: d as number, label: durationLabel(d) }))} value={duration} onChange={setDuration} />
       <InfoBox icon="pin-outline" style={{ marginTop: 16 }}>
-        Flaş indirim ürünü otomatik olarak sabitler. Süre bitince ya da stok tükenince ürün normal fiyatına döner. Flaş indirimde fiyat önerisi alınmaz.
+        İndirim süresince ürün ekranın altında sabit kalır ve fiyat önerileri kapanır. Süre dolduğunda ya da son adet satıldığında fiyat kendiliğinden liste fiyatına döner.
       </InfoBox>
     </Sheet>
   );
@@ -218,12 +218,12 @@ export function GiveawaySheet({
       visible={visible}
       onClose={onClose}
       dark
-      title="Çekiliş Başlat"
+      title="Yeni çekiliş"
       showClose
       footer={
-        <Button title="Çekilişi Başlat" icon="gift" size="lg" fullWidth onPress={() => onStart(prizeId === SURPRISE ? undefined : prize, duration, audience === 'followers')} />
+        <Button title="Geri sayımı başlat" icon="gift" size="lg" fullWidth onPress={() => onStart(prizeId === SURPRISE ? undefined : prize, duration, audience === 'followers')} />
       }>
-      <FieldLabel title="Ödül" hint="Kazanana sipariş olarak oluşturulur; 2 iş günü içinde kargolanmalı." />
+      <FieldLabel title="Ödül" hint="Kazanan belli olunca ödül, siparişlerine normal bir sipariş gibi düşer; kargo süresi diğer siparişlerle aynıdır (2 iş günü)." />
       <View style={{ gap: 8 }}>
         <RadioRow
           selected={prizeId === SURPRISE}
@@ -252,10 +252,10 @@ export function GiveawaySheet({
         ))}
       </View>
 
-      <FieldLabel title="Süre" hint="Çekilişler en fazla 5 dakika sürer; duraklatılamaz ve iptal edilemez. Geri sayımı yalnızca sen görürsün." />
+      <FieldLabel title="Süre" hint="Çekiliş 5 dakikaya kadar açık kalabilir. Başladıktan sonra beklemeye alınamaz ya da geri çekilemez." />
       <OptionChips options={GIVEAWAY_DURATIONS.map((d) => ({ value: d as number, label: durationLabel(d) }))} value={duration} onChange={setDuration} />
 
-      <FieldLabel title="Kimler katılabilir?" />
+      <FieldLabel title="Katılım" />
       <Segmented
         options={[
           { key: 'followers', label: 'Takipçilere özel' },
@@ -280,7 +280,7 @@ export function GiveawaySheet({
             </Text>
           ))}
           <Text variant="caption" weight="500" color="textSecondary">
-            • Kazananı reddetmek ya da ödülü değiştirmek yasaktır. Ödülün kargo ücreti bakiyenden düşülür.
+            • Kazanan belli olduktan sonra ödül değiştirilemez ve kazanan geri çevrilemez. Ödülün gönderim bedeli satış kazancından mahsup edilir.
           </Text>
         </View>
       </View>

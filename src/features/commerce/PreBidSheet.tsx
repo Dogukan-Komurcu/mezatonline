@@ -90,7 +90,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
           onClose();
         }, 650);
       },
-      { reason: 'Ön teklif verebilmek için bir kart ve teslimat adresi gerekli. Kartından yalnızca kazanırsan çekim yapılır.' },
+      { reason: 'Ön teklif için önce kartını ve teslimat adresini kaydet. Ücret yalnızca mezatı kazanırsan çekilir.' },
     );
   };
 
@@ -145,7 +145,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
       </View>
 
       <NoticeBox icon="flash-outline" title="Nasıl çalışır?">
-        Ön teklifin maks. teklif gibi çalışır. Ürün yayında sahneye geldiğinde, sen izlemiyor olsan bile, bu tutara kadar en düşük artışla senin adına otomatik teklif verilir. Tutarın kimseye gösterilmez.
+        Girdiğin tutar bir üst sınırdır. Ürün yayında sahneye geldiğinde, o an ekranda olmasan da, biri seni geçtikçe teklifin birer adım yükseltilir ve bu sınırda durur. Sınırını yalnızca sen görürsün.
       </NoticeBox>
 
       <NoticeBox icon="alert-circle-outline" tone="warning" title="Teklifler bağlayıcıdır">

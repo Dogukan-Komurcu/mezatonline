@@ -284,7 +284,7 @@ export default function InboxScreen() {
         icon="ban-outline"
         destructive
         title={`${toBlock?.user.username ?? ''} engellensin mi?`}
-        message="Engellediğin kişi sana mesaj gönderemez, yayınlarına katılamaz ve seni takip edemez. Engellendiğine dair bildirim almaz."
+        message="Karşı tarafa bildirim gitmez. Engel sürdükçe bu kişi sana yazamaz, seni takip edemez ve yayınlarına giremez."
         confirmLabel="Engelle"
         onConfirm={() => {
           if (toBlock) block(toBlock.user.id);

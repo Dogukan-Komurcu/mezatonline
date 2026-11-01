@@ -114,7 +114,7 @@ function UsernameScreen() {
     ) : status === 'checking' ? (
       <Hint icon="time-outline" color="textSecondary" text="Kontrol ediliyor…" />
     ) : (
-      <Hint icon="information-circle-outline" color="textTertiary" text="Küçük harf, rakam ve alt çizgi (_) kullanabilirsin. Boşluk ve özel karakter yok." />
+      <Hint icon="information-circle-outline" color="textTertiary" text="3–30 karakter · yalnızca a–z, 0–9 ve _ (Türkçe harf ve boşluk kabul edilmez)" />
     );
 
   return (
@@ -126,7 +126,7 @@ function UsernameScreen() {
         </>
       }
       footer={<Button title="Devam" size="lg" fullWidth disabled={status !== 'available' || !consentOk} onPress={submit} />}>
-      <StepTitle title="Kullanıcı adını oluştur" subtitle="Alıcılar ve satıcılar seni bu adla görecek. Akılda kalıcı, kolay yazılan bir ad seç." />
+      <StepTitle title="Kullanıcı adını oluştur" subtitle="Bu ad tekliflerinde, sohbet mesajlarında ve profil bağlantında @ ile görünür. Sonradan Profili düzenle ekranından değiştirebilirsin." />
 
       <View style={[styles.preview, { backgroundColor: colors.surface }]}>
         <Avatar uri={avatar} name={value || 'mezat'} size={44} />

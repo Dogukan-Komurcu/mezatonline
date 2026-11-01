@@ -25,7 +25,7 @@ type IssueDef = { title: string; subtitle: string; icon: IconName; needsDelivery
 
 export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
   not_received: {
-    title: 'Ürün gelmedi veya gecikti',
+    title: 'Paket gelmedi ya da gecikiyor',
     subtitle: 'Kargo ilerlemiyor ya da teslim edildi görünüyor ama ulaşmadı',
     icon: 'time-outline',
     needsDelivery: false,
@@ -39,7 +39,7 @@ export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
     next: 'Hasarı gösteren fotoğraflar eklersen talebin daha hızlı sonuçlanır. Paketi ve kutuyu atma.',
   },
   missing: {
-    title: 'Eksik ürün',
+    title: 'Koliden eksik çıktı',
     subtitle: 'Paketten sipariş ettiklerinin bir kısmı çıkmadı',
     icon: 'cube-outline',
     needsDelivery: true,
@@ -53,14 +53,14 @@ export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
     next: 'Gelen ürünün fotoğrafını ekle. Yanlış gönderilen ürünün iade kargo ücreti satıcıya aittir.',
   },
   not_as_described: {
-    title: 'Açıklamaya uygun değil',
+    title: 'İlandakinden farklı',
     subtitle: 'Durumu, ölçüsü ya da fotoğraflardaki hâli farklı',
     icon: 'document-text-outline',
     needsDelivery: true,
     next: 'Farkı gösteren fotoğraflar ekle. Satıcı tam iade, kısmi iade ya da değişim önerebilir.',
   },
   counterfeit: {
-    title: 'Sahte olduğunu düşünüyorum',
+    title: 'Taklit olabilir',
     subtitle: 'Ürünün orijinalliğinden şüphe ediyorum',
     icon: 'shield-half-outline',
     needsDelivery: true,
@@ -77,7 +77,7 @@ export const HELP_ISSUES: Record<HelpIssue, IssueDef> = {
 
 const ISSUE_ORDER: HelpIssue[] = ['not_received', 'damaged', 'missing', 'wrong_item', 'not_as_described', 'counterfeit', 'withdrawal'];
 
-const CANCEL_REASONS = ['Yanlışlıkla teklif verdim', 'Fikrimi değiştirdim', 'Teknik bir hata oldu', 'Yanlış adres seçtim', 'Diğer'];
+const CANCEL_REASONS = ['Teklif tutarını yanlış girdim', 'Ürünü artık istemiyorum', 'Uygulamada bir aksaklık yaşadım', 'Yanlış adres seçtim', 'Başka bir neden'];
 
 type Mode = 'closed' | 'eligible' | 'help' | 'cancel' | 'request';
 
@@ -185,7 +185,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
         useInboxStore.getState().pushNotification({
           type: 'order_delivered',
           title: 'Siparişin iptal edildi',
-          body: `${order.productTitle} · İaden başlatıldı, bankana bağlı olarak 2–10 iş günü içinde kartına yansır.`,
+          body: `${order.productTitle} · İade başlatıldı; tutarın kartına yansıması bankana göre 2–10 iş günü sürebilir.`,
           image: order.productImage,
           href: `/orders/${order.id}`,
         });
@@ -213,11 +213,11 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
         onClose={close}
         icon="time-outline"
         iconTone="warning"
-        title="İptal talebine uygun"
-        message={`Bu sipariş için hâlâ iptal talebinde bulunabilirsin (${cancelHoursLeft(order)} saat kaldı). İptal, satıcının onayına bağlıdır. İptal mi talep etmek istersin, yoksa yardım mı almak istersin?`}
+        title="Kargo öncesi iptal açık"
+        message={`Paket henüz yola çıkmadığı için ${cancelHoursLeft(order)} saat boyunca satıcıdan iptal isteyebilirsin; kararı satıcı verir. Siparişte başka bir sorun varsa yardım adımına geç.`}
         actions={[
           { label: 'İptal talep et', variant: 'danger', onPress: () => swapTo('cancel') },
-          { label: 'Yardım al', variant: 'secondary', onPress: () => swapTo('help') },
+          { label: 'Başka bir sorun bildir', variant: 'secondary', onPress: () => swapTo('help') },
           { label: 'Vazgeç', variant: 'outline', onPress: close },
         ]}
       />
@@ -289,7 +289,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
             {orderClosed ? null : <Divider style={styles.divider} />}
             <ListRow
               title="Satıcıya mesaj gönder"
-              subtitle={sellerName ? `@${sellerName} genelde birkaç saat içinde yanıtlar` : undefined}
+              subtitle={sellerName ? `@${sellerName} ile bu sipariş hakkında yazış` : undefined}
               left={
                 <View style={[styles.issueIcon, { backgroundColor: colors.surface }]}>
                   <Icon name="chatbubble-ellipses-outline" size={20} />
@@ -371,7 +371,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
         <InfoBanner
           icon="alert-circle-outline"
           tone="warning"
-          text="Kargo öncesi iptal satıcının onayına bağlıdır. Satıcı kurumsal (tacir veya esnaf) ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin. İptal talebinde bulunduğun siparişi daha sonra değerlendiremezsin."
+          text="Kargo öncesi iptal satıcının onayına bağlıdır. Satıcı kurumsal (tacir veya esnaf) ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin. İptal talebi açılan siparişlere sonradan puan verilemez."
           style={styles.mb}
         />
         <Text variant="subhead" weight="700" style={styles.reasonTitle}>
@@ -388,7 +388,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
           />
         ))}
         <Text variant="caption" color="textTertiary" style={styles.legal}>
-          Onaylanırsa ödemenin tamamı kartına iade edilir (bankana bağlı olarak 2–10 iş günü).
+          Onaylanırsa ödemenin tamamı kartına iade edilir; hesabına yansıması bankaya göre 2–10 iş günü sürebilir.
         </Text>
       </Sheet>
 

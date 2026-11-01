@@ -141,7 +141,7 @@ export function AuctionCard({ lot, shippingCost, bundled, couponDiscount, onPres
   const leading = !!lot.leader?.isMe;
   const outbid = running && lot.iBid && !leading;
   const product = lot.product;
-  const shippingLine = bundled ? 'Kargo: +₺0 (aynı pakete eklendi)' : shippingCost > 0 ? `Kargo: ${formatTRY(shippingCost)}` : 'Ücretsiz kargo';
+  const shippingLine = bundled ? 'Kargo: ₺0 · aynı pakette' : shippingCost > 0 ? `Kargo: ${formatTRY(shippingCost)}` : 'Ücretsiz kargo';
   const condition = product.grade ?? CONDITION_LABELS[product.condition];
   const priceLabel = lot.status === 'sold' ? 'Satış fiyatı' : lot.bidCount === 0 ? 'Açılış fiyatı' : 'Güncel teklif';
   const priceColor = running ? liveColors.text : lot.status === 'sold' ? liveColors.live : liveColors.textSecondary;

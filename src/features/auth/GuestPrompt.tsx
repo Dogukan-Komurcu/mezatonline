@@ -37,7 +37,7 @@ export function GuestPrompt({ icon, title, message, reason = AUTH_REASONS.generi
       </Text>
       <Button title="Giriş yap veya kaydol" size="lg" fullWidth onPress={() => requireAuth(onSignedIn, { reason })} style={styles.cta} />
       <Text variant="footnote" color="textTertiary" align="center">
-        Kaydolmak ücretsiz ve bir dakikadan kısa sürer.
+        Hesap açmak ücretsizdir; e-posta adresin, telefon numaran ya da Google, Apple veya Facebook hesabınla kaydolabilirsin.
       </Text>
     </View>
   );

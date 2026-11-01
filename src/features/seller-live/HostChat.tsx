@@ -217,7 +217,7 @@ function eventMeta(m: ChatMessage): { icon: string; text: string; color: string;
   const amount = m.amount !== undefined ? formatTRY(m.amount) : '';
   switch (m.type) {
     case 'join':
-      return { icon: '👋', text: 'katıldı', color: liveColors.textTertiary, showName: true };
+      return { icon: '🙌', text: 'yayına geldi', color: liveColors.textTertiary, showName: true };
     case 'bid':
       return { icon: '🔨', text: `${amount} teklif verdi`, color: liveColors.textSecondary, nameColor: liveColors.text, showName: true };
     case 'won':

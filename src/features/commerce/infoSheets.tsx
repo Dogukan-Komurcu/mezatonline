@@ -18,23 +18,23 @@ import { addressLine, ESCROW_TEXT } from './utils';
 const PROTECTION_POINTS: { icon: IconName; title: string; body: string }[] = [
   {
     icon: 'cube-outline',
-    title: 'Ürün gelmezse paran iade',
-    body: 'Siparişin sana ulaşmazsa ya da satıcı 7 gün içinde kargoya vermezse ödemenin tamamını iade ederiz.',
+    title: 'Paket gelmezse',
+    body: 'Satıcı paketi 2 iş günü içinde kargoya vermezse ya da paket yolda kaybolursa sipariş detayından talep açabilirsin. Ürün sana hiç ulaşmazsa ödediğin tutarın tamamı iade edilir.',
   },
   {
     icon: 'search-outline',
-    title: 'Açıklandığı gibi değilse iade',
-    body: 'Ürün hasarlı, eksik ya da açıklamadan önemli ölçüde farklı çıkarsa ürün sana ulaştıktan sonra 14 gün içinde talep oluştur.',
+    title: 'İlandan farklı çıkarsa',
+    body: 'Kırık, eksik ya da ilandaki fotoğraf ve açıklamayla belirgin biçimde farklı bir ürün geldiyse teslimattan sonraki 14 gün içinde fotoğraf ekleyerek bildir.',
   },
   {
     icon: 'ribbon-outline',
-    title: 'Sahte ürün şüphesi',
-    body: 'Ürünün sahte ya da taklit olduğundan şüpheleniyorsan ürün sana ulaştıktan sonra 14 gün içinde bildir; talebini destek ekibimiz inceler.',
+    title: 'Taklit şüphesi',
+    body: 'Ürünün orijinal olmadığını düşünüyorsan yine 14 gün içinde bildir; bu talepleri satıcının yanı sıra Mezatonline destek ekibi de inceler.',
   },
   {
     icon: 'lock-closed-outline',
     title: 'Güvenli ödeme',
-    body: `${ESCROW_TEXT} Platform dışı ödeme yapma. ${DEMO_COPY.payment}`,
+    body: `${ESCROW_TEXT} Satıcı IBAN, elden ödeme gibi başka bir yol önerirse kabul etme; bu ödemeler korumaya girmez. ${DEMO_COPY.payment}`,
   },
 ];
 
@@ -50,7 +50,7 @@ export function BuyerProtectionSheet({ visible, onClose }: { visible: boolean; o
           Alıcı Koruması
         </Text>
         <Text variant="callout" color="textSecondary" align="center">
-          Ürün sana ulaşmazsa ya da açıklamayla önemli ölçüde farklıysa paranı iade ederiz; sorunu ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli. Mezatonline üzerinden ödenen her siparişte geçerlidir.
+          Mezatonline üzerinden ödediğin her siparişte geçerlidir. Paket hiç gelmezse ya da ürün ilandakinden belirgin biçimde farklı çıkarsa sorunu teslimattan sonraki 14 gün içinde bildir; inceleyip iadeni başlatalım.
         </Text>
       </View>
       <View style={styles.points}>

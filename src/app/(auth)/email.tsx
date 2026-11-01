@@ -201,7 +201,7 @@ function EmailScreen() {
       <Animated.View key={mode} entering={FadeIn.duration(250)}>
         <StepTitle
           title={isSignup ? 'Hesabını oluştur' : 'Tekrar hoş geldin'}
-          subtitle={isSignup ? 'Birkaç saniyede kaydol, canlı mezatlara hemen katıl.' : 'E-posta adresin veya kullanıcı adınla giriş yap.'}
+          subtitle={isSignup ? 'E-posta ve şifreyle hesabını aç; telefon onayından sonra mezatlarda teklif verebilirsin.' : 'E-posta adresin veya kullanıcı adınla giriş yap.'}
         />
       </Animated.View>
 

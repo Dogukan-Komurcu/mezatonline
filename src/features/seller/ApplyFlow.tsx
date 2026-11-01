@@ -116,9 +116,9 @@ function WelcomeStep({ draft, set, onLegal }: { draft: Draft; set: (p: Partial<D
         <Text style={{ fontSize: 46, lineHeight: 54 }}>🛍️</Text>
       </View>
       <View style={{ gap: 6 }}>
-        <Text variant="title1">Satış yapmaya başla 👋</Text>
+        <Text variant="title1">Mağazanı açalım 👋</Text>
         <Text variant="body" color="textSecondary">
-          Başvurunu birkaç dakikada tamamla. Demo sürümde başvurular otomatik onaylanır; gerçek kimlik ve IBAN doğrulaması yapılmaz.
+          Bilgilerini sekiz kısa adımda gir; göndermeden önce hepsini tek ekranda gözden geçirirsin. Demo sürümde başvurular otomatik onaylanır; gerçek kimlik ve IBAN doğrulaması yapılmaz.
         </Text>
       </View>
       <Card style={{ gap: 10, backgroundColor: colors.surface, borderColor: colors.surface }}>
@@ -175,16 +175,16 @@ function CategoryStep({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
   return (
     <View style={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <Text variant="title2">En çok hangi kategoride satış yapacaksın?</Text>
+        <Text variant="title2">Ağırlıklı olarak ne satacaksın?</Text>
         <Text variant="callout" color="textSecondary">
-          Yayınların bu kategoride öne çıkar. Daha sonra başka kategorilerde de satabilirsin.
+          Seçtiğin kategori mağazanın ana vitrini olur. Bu bir sınır değil; ileride başka kategorilerde de ürün ekleyebilirsin.
         </Text>
       </View>
       {selected ? (
         <Animated.View entering={FadeIn.duration(200)}>
           <Card style={{ gap: 10 }}>
             <Text variant="subhead" weight="700">
-              {selected.emoji} {selected.name} — alt kategori seç
+              {selected.emoji} {selected.name} içinde hangi alan?
             </Text>
             <View style={styles.wrap}>
               {selected.subcategories.map((s) => (
@@ -232,16 +232,16 @@ function ExperienceStep({ draft, set }: { draft: Draft; set: (p: Partial<Draft>)
   return (
     <View style={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <Text variant="title2">Satış deneyimin nedir?</Text>
+        <Text variant="title2">Daha önce satış yaptın mı?</Text>
         <Text variant="callout" color="textSecondary">
           Sana en uygun ipuçlarını ve satıcı desteğini sunabilmemiz için soruyoruz.
         </Text>
       </View>
-      <OptionCard emoji="🌱" title="Hiç satış yapmadım" subtitle="Yeni başlıyorum, koleksiyonumu ya da eşyalarımı satacağım" selected={draft.experience === 'new'} onPress={() => set({ experience: 'new' })} />
+      <OptionCard emoji="🌱" title="Hiç satış yapmadım" subtitle="İlk kez satacağım; koleksiyonumdan ya da evdeki eşyalardan başlıyorum" selected={draft.experience === 'new'} onPress={() => set({ experience: 'new' })} />
       <OptionCard
         emoji="📦"
-        title="Başka platformlarda satıyorum"
-        subtitle="Trendyol, Hepsiburada, Instagram, Dolap, Letgo…"
+        title="İnternette zaten satıyorum"
+        subtitle="Bir pazar yerinde, ikinci el uygulamasında ya da sosyal medyada ilanlarım var"
         selected={draft.experience === 'other_platforms'}
         onPress={() => set({ experience: 'other_platforms' })}>
         <View style={styles.wrap}>
@@ -259,7 +259,7 @@ function ExperienceStep({ draft, set }: { draft: Draft; set: (p: Partial<Draft>)
           autoCorrect={false}
         />
       </OptionCard>
-      <OptionCard emoji="🏪" title="Fiziksel mağazam var" subtitle="Dükkânımdaki ürünleri canlı yayında satmak istiyorum" selected={draft.experience === 'physical_store'} onPress={() => set({ experience: 'physical_store' })}>
+      <OptionCard emoji="🏪" title="Dükkânım var" subtitle="Raflarımdaki ürünleri canlı yayına da taşımak istiyorum" selected={draft.experience === 'physical_store'} onPress={() => set({ experience: 'physical_store' })}>
         <TextField label="Mağaza adı ve şehir (isteğe bağlı)" value={draft.storeLink} onChangeText={(v) => set({ storeLink: v })} placeholder="ör. Kadıköy Koleksiyon, İstanbul" />
       </OptionCard>
       <View style={{ gap: 10 }}>
@@ -286,15 +286,15 @@ function IdentityStep({ draft, set, submitted }: { draft: Draft; set: (p: Partia
   return (
     <View style={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <Text variant="title2">Satıcı bilgilerin</Text>
+        <Text variant="title2">Kim olarak satacaksın?</Text>
         <Text variant="callout" color="textSecondary">
-          Faturalandırma ve ödeme için gerekli. Bilgilerin kimliğindekiyle aynı olmalı.
+          Seçtiğin tipe göre fatura ve vergi bilgisi istiyoruz. Yazdıkların nüfus ve vergi kayıtlarınla birebir eşleşmeli.
         </Text>
       </View>
       <OptionCard icon="person-outline" title="Bireysel" subtitle="Kişisel eşyalarını ya da koleksiyonunu satıyorsan" selected={draft.sellerType === 'individual'} onPress={() => set({ sellerType: 'individual' })} />
       <OptionCard icon="briefcase-outline" title="Şahıs Şirketi" subtitle="Vergi levhan varsa (esnaf, serbest meslek)" selected={draft.sellerType === 'sole_proprietor'} onPress={() => set({ sellerType: 'sole_proprietor' })} />
       <OptionCard icon="business-outline" title="Kurumsal" subtitle="Limited ya da anonim şirket" selected={draft.sellerType === 'company'} onPress={() => set({ sellerType: 'company' })} />
-      <TextField label="Ad Soyad (kimlikteki gibi)" value={draft.legalName} onChangeText={(v) => set({ legalName: v })} autoCapitalize="words" textContentType="name" error={show('legalName')} />
+      <TextField label="Ad ve soyad (nüfus kaydındaki yazımla)" value={draft.legalName} onChangeText={(v) => set({ legalName: v })} autoCapitalize="words" textContentType="name" error={show('legalName')} />
       <TextField
         label="T.C. Kimlik No"
         value={draft.tckn}
@@ -580,8 +580,8 @@ function SuccessView() {
       </Text>
       <Text variant="body" color="textSecondary" align="center" style={{ maxWidth: 320 }}>
         {approved
-          ? "Satıcı Paneli'n hazır. İlk yayınını planla, ürünlerini ekle ve canlıya geç."
-          : 'Genellikle birkaç dakika içinde sonuçlanır. Onaylandığında sana bildirim göndereceğiz.'}
+          ? 'Artık ürün ekleyip yayın takvimini oluşturabilirsin. Panelde seni ilk yayınına hazırlayacak birkaç adım var.'
+          : 'Demo sürümde başvurular birkaç saniye içinde otomatik onaylanır; sonucu bildirimlerinde de göreceksin.'}
       </Text>
       <StatusPill label={approved ? 'Satıcı hesabı aktif' : 'İnceleniyor…'} tone={approved ? 'success' : 'warning'} icon={approved ? 'checkmark-circle' : 'time'} style={{ alignSelf: 'center' }} />
       <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 18 }}>
@@ -755,9 +755,9 @@ export function ApplyFlow() {
           {step === 4 ? (
             <View style={{ gap: 16 }}>
               <View style={{ gap: 6 }}>
-                <Text variant="title2">İade adresin</Text>
+                <Text variant="title2">Paketlerin nereye dönsün?</Text>
                 <Text variant="callout" color="textSecondary">
-                  Kargo ücretleri bu adrese göre hesaplanır, iade edilen paketler buraya gelir. Alıcılar adresini görmez.
+                  Alıcının geri gönderdiği ya da teslim edilemeyen paketler bu adrese ulaştırılır. Adresin alıcılara gösterilmez.
                 </Text>
               </View>
               <AddressForm value={draft.address} onChange={(address) => set({ address })} errors={submitted ? addressErrors : {}} />

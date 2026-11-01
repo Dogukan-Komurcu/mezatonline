@@ -28,7 +28,7 @@ const H = 42;
  * çanta ikonlu cam "Mağaza · N" etiketi.
  */
 export function BottomBar({ shopCount, reactionEmoji, guest, onCompose, onReact, onReactLong, onShop }: BottomBarProps) {
-  const placeholder = guest ? 'Sohbete katılmak için giriş yap' : 'Bir şey yaz…';
+  const placeholder = guest ? 'Mesaj yazmak için giriş yap' : 'Sohbete katıl…';
   const custom = reactionEmoji !== DEFAULT_REACTION;
   return (
     <View style={styles.row}>

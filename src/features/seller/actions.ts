@@ -46,7 +46,7 @@ export function approveSellerNow() {
   useInboxStore.getState().pushNotification({
     type: 'promo',
     title: 'Satıcı başvurun onaylandı 🎉',
-    body: "Satıcı Paneli'ne hoş geldin! İlk yayınını planlayarak satışa başla.",
+    body: 'Satıcı Paneli açıldı. Ürün ekleyerek ya da bir yayın tarihi seçerek başlayabilirsin.',
     href: '/sell',
   });
   haptic.success();

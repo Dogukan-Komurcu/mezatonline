@@ -109,7 +109,7 @@ export default function RewardsScreen() {
       />
       <ScrollView contentOffset={qa.offset} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
         <Text variant="title2" style={styles.title}>
-          Görevlerle puan topla, ayrıcalık kazan
+          Günlük görevleri bitir, puanlarını tepkilere harca
         </Text>
         <View style={{ backgroundColor: colors.bg }}>
           <UnderlineTabs
@@ -132,13 +132,13 @@ export default function RewardsScreen() {
                 style={styles.ends}
                 accessibilityRole="button">
                 <Text variant="footnote" weight="700" color="textSecondary">
-                  Bitiş: {formatTimeUntil(nextMidnight(now), now)}
+                  Yenilenmesine: {formatTimeUntil(nextMidnight(now), now)}
                 </Text>
                 <Icon name="information-circle-outline" size={15} color="textSecondary" />
               </PressableScale>
             </View>
             <Text variant="footnote" color="textTertiary" style={{ marginTop: -6 }}>
-              İlerlemenin güncellenmesi birkaç dakika sürebilir.
+              Görevi bitirdiğin anda puanı bakiyene eklenir.
             </Text>
 
             <View style={[styles.summary, { backgroundColor: summaryBg, borderColor: colors.border, borderWidth: isDark ? StyleSheet.hairlineWidth : 0 }]}>
@@ -177,7 +177,7 @@ export default function RewardsScreen() {
                   Arkadaşını davet et
                 </Text>
                 <Text variant="footnote" color={colors.onPrimary} style={{ opacity: 0.75 }}>
-                  İkiniz de ₺250 Mezat Kredisi kazanın
+                  İlk siparişi teslim edilince ₺250 sana, ₺250 arkadaşına
                 </Text>
               </View>
               <Icon name="chevron-forward" size={18} color={colors.onPrimary} />
@@ -194,7 +194,7 @@ export default function RewardsScreen() {
                   {formatNumber(points)} puan
                 </Text>
                 <Text variant="footnote" color="textSecondary">
-                  Puanlarının süresi dolmaz. Görevlerle daha fazlasını kazan.
+                  Puanların bir son kullanma tarihi yok; bakiyeni görevlerle büyütebilirsin.
                 </Text>
               </View>
               <Text variant="subhead" weight="700" color="accent" onPress={() => setTab('tasks')} suppressHighlighting>
@@ -207,7 +207,7 @@ export default function RewardsScreen() {
                 <View>
                   <Text variant="title3">Dev tepkiler</Text>
                   <Text variant="footnote" color="textSecondary">
-                    Bir ürün aldığında yayındaki herkes adınla bu kutlamayı görür
+                    Yayında bir şey satın aldığın an, adınla birlikte bütün izleyicilerin ekranında oynar
                   </Text>
                 </View>
                 <View style={[styles.hero, { backgroundColor: liveColors.panel }]}>

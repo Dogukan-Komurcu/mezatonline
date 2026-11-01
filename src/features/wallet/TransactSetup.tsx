@@ -11,6 +11,7 @@ import { View } from 'react-native';
 import { create } from 'zustand';
 
 import { Button, Icon, Sheet, Text, toast } from '@/components/ui';
+import { DEMO_MODE } from '@/config/demo';
 import { AUTH_REASONS, isSignedIn, requireAuth } from '@/features/auth/gate';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -111,7 +112,7 @@ function SetupSheet() {
       onClose={close}
       dark={dark}
       title={step === 'card' ? 'Ödeme yöntemi ekle' : 'Teslimat adresi ekle'}
-      subtitle={reason ?? 'Teklif verebilmek ve satın alabilmek için bir kart ve teslimat adresi gerekli. Kartından yalnızca kazandığında çekim yapılır.'}
+      subtitle={reason ?? 'Kartını ve adresini bir kez kaydedersen teklif ve alışverişleri tek dokunuşla tamamlarsın. Kayıt sırasında kartından ücret alınmaz.'}
       maxHeight={0.94}
       showClose
       footer={
@@ -120,7 +121,7 @@ function SetupSheet() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Icon name="lock-closed" size={12} color={dark ? 'rgba(255,255,255,0.6)' : 'textTertiary'} />
             <Text variant="caption" color={dark ? 'rgba(255,255,255,0.6)' : 'textTertiary'}>
-              {step === 'card' ? 'Adım 1/2 · 256-bit SSL ile korunur' : hasCard ? 'Adım 2/2' : 'Adres'}
+              {step === 'card' ? (DEMO_MODE ? 'Adım 1/2 · Demo: kart numarası saklanmaz' : 'Adım 1/2 · Bağlantı şifrelidir') : hasCard ? 'Adım 2/2' : 'Adres'}
             </Text>
           </View>
         </View>

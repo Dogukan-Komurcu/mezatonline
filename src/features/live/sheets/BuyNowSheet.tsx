@@ -221,7 +221,7 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
 
           <Line label={`Ara toplam${qty > 1 ? ` (${qty} adet)` : ''}`} value={formatTRY(unitPrice * qty, { cents: true })} strike={originalPrice && originalPrice > unitPrice ? formatTRY(originalPrice * qty) : undefined} />
           {discount > 0 ? <Line label="Kupon indirimi" value={`-${formatTRY(discount, { cents: true })}`} positive /> : null}
-          <Line label="Kargo" value={bundled ? '+₺0 · aynı pakete eklendi' : formatTRY(shipping, { cents: true })} positive={bundled} />
+          <Line label="Kargo" value={bundled ? '₺0 · aynı pakette' : formatTRY(shipping, { cents: true })} positive={bundled} />
           <Line label="Alıcı Koruması hizmet bedeli" value={formatTRY(fee, { cents: true })} />
           {creditUsed > 0 ? <Line label="Mezat kredisi" value={`-${formatTRY(creditUsed, { cents: true })}`} positive /> : null}
           <View style={styles.totalRow}>

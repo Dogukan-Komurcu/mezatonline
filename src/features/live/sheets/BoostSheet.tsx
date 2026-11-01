@@ -36,7 +36,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
           Satıcıyı Destekle
         </Text>
         <Text variant="subhead" weight="600" color={liveColors.onPrimary} style={styles.heroText}>
-          {sellerName} adlı satıcıya teşekkür etmek için yayını öne çıkarabilir{onTip ? ' ya da bahşiş gönderebilirsin' : 'sin'}.
+          Bu yayını beğendiysen {sellerName} için {onTip ? 'iki yoldan destek olabilirsin: yayını daha görünür yap ya da doğrudan bahşiş bırak' : 'yayının daha çok kişiye görünmesine katkı verebilirsin'}.
         </Text>
       </LinearGradient>
 
@@ -50,7 +50,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
         <Text variant="footnote" color="textSecondary">
           {done
             ? '🚀 Hedefe ulaşıldı! Yayın 15 dakika boyunca akışlarda öne çıkarılıyor.'
-            : 'Diğer izleyicilerle birlikte katkı vererek bu yayının Mezatonline genelinde daha çok kişiye ulaşmasını sağla. Katkı verenler sohbette anılır.'}
+            : 'İzleyicilerin katkıları ortak bir hedefte toplanır. Hedef dolunca yayın 15 dakika boyunca akışlarda üst sıralarda gösterilir; katkın sohbet akışında da görünür.'}
         </Text>
         <View style={[styles.track, { backgroundColor: colors.surfaceAlt }]}>
           <LinearGradient colors={[liveColors.primary, liveColors.copper]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.fill, { width: `${Math.round(pct * 100)}%` }]} />
@@ -72,7 +72,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
             </View>
             <Button title={`${formatTRY(amount)} ile öne çıkar`} variant="inverse" fullWidth loading={boosting} onPress={() => onBoost(amount)} icon="rocket" />
             <Text variant="caption" color="textTertiary">
-              Hedefe 30 gün içinde ulaşılmazsa katkın otomatik iade edilir.
+              30 günün sonunda hedef hâlâ dolmamışsa katkını iade ederiz.
             </Text>
           </>
         ) : null}
@@ -87,7 +87,7 @@ export function BoostSheet({ visible, onClose, sellerName, raised, goal, boostin
             </Text>
           </View>
           <Text variant="footnote" color="textSecondary">
-            Satıcına hızlı ve güvenli bir şekilde teşekkür et. Bahşişin tamamı satıcıya gider.
+            Yayından memnun kaldıysan satıcına küçük bir teşekkür bırak. Bahşişin tamamı satıcıya gider.
           </Text>
           <Button title="Bahşiş Gönder" variant="inverse" fullWidth onPress={onTip} icon="heart-outline" />
         </View>

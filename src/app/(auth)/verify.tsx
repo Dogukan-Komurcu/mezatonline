@@ -134,7 +134,7 @@ function VerifyScreen() {
           onPress={() => verify(code)}
         />
       }>
-      <StepTitle title="Kodu gir" subtitle={`${pretty} numarasına gönderilen ${OTP_LENGTH} haneli kodu gir.`} />
+      <StepTitle title="Kodu gir" subtitle={`${pretty} numarasına SMS ile ${OTP_LENGTH} haneli bir kod yolladık. Kodu aşağıdaki kutulara yaz.`} />
       <PressableScale
         onPress={() => {
           haptic.tap();
@@ -198,7 +198,7 @@ function VerifyScreen() {
 
       <View style={[styles.resendCard, { backgroundColor: colors.surface }]}>
         <Text variant="subhead" color="textSecondary">
-          Kod gelmedi mi?
+          SMS ulaşmadı mı?
         </Text>
         {remaining > 0 ? (
           <Text variant="subhead" weight="700" color="textTertiary" tabular>
@@ -213,7 +213,7 @@ function VerifyScreen() {
               ·
             </Text>
             <Text variant="subhead" weight="800" style={styles.underline} onPress={() => resend('call')} suppressHighlighting>
-              Sesli arama ile al
+              Kodu telefonla dinle
             </Text>
           </View>
         )}

@@ -175,7 +175,7 @@ export default function EditProfileScreen() {
               maxLength={30}
               error={unameError}
               helper={
-                usernameChanged && available === true && !checking ? '✓ Bu kullanıcı adı kullanılabilir' : 'Küçük harf, rakam, nokta ve alt çizgi · en fazla 30 karakter · 24 saatte bir değiştirilebilir'
+                usernameChanged && available === true && !checking ? '✓ Bu kullanıcı adı kullanılabilir' : '3–30 karakter · a–z, 0–9, nokta ve _ · değişiklikten sonra 24 saat beklenir'
               }
               right={checking ? <ActivityIndicator size="small" color={colors.textSecondary} /> : usernameChanged && available === true ? <Icon name="checkmark-circle" size={20} color="success" /> : null}
             />

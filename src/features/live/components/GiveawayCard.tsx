@@ -87,7 +87,7 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo, style }: Gi
             <Animated.View style={[styles.meta, shimmerStyle]}>
               <ActivityIndicator size="small" color={liveColors.accent} />
               <Text variant="caption" weight="700" color={liveColors.accent}>
-                Kazanan seçiliyor…
+                Kura çekiliyor…
               </Text>
             </Animated.View>
           ) : (
@@ -101,7 +101,7 @@ export function GiveawayCard({ giveaway, onEnter, onDismiss, onInfo, style }: Gi
                 </>
               ) : null}
               <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
-                {giveaway.entered ? '· Katıldın, yayında kal' : `· ${formatCompact(giveaway.entrants)} kişi`}
+                {giveaway.entered ? '· Listedesin, yayından çıkma' : `· ${formatCompact(giveaway.entrants)} kişi`}
               </Text>
               {giveaway.requiresFollow ? (
                 <View style={styles.tag}>

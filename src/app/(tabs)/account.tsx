@@ -113,7 +113,7 @@ function MemberAccount() {
     shareLink({
       title: "Mezatonline'a katıl",
       path: `/davet/${referralCode}`,
-      message: `Mezatonline'da canlı mezatlara katıl! ${referralCode} davet koduyla kaydol, ikimiz de ₺250 kazanalım 🎉`,
+      message: `Mezatonline'a ${referralCode} koduyla üye ol. İlk siparişin sana ulaştığında ikimizin cüzdanına da ₺250 Mezat Kredisi geçiyor 🎁`,
     });
 
   return (
@@ -193,7 +193,7 @@ function MemberAccount() {
               <View style={{ flex: 1 }}>
                 <Text variant="headline">Başvurun inceleniyor</Text>
                 <Text variant="footnote" color="textSecondary" numberOfLines={2}>
-                  Genellikle 1-2 iş günü sürer. Sonucu bildirim olarak göndereceğiz.
+                  {DEMO_MODE ? 'Demo sürümde başvuru kısa süre içinde otomatik onaylanır.' : 'İnceleme bitince sonucu bildirim olarak göndereceğiz.'}
                 </Text>
               </View>
               <Tag label="Beklemede" tone="warning" />
@@ -205,7 +205,7 @@ function MemberAccount() {
                 Mezatonline'da satış yap
               </Text>
               <Text variant="subhead" color={colors.onPrimary} style={{ opacity: 0.8, maxWidth: '78%' }}>
-                Canlı yayın aç, binlerce koleksiyoncuya ulaş. İlk ay %0 komisyon.
+                Ürünlerini canlı yayında açık artırmaya çıkar. İlk ay %0 komisyon.
               </Text>
               <View style={[styles.sellCta, { backgroundColor: colors.onPrimary }]}>
                 <Text variant="subhead" weight="700" color={colors.primary}>
@@ -228,7 +228,7 @@ function MemberAccount() {
           <MenuRow icon="bookmark-outline" title="Kaydedilenler" value={savedCount ? String(savedCount) : undefined} onPress={() => goActivity('saved')} />
           <MenuRow icon="wallet-outline" title="Cüzdan & Kredi" value={formatTRY(credits)} onPress={() => router.push('/wallet')} />
           <MenuRow icon="gift-outline" title="Ödüller" value={`${formatNumber(points)} puan`} onPress={() => router.push('/rewards')} />
-          <MenuRow icon="person-add-outline" title="Arkadaşını davet et" subtitle="İkiniz de ₺250 Mezat Kredisi kazanın" onPress={invite} />
+          <MenuRow icon="person-add-outline" title="Arkadaşını davet et" subtitle="İlk siparişi teslim edilince ₺250 sana, ₺250 arkadaşına" onPress={invite} />
         </MenuGroup>
 
         <MenuGroup title="Hesap">
@@ -279,7 +279,7 @@ function MemberAccount() {
         visible={blockedOpen}
         onClose={() => setBlockedOpen(false)}
         title="Engellenen kullanıcılar"
-        subtitle="Engellediğin kişiler seni takip edemez, sana mesaj gönderemez ve yayınlarına katılamaz."
+        subtitle="Bu listedekiler sana yazamaz, seni takip edemez ve yayınlarını açamaz. Engeli kaldırmak için kişinin yanındaki düğmeyi kullan."
         showClose
         contentStyle={{ paddingHorizontal: 0 }}>
         {blockedUsers.length ? (

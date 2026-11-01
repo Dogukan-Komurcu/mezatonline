@@ -102,12 +102,12 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
     if (!running) return;
     if (!amount) {
       haptic.error();
-      setError(`En az ${formatTRY(min)} gir`);
+      setError(`Tutar en az ${formatTRY(min)} olmalı`);
       return;
     }
     if (amount < min) {
       haptic.error();
-      setError(leading && myMax ? `Otomatik teklif üst sınırın ${formatTRY(myMax)}. Daha yüksek bir tutar gir.` : `Teklif ${formatTRY(min)} altında olamaz`);
+      setError(leading && myMax ? `Şu anki üst sınırın ${formatTRY(myMax)}; değiştirmek için daha yüksek bir tutar yaz.` : `Tutar en az ${formatTRY(min)} olmalı`);
       return;
     }
     setError(null);
@@ -150,14 +150,14 @@ export function CustomBidSheet({ visible, onClose, mode, product, lot, startPric
             <Text variant="footnote" weight="700" color="text">
               {product?.title}
             </Text>{' '}
-            sahneye geldiğinde, girdiğin tutara kadar senin yerine en küçük artışla teklif veririz.
+            yayında sahneye çıktığında devreye girecek üst sınırını belirliyorsun; tutarı kimse görmez.
           </>
         ) : isMax ? (
           <>
             <Text variant="footnote" weight="700" color="text">
               {product?.title}
             </Text>{' '}
-            için ödemeye razı olduğun en yüksek tutarı gir. Biri seni geçtiğinde, bu tutara kadar senin yerine teklif veririz.
+            için bir üst sınır belirle: rakip teklif geldikçe sistem seni birer adım öne taşır, sınıra gelince durur.
           </>
         ) : (
           <>

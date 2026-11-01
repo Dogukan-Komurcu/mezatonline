@@ -56,15 +56,15 @@ export function statusCopy(order: Order, ctx: { seller?: User; address?: Address
     case 'preparing':
       return {
         title: order.status === 'paid' ? 'Sipariş alındı' : 'Paket hazırlanıyor',
-        subtitle: `Genelde ${shipText(ctx.seller)} kargolanır`,
-        body: `${sellerName} paketini hazırlıyor ve genelde ${shipText(ctx.seller)} kargoya verir. Paket kargoya verildiğinde takip bilgileri burada görünecek.`,
+        subtitle: `Kargoya veriliş: çoğunlukla ${shipText(ctx.seller)}`,
+        body: `Sipariş ${sellerName} tarafına iletildi. Ürün kolilenip kargoya teslim edildiğinde firma adı ve takip numarası bu kartta belirecek; bu satıcının paketleri çoğunlukla ${shipText(ctx.seller)} yola çıkıyor.`,
       };
     case 'shipped': {
       const eta = deliveryDayLabel(estimatedDelivery(order));
       return {
         title: 'Kargoda',
         subtitle: `Tahmini teslimat: ${eta.label}`,
-        body: `Paketin ${order.carrier ?? 'kargo'} ile yolda. ${place(ctx.address)} adresine ${eta.relative ? eta.label.toLocaleLowerCase('tr-TR') : `${eta.label} tarihinde`} teslim edilmesi bekleniyor.`,
+        body: `Paket ${order.carrier ?? 'kargo firması'} elinde. Tahminimize göre ${eta.relative ? eta.label.toLocaleLowerCase('tr-TR') : `${eta.label} tarihinde`} ${place(ctx.address)} adresinde olur.`,
       };
     }
     case 'out_for_delivery':
@@ -77,15 +77,15 @@ export function statusCopy(order: Order, ctx: { seller?: User; address?: Address
       const at = eventAt(order, 'delivered');
       return {
         title: order.reviewed ? 'Teslim edildi' : 'Değerlendirme bekliyor',
-        subtitle: 'Siparişin ulaştı 🎉',
-        body: `Ürünün ${at ? formatDateTime(at) : 'yakın zamanda'} tarihinde ${place(ctx.address)} adresine teslim edildi.`,
+        subtitle: 'Paket teslim alındı 🎉',
+        body: `Kargo firması paketi ${at ? `${formatDateTime(at)} tarihinde` : 'kısa süre önce'} ${place(ctx.address)} adresine bıraktı. Bir sorun varsa 14 gün içinde bu sayfadan bildirebilirsin.`,
       };
     }
     case 'cancelled':
       return {
         title: 'Sipariş iptal edildi',
         subtitle: 'İaden başlatıldı',
-        body: `${ctx.cancelReason ? `İptal nedeni: ${ctx.cancelReason}. ` : ''}Ödemenin tamamı kartına iade edildi; bankana bağlı olarak 2–10 iş günü içinde hesabına yansır.`,
+        body: `${ctx.cancelReason ? `İptal nedeni: ${ctx.cancelReason}. ` : ''}Ödediğin tutarın tamamı kartına geri gönderildi; hesabına yansıması bankana göre 2–10 iş günü sürebilir.`,
       };
     case 'return_requested':
       return {
@@ -159,7 +159,7 @@ export function StatusCard({
         <View style={styles.reviewBlock}>
           <Button title="Değerlendir" variant="inverse" icon="star" fullWidth onPress={onReview} />
           <Text variant="footnote" color="textSecondary" align="center">
-            Geri bildirimin tüm alıcılar için güvenli ve kaliteli bir deneyim sağlamamıza yardımcı olur.
+            Puanın satıcının profilinde görünür ve sonraki alıcıların karar vermesine yardım eder.
           </Text>
         </View>
       ) : null}
@@ -324,7 +324,7 @@ export function ProtectionCard({ info, onPress }: { info: ProtectionInfo; onPres
       <View style={styles.flex}>
         <Text variant="headline">Alıcı Koruması</Text>
         <Text variant="footnote" color="textSecondary">
-          Ürün ulaşmazsa ya da açıklandığı gibi çıkmazsa, ürün sana ulaştıktan sonra 14 gün içinde bildir.
+          Paket hiç gelmezse ya da ürün ilandakinden belirgin biçimde farklı çıkarsa iade talep edebilirsin; farklılık için süre teslimattan sonra 14 gündür.
         </Text>
         <Text variant="footnote" weight="700" color={info.active ? 'success' : 'textTertiary'} style={styles.protectLabel}>
           {protectionLabel(info)}

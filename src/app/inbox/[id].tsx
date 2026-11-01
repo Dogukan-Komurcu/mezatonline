@@ -274,7 +274,7 @@ function DirectChat({ id }: { id: string }) {
         icon="ban-outline"
         destructive
         title={`${user.username} engellensin mi?`}
-        message="Engellediğin kişi sana mesaj gönderemez, yayınlarına katılamaz ve seni takip edemez. Engellendiğine dair bildirim almaz."
+        message="Karşı tarafa bildirim gitmez. Engel sürdükçe bu kişi sana yazamaz, seni takip edemez ve yayınlarına giremez."
         confirmLabel="Engelle"
         onConfirm={() => {
           block(user.id);
@@ -330,14 +330,14 @@ function SupportChat() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ChatHeader
           user={SUPPORT_USER}
-          subtitle={asked ? `${agent} · Destek uzmanı` : 'Genellikle birkaç dakika içinde yanıt verir'}
+          subtitle={asked ? `${agent} · Destek uzmanı` : DEMO_MODE ? 'Demo: yanıtlar otomatik örnek mesajlardır' : 'Uygulama içi destek sohbeti'}
           right={<IconButton name="ellipsis-horizontal" onPress={() => setMenu(true)} accessibilityLabel="Seçenekler" />}
         />
         <ChatView
           messages={messages}
           partner={SUPPORT_USER}
           typing={typing}
-          header={<ChatIntro user={SUPPORT_USER} note={`Mezatonline ekibi senden asla şifre, kart bilgisi ya da doğrulama kodu istemez.${DEMO_MODE ? '' : ' Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır.'}`} />}
+          header={<ChatIntro user={SUPPORT_USER} note={`Mezatonline ekibi senden asla şifre, kart bilgisi ya da doğrulama kodu istemez.${DEMO_MODE ? '' : ' Bizden gelen e-postaların gönderen adresi @mezatonline.com ile biter; başka adreslerden gelen “destek” mesajlarına itibar etme.'}`} />}
           footer={<Composer onSend={(t, img) => {
             if (!passesModeration(t)) return false;
             sendSupport(t, img);

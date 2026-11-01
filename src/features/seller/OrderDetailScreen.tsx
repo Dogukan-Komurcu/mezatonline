@@ -100,7 +100,7 @@ export function OrderDetailScreen() {
       : bucket === 'shipped'
         ? { icon: 'car', tone: colors.info, title: 'Kargoda', body: `${order.carrier ?? 'Kargo'} · Takip no ${order.trackingNumber ?? '—'}. Teslim edilince alıcıya bildirim gider.` }
         : bucket === 'delivered'
-          ? { icon: 'checkmark-circle', tone: colors.success, title: 'Teslim edildi', body: 'Kazancın çekilebilir bakiyende. Alıcı 30 gün içinde değerlendirme yapabilir.' }
+          ? { icon: 'checkmark-circle', tone: colors.success, title: 'Teslim edildi', body: 'Paket alıcıya ulaştı; bu siparişin kazancı çekilebilir bakiyende. Alıcı teslimattan sonraki 30 gün içinde ürünü puanlayabilir.' }
           : { icon: 'close-circle', tone: colors.textSecondary, title: SELLER_ORDER_STATUS[order.status], body: cancelReason ? `Neden: ${cancelReason}` : 'Bu sipariş için kazanç oluşmadı.' };
 
   const makeLabel = () => {

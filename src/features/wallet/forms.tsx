@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, ListRow, SelectField, Text, TextField } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { districtsOf, neighborhoodsOf, PROVINCES } from '@/data/turkey';
 import { useMe } from '@/store/auth';
 import { detectCardBrand } from '@/store/wallet';
@@ -195,7 +196,7 @@ export function CardForm({ value, onChange, errors = {} }: { value: CardDraft; o
           containerStyle={styles.flex}
         />
       </View>
-      <ListRow icon="shield-checkmark" title="3D Secure ile güvenli kayıt" subtitle="Kartın şifrelenerek saklanır; doğrulama için alınan ₺1 provizyon hemen iade edilir." subtitleLines={3} style={{ paddingHorizontal: 0 }} />
+      <ListRow icon="shield-checkmark" title="3D Secure ile kayıt" subtitle={DEMO_MODE ? DEMO_COPY.payment : 'Kartın şifrelenerek saklanır; doğrulama için alınan ₺1 provizyon hemen iade edilir.'} subtitleLines={3} style={{ paddingHorizontal: 0 }} />
     </View>
   );
 }

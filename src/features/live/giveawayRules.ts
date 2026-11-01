@@ -6,11 +6,11 @@ import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 
 /** Resmî kurallar özeti */
 export const GIVEAWAY_RULES = [
-  'Katılım ücretsizdir; satın alma şartı yoktur. Her kullanıcı bir kez katılabilir.',
-  'Katılmak için kayıtlı bir teslimat adresi ve kart gerekir; karttan ücret alınmaz.',
-  'Yalnızca 18 yaşından büyükler katılabilir.',
-  'Kazanan, çekiliş bittiğinde katılımcılar arasından rastgele seçilir ve yayında duyurulur.',
-  'Kazanmak için çekiliş bitene kadar yayında kalmalısın; ayrılırsan katılımın iptal olur.',
+  'Katılmak için para ödemen ya da bir şey satın alman gerekmez; her hesap bir çekilişe tek kez girebilir.',
+  'Ödülün gönderilebilmesi için hesapta adres ve kart kayıtlı olmalıdır; bu kart çekiliş nedeniyle hiçbir zaman ücretlendirilmez.',
+  '18 yaşını doldurmamış kullanıcılar katılamaz.',
+  'Kura, süre dolduğunda katılanlar arasından rastgele çekilir; sonuç aynı yayında açıklanır.',
+  'Kura anına kadar yayında kalmalısın; yayından çıkan kullanıcının katılımı silinir.',
   ...(DEMO_MODE ? ['Demo sürümde katılımcılar ve kazanan simülasyondur; ödül gönderilmez.'] : []),
 ];
 

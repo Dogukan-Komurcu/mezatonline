@@ -53,7 +53,7 @@ export function Celebration({ data, me, onViewOrder, onClose }: { data: Celebrat
   const shippingNote =
     data.kind === 'giveaway'
       ? 'Kargo ücretini satıcı karşılar · Siparişlerinde görebilirsin'
-      : `Ödemen kayıtlı kartından alındı · ${data.bundled ? 'Kargo aynı pakete eklendi (+₺0)' : 'Kargo ücreti aynı yayın için tek sefer'}`;
+      : `${DEMO_MODE ? 'Demo: kartından ödeme alınmadı' : 'Ödemen kayıtlı kartından alındı'} · ${data.bundled ? 'Kargo ₺0 · aynı pakette' : 'Kargo ücreti aynı yayın için tek sefer'}`;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.overlay}>

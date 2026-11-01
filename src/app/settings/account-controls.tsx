@@ -223,7 +223,7 @@ export default function AccountControlsScreen() {
               toast(v ? 'Doğrudan mesajlar açıldı' : 'Doğrudan mesajlar kapatıldı', 'chatbubbles-outline');
             }}
           />
-          <SwitchRow icon="eye-off-outline" title="Gizli giriş" subtitle="Yayınlara girdiğinde sohbette “katıldı” mesajı görünmez" value={privateEntry} onChange={(v) => setFlag('privateEntry', v)} />
+          <SwitchRow icon="eye-off-outline" title="Gizli giriş" subtitle="Bir yayını açtığında sohbette adınla bir giriş satırı çıkmaz" value={privateEntry} onChange={(v) => setFlag('privateEntry', v)} />
           <SwitchRow icon="pulse-outline" title="Etkinlik durumu" subtitle="Arkadaşların hangi yayını izlediğini görebilir" value={activityStatus} onChange={(v) => setFlag('activityStatus', v)} />
         </MenuGroup>
 
@@ -259,9 +259,9 @@ export default function AccountControlsScreen() {
         subtitle={
           editing?.type === 'limit'
             ? editing.kind === 'watch'
-              ? 'Limite ulaştığında dönem sonuna kadar canlı yayın izleyemezsin; mağazalardan alışverişe devam edebilirsin.'
-              : 'Limite ulaştığında dönem sonuna kadar teklif veremez ve satın alamazsın; yayınları izlemeye devam edebilirsin.'
-            : 'Belirlediğin değere ulaştığında tam ekran bir hatırlatma gösteririz.'
+              ? 'Dönem bitene kadar canlı yayınlar senin için kapanır. Bu süre içinde mağazalardan alışveriş açık kalır.'
+              : 'Dönem bitene kadar teklif ve satın alma düğmeleri kilitlenir. Yayınları izlemeye ise devam edebilirsin.'
+            : 'Bu değere geldiğinde ekranı kaplayan bir uyarı çıkar; kapatıp kaldığın yerden devam edebilirsin.'
         }
         showClose
         footer={

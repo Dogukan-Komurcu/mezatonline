@@ -27,7 +27,7 @@ export function CountdownOverlay({ count, rehearsal, onCancel }: { count: number
         )}
       </View>
       <Text variant="callout" color={liveColors.textSecondary} align="center" style={{ maxWidth: 280 }}>
-        {rehearsal ? 'Prova modunda yayının gizli; satışlar kaydedilmez.' : 'Takipçilerine bildirim gönderiliyor 🔔'}
+        {rehearsal ? 'Prova: yayın kimseye görünmez, satışlar gerçek değildir.' : 'Takipçilerine bildirim gönderiliyor 🔔'}
       </Text>
       {count > 0 ? <Button title="Vazgeç" variant="glass" onPress={onCancel} style={{ marginTop: 24, minWidth: 160 }} /> : null}
     </Animated.View>

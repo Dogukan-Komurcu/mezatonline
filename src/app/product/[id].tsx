@@ -370,7 +370,7 @@ export default function ProductScreen() {
           <Text variant="subhead" color="textSecondary">
             {bundled ? (
               <Text variant="subhead" weight="700" color="success">
-                Kargo +₺0 · aynı pakete eklenir
+                Kargo ₺0 · aynı pakette
               </Text>
             ) : shippingFree ? (
               <Text variant="subhead" weight="700" color="success">
@@ -418,7 +418,7 @@ export default function ProductScreen() {
           {offer && !(offer.status === 'accepted' && soldOut) ? <OfferBanner productPrice={product.price} offer={offer} onAccept={(p) => buyNow(p, 'offer')} orderId={latestOrder?.id} onNewOffer={() => requireAuth(() => setOfferOpen(true), { reason: AUTH_REASONS.offer })} /> : null}
           {preBid ? (
             <NoticeBox icon="trending-up" tone={preBid.status === 'outbid' ? 'warning' : 'success'} title={`Ön teklifin: ${formatTRY(preBid.maxAmount)} · ${PRE_BID_STATUS_LABELS[preBid.status]}`}>
-              Ürün yayında sahneye geldiğinde bu tutara kadar senin adına otomatik teklif verilir.
+              Bu tutar senin üst sınırın. Ürün sahneye çıktığında biri seni geçerse teklifin birer adım yükselir, sınıra gelince durur.
             </NoticeBox>
           ) : null}
         </View>
@@ -467,14 +467,14 @@ export default function ProductScreen() {
           <BlockTitle title="Kargo ve teslimat" style={styles.noMargin} />
           <InfoLine
             icon="car-outline"
-            title={bundled ? 'Kargo: +₺0 (aynı pakete eklenir)' : shippingFree ? 'Ücretsiz kargo' : `Kargo ücreti: ${formatTRY(product.shippingCost)}`}
-            subtitle={bundled ? 'Bu yayından aldığın diğer ürünlerle tek pakette gelir.' : product.showId ? 'Aynı yayından alacağın diğer ürünler tek pakette, ek kargo ücreti olmadan gelir.' : 'Fiyatlara KDV dahildir.'}
+            title={bundled ? 'Kargo: ₺0 · aynı pakette' : shippingFree ? 'Ücretsiz kargo' : `Kargo ücreti: ${formatTRY(product.shippingCost)}`}
+            subtitle={bundled ? 'Bu yayında daha önce aldığın ürünle aynı koliye konur.' : product.showId ? 'Bu yayından sonra alacakların da aynı koliye girer; onlar için ayrıca kargo ödemezsin.' : 'Fiyatlara KDV dahildir.'}
           />
           <InfoLine icon="business-outline" title="Kargo firmaları" subtitle={CARRIER_LINE} />
-          <InfoLine icon="time-outline" title="Satıcı 2 iş günü içinde kargolar" subtitle={`Bu satıcının ortalama kargolama süresi: ${avgShip}`} />
-          <InfoLine icon="calendar-outline" title="Tahmini teslimat: 2–4 iş günü" subtitle={delivery.label} />
+          <InfoLine icon="time-outline" title="Kargoya veriliş: en geç 2 iş günü" subtitle={`Bu satıcının ortalama kargolama süresi: ${avgShip}`} />
+          <InfoLine icon="calendar-outline" title="Tahmini varış (2–4 iş günü)" subtitle={delivery.label} />
           {seller ? <InfoLine icon="location-outline" title="Gönderim yeri" subtitle={`${seller.city}, Türkiye`} /> : null}
-          <InfoLine icon="shield-checkmark" tint={colors.success} title="Alıcı Koruması" subtitle="Ürün ulaşmazsa ya da açıklandığı gibi değilse, ürün sana ulaştıktan sonra 14 gün içinde bildirirsen paran iade edilir." onPress={() => setProtectionOpen(true)} />
+          <InfoLine icon="shield-checkmark" tint={colors.success} title="Alıcı Koruması" subtitle="Paket hiç gelmezse ya da ürün ilandakinden belirgin biçimde farklı çıkarsa, teslimattan sonraki 14 gün içinde iade talep edebilirsin." onPress={() => setProtectionOpen(true)} />
         </View>
 
         <SectionGap />
@@ -697,7 +697,7 @@ function OfferBanner({
   if (offer.status === 'pending') {
     return (
       <NoticeBox icon="hourglass-outline" title={`Fiyat önerin: ${formatTRY(offer.amount)} · ${OFFER_STATUS_LABELS.pending}`}>
-        Satıcı önerini inceliyor. Kabul ederse kayıtlı kartından otomatik ödeme alınır.
+        Öneri şu an satıcının önünde. Kabul ederse tutar kayıtlı kartından çekilir; reddederse kartından hiçbir şey alınmaz.
       </NoticeBox>
     );
   }

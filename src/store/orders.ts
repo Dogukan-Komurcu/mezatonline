@@ -119,7 +119,7 @@ export const useOrdersStore = create<OrdersState>()(
         set((s) => ({
           orders: s.orders.map((o) =>
             o.id === id && (o.status === 'paid' || o.status === 'preparing')
-              ? { ...o, status: 'cancelled', timeline: [...o.timeline, { status: 'cancelled', at: new Date().toISOString(), note: 'İade kartına 1-3 iş günü içinde yansır' }] }
+              ? { ...o, status: 'cancelled', timeline: [...o.timeline, { status: 'cancelled', at: new Date().toISOString(), note: 'İade tutarının kartına yansıması bankana göre 2–10 iş günü sürebilir' }] }
               : o,
           ),
         })),

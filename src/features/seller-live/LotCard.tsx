@@ -183,7 +183,7 @@ function PinnedCard({ pinned, pinnedRemaining, onStartAuction, onFlash, onUnpin 
       </View>
       <View style={styles.actions}>
         {auction ? (
-          <Button title="Açık Artırmayı Başlat" icon="hammer-outline" size="sm" onPress={() => onStartAuction(pinned)} disabled={soldOut} style={{ flex: 1 }} />
+          <Button title="Mezata Çıkar" icon="hammer-outline" size="sm" onPress={() => onStartAuction(pinned)} disabled={soldOut} style={{ flex: 1 }} />
         ) : (
           <Button title="Flaş İndirim" icon="flash-outline" size="sm" onPress={() => onFlash(pinned)} disabled={soldOut} style={{ flex: 1 }} />
         )}
@@ -202,20 +202,20 @@ function ResultCard({ lot, remainingOf, onStartAuction, onOpenShop, onDismissRes
         <Thumb uri={lot.product.images[0]} id={lot.product.id} />
         <View style={styles.mid}>
           <Text variant="subhead" weight="800" color={sold ? liveColors.success : liveColors.danger}>
-            {sold ? `Satıldı! ${formatTRY(lot.currentBid)}` : 'Teklif gelmedi'}
+            {sold ? `Çekiç indi · ${formatTRY(lot.currentBid)}` : 'Bu turda alıcı çıkmadı'}
           </Text>
           <Text variant="footnote" weight="600" color={liveColors.text} numberOfLines={1}>
             {lot.product.title}
           </Text>
           <Text variant="caption" color={liveColors.textSecondary} numberOfLines={1}>
-            {sold ? `Kazanan @${lot.leader?.username ?? '—'} · ${lot.bidCount} teklif` : 'Tekrar başlatabilir ya da sıradaki ürüne geçebilirsin'}
+            {sold ? `Kazanan @${lot.leader?.username ?? '—'} · ${lot.bidCount} teklif` : 'Bir tur daha dene ya da mağazadan başka ürün seç'}
           </Text>
         </View>
         <IconButton name="close" variant="glass" size={30} onPress={onDismissResult} accessibilityLabel="Kapat" />
       </View>
       <View style={styles.actions}>
-        <Button title="Sonraki ürün" icon="play-forward-outline" size="sm" onPress={() => onOpenShop('auction')} style={{ flex: 1 }} />
-        {canRerun ? <Button title="Tekrar başlat" icon="refresh-outline" variant="glass" size="sm" onPress={() => onStartAuction(lot.product)} /> : null}
+        <Button title="Başka ürün seç" icon="play-forward-outline" size="sm" onPress={() => onOpenShop('auction')} style={{ flex: 1 }} />
+        {canRerun ? <Button title="Bir tur daha" icon="refresh-outline" variant="glass" size="sm" onPress={() => onStartAuction(lot.product)} /> : null}
       </View>
     </Animated.View>
   );
@@ -253,7 +253,7 @@ function EmptyCard({ next, onOpenShop, onStartAuction, onPin }: LotCardProps) {
           Sahnede ürün yok
         </Text>
         <Text variant="caption" color={liveColors.textSecondary} numberOfLines={2}>
-          Mağazana ürün ekle, sonra sabitle ya da açık artırma başlat
+          Mağazana ürün ekle; sonra sahneye sabitle ya da mezata çıkar
         </Text>
       </View>
       <Button title="Ürün ekle" icon="add" size="sm" onPress={() => onOpenShop()} />

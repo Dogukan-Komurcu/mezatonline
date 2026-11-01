@@ -143,7 +143,7 @@ export default function NotificationsScreen() {
             <EmptyState
               icon="notifications-outline"
               title="Henüz bildirimin yok"
-              message="Yayınları izle, satıcıları takip et ve mezatlara katıl; gelişmelerden ilk sen haberdar ol."
+              message="Bir satıcıyı takip ettiğinde, bir yayına hatırlatıcı kurduğunda ya da teklif verdiğinde gelişmeler buraya düşer."
               actionLabel="Yayınları keşfet"
               onAction={() => router.navigate('/')}
             />

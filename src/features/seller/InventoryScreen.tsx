@@ -212,7 +212,7 @@ export function InventoryScreen() {
     actions.push({
       label: 'Kopyala',
       icon: 'copy-outline',
-      subtitle: 'Ayrı stoklu yeni bir taslak oluşturur',
+      subtitle: 'Bilgileri yeni bir taslağa aktarır; stok sayısı ayrı tutulur',
       onPress: () => {
         duplicateListing(p);
         haptic.success();

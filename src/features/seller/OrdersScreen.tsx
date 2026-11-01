@@ -160,7 +160,7 @@ export function OrdersScreen() {
                 <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
                   {late
                     ? `${late} siparişin gönderim süresi geçti. Hemen kargola; gecikmeler hesap sağlığını etkiler.`
-                    : 'Siparişleri satıştan sonraki 2 iş günü içinde kargoya ver. Hafta sonu ve resmi tatiller sayılmaz.'}
+                    : 'Her sipariş için 2 iş günün var ve süre yalnızca iş günlerinde işler; cumartesi, pazar ve resmi tatiller sayılmaz. Kalan süre her siparişin altında yazar.'}
                 </Text>
               </View>
               {needLabel.length > 1 ? (

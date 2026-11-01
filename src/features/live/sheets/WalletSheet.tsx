@@ -93,8 +93,8 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
         />
       </View>
       <ListRow
-        title="Arkadaşını davet et, ₺100 kazan"
-        subtitle="Arkadaşın ilk siparişini verince ikiniz de kredi kazanırsınız"
+        title="Davet kodunu paylaş"
+        subtitle="İlk siparişi teslim edilince ₺250 sana, ₺250 arkadaşına"
         left={<IconCircle name="gift-outline" tint={liveColors.primary} />}
         onPress={() => onNavigate('/wallet')}
         style={styles.row}
@@ -147,7 +147,7 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
             <Button title="Uygula" size="sm" variant="secondary" loading={applying} disabled={!code.trim()} onPress={apply} />
           </View>
           <Text variant="caption" color={error ? 'danger' : 'textTertiary'} style={styles.helper}>
-            {error ?? 'Kupon, bu yayındaki bir sonraki alışverişine otomatik uygulanır. Deneme: MEZAT10'}
+            {error ?? 'Kuponun indirimi bu yayında yapacağın ilk uygun alışverişten düşülür. Deneme: MEZAT10'}
           </Text>
         </>
       )}
@@ -156,13 +156,13 @@ export function WalletSheet({ visible, onClose, onNavigate }: { visible: boolean
         <View style={styles.bundleHead}>
           <Icon name="layers-outline" size={18} color="text" />
           <Text variant="subhead" weight="700" style={styles.flex}>
-            Akıllı paketleme
+            Aynı yayın, tek paket
           </Text>
           <Icon name={bundleOpen ? 'chevron-up' : 'chevron-down'} size={16} color="textSecondary" />
         </View>
         {bundleOpen ? (
           <Text variant="footnote" color="textSecondary" style={styles.bundleText}>
-            Aynı yayında aynı satıcıdan aldığın tüm ürünler tek pakette gönderilir; kargo ücretini yalnızca ilk siparişte ödersin. Sonraki ürünlerde "Kargo: +₺0 (aynı pakete eklendi)" yazar.
+            Bu yayında aynı satıcıdan birden çok ürün alırsan hepsi tek kolide yola çıkar. Kargo ücreti ilk üründe alınır; sonrakilerin ödeme özetinde “₺0 · aynı pakette” görürsün.
           </Text>
         ) : null}
       </PressableScale>

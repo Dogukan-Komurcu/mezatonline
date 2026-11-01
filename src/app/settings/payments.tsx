@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Header, Icon, IconButton, PressableScale, Screen, Text, toast } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { useAccountStore, type DeliveryPreference } from '@/features/account/store';
 import { ActionSheet, CARD_BRAND_NAMES, CardBrandBadge, ConfirmSheet, InfoNote, isCardExpired, MenuGroup, MenuRow, OutlineCard, SwitchRow, Tag } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
@@ -51,7 +52,7 @@ export default function PaymentsScreen() {
       <Header title="Ödeme ve Kargo" right={<IconButton name="add" onPress={() => router.push('/settings/add-card')} accessibilityLabel="Kart ekle" />} />
       <ScrollView contentOffset={qa.offset} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <Text variant="subhead" color="textSecondary" style={styles.intro}>
-          Teklif vermek, sipariş vermek ya da yayında ürün satın almak için gereklidir. Kartından yalnızca teklifini kazandığında, satın aldığında ya da fiyat önerin kabul edildiğinde çekim yapılır.
+          Kayıtlı bir kartın ve teslimat adresin olduğunda yayınlarda beklemeden teklif verip alışveriş yapabilirsin. Teklif vermek tek başına ücret doğurmaz; kartından para yalnızca mezatı kazandığında, Hemen Al ile aldığında ya da fiyat önerin kabul edildiğinde çekilir.
         </Text>
 
         <MenuGroup title="Ödeme yöntemleri">
@@ -104,7 +105,7 @@ export default function PaymentsScreen() {
             <OutlineCard style={{ padding: 0 }}>
               <SwitchRow
                 title="Haftalık birleştirme"
-                subtitle="Aynı hafta aynı satıcıdan aldıkların tek pakette gelsin; kargo ücretini bir kez öde."
+                subtitle="Bir satıcıdan aynı hafta içinde aldıkların tek koliye konur; kargo yalnızca ilk siparişte alınır."
                 value={weeklyBundling}
                 onChange={(v) => {
                   setFlag('weeklyBundling', v);
@@ -146,7 +147,7 @@ export default function PaymentsScreen() {
         </MenuGroup>
 
         <View style={[styles.pad, { marginTop: 24 }]}>
-          <InfoNote icon="lock-closed-outline">Kart bilgilerin PCI-DSS uyumlu ödeme altyapısında şifrelenerek saklanır. Mezatonline kart numaranın tamamını görmez.</InfoNote>
+          <InfoNote icon="lock-closed-outline">{DEMO_MODE ? DEMO_COPY.payment : 'Kart bilgilerin lisanslı ödeme kuruluşunun altyapısında şifrelenerek saklanır. Mezatonline kart numaranın tamamını görmez.'}</InfoNote>
         </View>
       </ScrollView>
 

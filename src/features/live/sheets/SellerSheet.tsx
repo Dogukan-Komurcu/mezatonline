@@ -24,7 +24,7 @@ export type SellerSheetProps = {
 };
 
 const BADGE_LABELS: Record<string, string> = {
-  top_seller: '🏆 En iyi satıcı',
+  top_seller: '🏆 Gözde satıcı',
   verified: '✓ Onaylı',
   fast_shipper: '⚡ Hızlı kargo',
   partner: '🤝 Partner',

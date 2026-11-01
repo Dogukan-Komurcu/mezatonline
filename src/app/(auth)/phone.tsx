@@ -15,8 +15,8 @@ import { ForceScheme, radius, useTheme } from '@/theme';
 const COPY: Record<PhoneMode, { header?: string; title: string; subtitle: string }> = {
   finish: {
     header: 'Kaydı Tamamla',
-    title: 'Telefon numaranı doğrula',
-    subtitle: 'Topluluğumuzu güvende tutmak için her yeni hesabı doğruluyoruz. Numaran profilinde görünmez.',
+    title: 'Numaranı onaylayalım',
+    subtitle: 'Hesabını açmadan önce numarana 6 haneli bir kod göndereceğiz; böylece her hesabın arkasında gerçek bir telefon olduğundan emin oluruz. Numaran profilinde görünmez.',
   },
   signup: {
     title: 'Telefon numaran nedir?',

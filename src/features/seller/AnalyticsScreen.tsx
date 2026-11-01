@@ -271,7 +271,7 @@ export function AnalyticsScreen() {
         </Card>
 
         <Text variant="footnote" color="textTertiary" align="center">
-          Analizler tahminidir ve 1-2 saatte bir güncellenir. Vergi beyanı için aylık ekstreni kullan.
+          Buradaki rakamlar yaklaşık değerlerdir. Kesinleşen tutarları Ödemeler → Hesap Hareketleri bölümünde görürsün.
         </Text>
       </ScrollView>
     </Screen>

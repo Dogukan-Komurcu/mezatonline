@@ -309,7 +309,7 @@ export function ScheduleForm() {
                 Kapak görseli
               </Text>
               <Text variant="footnote" color="textSecondary">
-                9:16 dikey, 1080×1920 önerilir. Yüzün ve öne çıkan ürünlerin görünsün. Eklemezsen kategori görseli kullanılır.
+                Dikey (9:16) çalışır, 1080×1920 piksel idealdir. Kapakta yüzün ve yayının en dikkat çekici ürünü olsun; eklemezsen kategori görseli kullanılır.
               </Text>
               <Button title="Galeriden seç" size="sm" variant="secondary" icon="images-outline" onPress={() => pickFromLibrary({ limit: 1, aspect: [9, 16] }).then((u) => u[0] && set({ cover: u[0] }))} />
               <Button title="Örnek görsel" size="sm" variant="ghost" icon="sparkles-outline" onPress={() => setSamples(true)} />
@@ -327,7 +327,7 @@ export function ScheduleForm() {
               onChangeText={(v) => set({ title: v.slice(0, TITLE_MAX) })}
               placeholder="ör. 🔥 ₺1'den Başlayan Pokémon Kartları"
               maxLength={TITLE_MAX}
-              helper={`${s.title.length}/${TITLE_MAX} · Ne sattığını söyle; çekiliş varsa başa yaz`}
+              helper={`${s.title.length}/${TITLE_MAX} · Ürün türünü ve markayı yaz; izleyiciler aramada böyle bulur`}
               error={err('title')}
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
@@ -337,7 +337,7 @@ export function ScheduleForm() {
             </ScrollView>
           </FormSection>
 
-          <FormSection title="Kategori" subtitle="Yayının yalnızca seçtiğin kategoride görünür">
+          <FormSection title="Kategori" subtitle="İzleyiciler yayınını bu kategorinin sayfasında bulur">
             <SelectField
               placeholder="Kategori seç"
               value={s.categoryId}
@@ -411,7 +411,7 @@ export function ScheduleForm() {
             />
           </FormSection>
 
-          <FormSection title="Etiketler" subtitle={`Keşfedilmeni kolaylaştırır · ${s.tags.length}/${MAX_TAGS}`}>
+          <FormSection title="Etiketler" subtitle={`Aramada hangi kelimelerle çıkacağını seç · ${s.tags.length}/${MAX_TAGS}`}>
             {category ? (
               <View style={styles.wrap}>
                 {category.subcategories.map((x) => (
@@ -435,7 +435,7 @@ export function ScheduleForm() {
             />
           </FormSection>
 
-          <FormSection title="Yayın formatı" subtitle="Yayında ağırlıklı olarak nasıl satış yapacaksın?">
+          <FormSection title="Yayın formatı" subtitle="İzleyiciler yayına girmeden ne bekleyeceklerini bilsin">
             <OptionCard icon="hammer-outline" title="Açık artırma ağırlıklı" subtitle="Ürünler teklifle satılır, heyecan yüksek" selected={s.format === 'auction'} onPress={() => set({ format: 'auction' })} />
             <OptionCard icon="flash-outline" title="Hemen Al" subtitle="Sabit fiyat, flaş indirimlerle hızlı satış" selected={s.format === 'buy_now'} onPress={() => set({ format: 'buy_now' })} />
             {FEATURES.breaks ? (
@@ -521,7 +521,7 @@ export function ScheduleForm() {
             <Text variant="footnote" color="textSecondary">
               {s.visibility === 'public'
                 ? 'Yayının ana sayfada ve kategoride görünür, takipçilerine bildirim gider.'
-                : 'Yayının akışlarda görünmez; yalnızca bağlantıya sahip olanlar katılabilir. Satışlar gerçektir.'}
+                : 'Kapalı bir grup için: yayını yalnızca bağlantıyı gönderdiğin kişiler bulabilir. Siparişler ve ödemeler diğer yayınlardakiyle aynı şekilde işler.'}
             </Text>
           </FormSection>
 

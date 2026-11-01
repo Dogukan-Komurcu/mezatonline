@@ -339,11 +339,11 @@ function GoLiveContent() {
             <SwitchRow
               icon="school-outline"
               title="Prova Modu"
-              subtitle="Yayının gizli olur; demo izleyicilerle sabitleme ve açık artırma pratiği yaparsın. Satışlar kaydedilmez."
+              subtitle="Kimse seni görmez; ekrana sanal alıcılar gelir ve teklif verir. Prova sırasında yapılan satışlar siparişe dönüşmez."
               value={rehearsal}
               onChange={setRehearsal}
             />
-            <InfoBox icon="bulb-outline">İpucu: Yayın boyunca her zaman sabitlenmiş ya da devam eden bir ürünün olsun — izleyiciler böyle daha uzun kalıyor.</InfoBox>
+            <InfoBox icon="bulb-outline">İpucu: Mezatlar arasında uzun sessizlik olmasın. Sıradaki ürünü önceden hazırlarsan geçişler hızlanır.</InfoBox>
           </ScrollView>
           <View style={{ paddingTop: 10, paddingBottom: keyboard > 0 ? 10 : Math.max(insets.bottom, 12) }}>
             <Button

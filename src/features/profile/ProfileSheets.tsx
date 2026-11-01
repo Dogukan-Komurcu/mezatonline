@@ -41,7 +41,7 @@ export function MoreSheet({
         <>
           <ListRow
             title={blocked ? 'Engeli kaldır' : 'Engelle'}
-            subtitle={blocked ? undefined : 'Seni takip edemez, mesaj gönderemez, yayınlarına katılamaz'}
+            subtitle={blocked ? undefined : 'Sessizce uygulanır; sana yazamaz, yayınlarına giremez'}
             icon={blocked ? 'lock-open-outline' : 'ban-outline'}
             destructive={!blocked}
             onPress={onBlock}

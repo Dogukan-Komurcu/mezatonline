@@ -29,7 +29,7 @@ export const FAQS: Faq[] = [
     id: 'f1',
     topic: 'bids',
     q: 'Canlı mezatta nasıl teklif veririm?',
-    a: 'Ürün sahneye geldiğinde tutarı ekranın altındaki − ve + düğmeleriyle ayarla; tutar, sıradaki geçerli teklifin altına inmez. Ardından turkuaz “Teklif ver” düğmesini düğme dolana kadar (yaklaşık yarım saniye) basılı tut. Farklı bir tutar yazmak için tutarın üzerine dokun; açılan pencerede istersen “Otomatik teklif (en fazla)” seçeneğini açarak bir üst sınır belirleyebilirsin. Bu durumda sistem, belirlediğin sınıra kadar senin adına en düşük adımla teklif verir. Üst sınırını kimse göremez.',
+    a: 'Ürün sahneye geldiğinde tutarı ekranın altındaki − ve + düğmeleriyle ayarla; tutar, sıradaki geçerli teklifin altına inmez. Ardından turkuaz “Teklif ver” düğmesini düğme dolana kadar (yaklaşık yarım saniye) basılı tut. Farklı bir tutar yazmak için tutarın üzerine dokun; açılan pencerede istersen “Otomatik teklif (en fazla)” seçeneğini açarak bir üst sınır belirleyebilirsin. Sonra biri seni geçtiğinde teklifin, sınırın dolana kadar kendiliğinden birer adım yükseltilir. Belirlediğin sınır yalnızca sana görünür.',
   },
   {
     id: 'f2',
@@ -47,19 +47,19 @@ export const FAQS: Faq[] = [
     id: 'f4',
     topic: 'bids',
     q: 'Ön teklif nedir, nasıl çalışır?',
-    a: 'Yayın başlamadan önce ürün sayfasından ön teklif verebilirsin. Ön teklifin, ürün sahneye geldiğinde maks. teklif gibi çalışır. Ön teklifler bağlayıcıdır: geri çekilemez ve düşürülemez, yalnızca yükseltilebilir. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Ürün, planlanan yayın saatinden sonraki 24 saat içinde satışa çıkmazsa ön teklifin düşer. Teklifin geçilirse sana bildirim göndeririz.',
+    a: 'Yayın saatinden önce ürün sayfasındaki “Ön Teklif Ver” düğmesiyle bir üst sınır belirleyebilirsin. Ürün sahneye geldiğinde bu sınır otomatik teklif olarak devreye girer; o an yayında olman gerekmez. Ön teklifler de bağlayıcı olduğu için sınırını sonradan yalnızca yükseltebilirsin; kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Planlanan yayın saatinin üzerinden 24 saat geçtiği hâlde ürün satışa çıkmazsa ön teklifin kendiliğinden düşer. Biri seni geçtiğinde de bildirim gönderiyoruz.',
   },
   {
     id: 'f5',
     topic: 'shipping',
     q: 'Siparişim ne zaman kargoya verilir?',
-    a: 'Satıcılar siparişleri 2 iş günü içinde kargoya vermekle yükümlüdür. Kargo takip numarası, Aktivite → Siparişlerim’deki sipariş detayında görünür. Türkiye içinde teslimat genellikle 1-3 iş günü sürer. 7 gün içinde kargoya verilmeyen siparişlerde destek ekibimiz devreye girer.',
+    a: 'Kullanım Koşulları gereği satıcı, paketi satıştan sonraki 2 iş günü içinde kargoya teslim etmelidir. Paket yola çıktığında takip numarası Aktivite → Siparişlerim’de ilgili siparişin detayına eklenir; teslimatın ne zaman yapılacağı kargo firmasına ve adresine göre değişir. Kurumsal satıcılardan alımlarda ürünün siparişten itibaren en geç 30 gün içinde teslim edilmesi yasal zorunluluktur. Paket gecikirse sipariş detayındaki “Bu siparişle ilgili yardım al” adımından bize yaz. Demo sürümde gerçek kargo gönderimi yapılmaz.',
   },
   {
     id: 'f6',
     topic: 'shipping',
     q: 'Kargo ücreti nasıl hesaplanır?',
-    a: 'Aynı yayında aynı satıcıdan aldığın ürünler için kargo ücretini yalnızca bir kez ödersin; sonraki ürünlerde “Kargo birleştirildi” yazar. Ücret, paketin desisine göre belirlenir. Bazı satıcılar belirli bir tutarın üzerindeki alışverişlerde ücretsiz kargo sunar.',
+    a: 'Kargo ücretini paketin boyutu (desi) belirler; satıcı her ürün için küçük paketten büyük koliye kadar bir boyut seçer ve tutar ödeme özetinde ayrı satır olarak görünür. Bir yayında aynı satıcıdan birden fazla ürün alırsan ürünler aynı pakette gönderilir; ilk üründen sonrakilerde ödeme özetindeki kargo satırı “₺0 · aynı pakette” olarak görünür. Satıcı yayın için ücretsiz kargo sınırı belirlediyse bu bilgi yayın sayfasında yazar.',
   },
   {
     id: 'f7',
@@ -77,7 +77,7 @@ export const FAQS: Faq[] = [
     id: 'f9',
     topic: 'returns',
     q: 'Siparişimi iptal edebilir miyim?',
-    a: 'Sipariş kargoya verilmeden önce, satın alımdan sonraki ilk 24 saat içinde sipariş detayındaki “Bu siparişle ilgili yardım al” adımından iptal talebinde bulunabilirsin. Kargo öncesi iptal satıcının onayına bağlıdır; onaylanırsa ödemenin tamamı kartına iade edilir ve iadenin kartına yansıma süresi bankana göre değişir. Satıcı kurumsal ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin.',
+    a: 'Paket henüz kargoya teslim edilmediyse, satın aldıktan sonraki 24 saat boyunca sipariş detayındaki “Bu siparişle ilgili yardım al” adımından satıcıdan iptal isteyebilirsin. Teklifler bağlayıcı olduğu için son karar satıcınındır. Satıcı kabul ederse ödediğin tutarın tamamı kartına geri gönderilir; hesabına yansıma süresi bankaya göre değişir. Satıcı kurumsal ise, ürünü teslim aldıktan sonra 14 gün içinde yasal cayma hakkını ayrıca kullanabilirsin.',
   },
   {
     id: 'f10',
@@ -89,7 +89,7 @@ export const FAQS: Faq[] = [
     id: 'f11',
     topic: 'protection',
     q: 'Alıcı Koruması neleri kapsar?',
-    a: `Ürün sana hiç ulaşmazsa paranı iade ederiz. Ürün hasarlı, eksik, sahte ya da açıklamayla önemli ölçüde farklı çıkarsa, ürün sana ulaştıktan sonra 14 gün içinde bildirmen yeterli. ${ESCROW_TEXT} Mezatonline bu parayı kendi hesabında tutmaz. ${DEMO_COPY.payment}`,
+    a: `Mezatonline üzerinden ödediğin her sipariş kapsamdadır. Paket hiç gelmezse ödediğin tutar iade edilir. Kırık, eksik, taklit ya da ilandakinden belirgin biçimde farklı bir ürün geldiyse teslimattan sonraki 14 gün içinde fotoğraf ekleyerek bildirmen yeterli. ${ESCROW_TEXT} Mezatonline bu parayı kendi hesabında tutmaz. ${DEMO_COPY.payment}`,
   },
   {
     id: 'f12',
@@ -101,13 +101,13 @@ export const FAQS: Faq[] = [
     id: 'f13',
     topic: 'giveaway',
     q: 'Çekilişlere nasıl katılırım?',
-    a: `Çekiliş kartı yayında göründüğünde “Katıl”a dokunman yeterli. Her çekilişe bir kez katılabilirsin; bazı çekilişler yalnızca satıcının takipçilerine açıktır. Kazanan, çekiliş süresi dolduğunda katılımcılar arasından rastgele belirlenir. ${GIVEAWAY_NOTE}`,
+    a: `Yayında çekiliş kartı belirdiğinde karttaki “Katıl” düğmesine dokun. Bazı çekilişler yalnızca satıcıyı takip edenlere açıktır ve aynı çekilişe ikinci kez girilemez. Süre dolunca kura otomatik çekilir; kazanan, katılanlar arasından rastgele seçilir. ${GIVEAWAY_NOTE}`,
   },
   {
     id: 'f14',
     topic: 'giveaway',
     q: 'Çekilişi kazandığımı nasıl anlarım?',
-    a: `Kazandıysan yayın ekranında adın görünür ve sana bildirim gelir; ödül, Aktivite → Siparişlerim’e ₺0 tutarlı bir sipariş olarak eklenir. ${GIVEAWAY_NOTE}`,
+    a: `Kazananın kullanıcı adı yayında herkesin ekranında gösterilir; kura sana çıktıysa ayrıca bildirim alırsın. Ödülün takibi için Aktivite → Siparişlerim’e ₺0’lık bir sipariş eklenir. ${GIVEAWAY_NOTE}`,
   },
   {
     id: 'f15',
@@ -131,19 +131,19 @@ export const FAQS: Faq[] = [
     id: 'f18',
     topic: 'account',
     q: 'Kullanıcı adımı nasıl değiştiririm?',
-    a: 'Hesap → Profili düzenle’den kullanıcı adını 24 saatte bir değiştirebilirsin. Kullanıcı adı küçük harf, rakam, nokta ve alt çizgiden oluşabilir; en fazla 30 karakterdir.',
+    a: 'Hesap → Profili düzenle ekranında kullanıcı adı alanına yeni adını yaz; adın boşta olup olmadığını yazarken kontrol ederiz. Ad 3 ile 30 karakter arasında olmalı ve yalnızca küçük harf, rakam, nokta (.) ve alt çizgi (_) içerebilir. Takipçilerinin seni karıştırmaması için bir değişiklikten sonra yenisini yapabilmek üzere 24 saat beklemen gerekir.',
   },
   {
     id: 'f19',
     topic: 'account',
     q: 'Doğrulanmış Alıcı nasıl olurum?',
-    a: 'Hesap → Doğrulanmış Alıcı’dan “Doğrulan”a dokun. Varsayılan kartından ₺250 geçici ön provizyon alınır ve bankanın 3D Secure ekranında onaylarsın. Provizyon 24 saat içinde iptal edilir; kartından çekim yapılmaz.',
+    a: 'Satıcılar canlı yayında teklifleri yalnızca doğrulanmış hesaplara açabilir; bu yayınlara katılmak için kartını bir kez onaylaman yeterli. Hesap → Doğrulanmış Alıcı ekranında “Doğrulan”a dokun ve bankanın 3D Secure adımında ₺250 tutarındaki ön provizyonu (geçici bloke) onayla. Bu tutar tahsil edilmez; bloke en geç 24 saat içinde kalkar. Demo sürümde kartında gerçek bir provizyon oluşturulmaz.',
   },
   {
     id: 'f20',
     topic: 'account',
     q: 'Harcama veya izleme limiti koyabilir miyim?',
-    a: 'Evet. Hesap → Hesap Kontrolleri’nden haftalık ya da aylık izleme süresi ve harcama için hatırlatıcı veya limit belirleyebilirsin. Ayarlar 4 haneli bir PIN ile korunur; ulaşılan bir limit dönem sonuna kadar kaldırılamaz.',
+    a: 'Evet. Hesap → Hesap Kontrolleri ekranında canlı yayın izleme süren ve harcaman için ayrı ayrı sınır koyabilirsin. Hatırlatıcı yalnızca uyarı gösterir. Limit ise kesin bir sınırdır: izleme limitine ulaşınca dönem sonuna kadar canlı yayın izleyemezsin, harcama limitine ulaşınca teklif veremez ve satın alamazsın. Haftalık dönem her Pazartesi 00:00’da, aylık dönem her ayın 1’inde (Türkiye saati) yenilenir. Ayarlarını kendi belirlediğin 4 haneli PIN ile kilitlersin; ani bir kararla gevşetilmesin diye ulaşılan limit dönem sonuna kadar kaldırılamaz.',
   },
 ];
 
@@ -173,7 +173,7 @@ export const LEGAL_DOCS: LegalDoc[] = [
     sections: [
       { h: 'Üyelik', p: 'Platformu kullanmak için 18 yaşını doldurmuş olman ve doğru bilgilerle tek bir hesap oluşturman gerekir. Hesabının güvenliğinden sen sorumlusun.' },
       { h: 'Teklifler bağlayıcıdır', p: `${BINDING_BID_TEXT} Bu kural canlı mezatlarda ve ön tekliflerde geçerlidir. Kazandığında ödeme, varsayılan ödeme yönteminden otomatik olarak tahsil edilir (demo sürümde ödeme alınmaz).` },
-      { h: 'Yasaklı davranışlar', p: 'Sahte teklif (şişirme), bot kullanımı, platform dışı ödeme talebi, taciz, nefret söylemi, başkalarının kişisel bilgilerini paylaşma ve yasaklı ürün satışı kesinlikle yasaktır. İhlallerde uyarıdan hesabın kapatılmasına kadar yaptırım uygulanır.' },
+      { h: 'Yasaklı davranışlar', p: 'Mevzuatın yasakladığı ürünleri listelemek, fiyatı tanıdıklar ya da ikinci hesaplar üzerinden yapay olarak yükseltmek, otomatik yazılımla teklif vermek, ödemeyi uygulama dışına taşımaya çalışmak, kullanıcılara hakaret, tehdit ya da nefret söylemi ve başkasının adres veya telefonunu paylaşmak yasaktır. İhlalin ağırlığına göre uyarı verilebilir, hesap kısıtlanabilir ya da kapatılabilir.' },
       { h: 'Satıcı yükümlülükleri', p: 'Satıcılar ürünleri doğru ve eksiksiz tanıtmak, siparişleri 2 iş günü içinde kargoya vermek ve ilgili mevzuata (vergi, tüketici, e-ticaret) uymakla yükümlüdür.' },
       { h: 'Uyuşmazlıklar', p: 'Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir. Tüketici uyuşmazlıklarında, parasal sınırlar dahilinde Tüketici Hakem Heyetleri; aşan durumlarda arabuluculuk ve Tüketici Mahkemeleri yetkilidir.' },
     ],

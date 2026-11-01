@@ -329,7 +329,7 @@ export const SHOW_TITLES: Record<string, string[]> = {
     'F1 Topps Chrome Kapalı Kutular 🏎️',
   ],
   sneakers: [
-    'Jordan Gecesi 👟 %100 Orijinal Garantili',
+    'Jordan Gecesi 👟 Faturalı ve kutulu çiftler',
     '₺1 Başlangıç Sneaker Mezatı 🔥',
     'Dunk & Yeezy Cuma Yayını',
     'Kutulu Sneaker Mezatı 📦',

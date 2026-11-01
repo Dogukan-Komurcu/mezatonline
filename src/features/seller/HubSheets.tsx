@@ -63,7 +63,7 @@ export function HubMenuSheet({ visible, onClose, onOpen }: { visible: boolean; o
 
   const groups: { title: string; items: MenuItem[] }[] = [
     {
-      title: 'Yönet',
+      title: 'Mağaza',
       items: [
         { key: 'shows', icon: 'videocam-outline', title: 'Yayınlarım', onPress: nav('/seller/shows') },
         { key: 'inventory', icon: 'cube-outline', title: 'Envanter', onPress: nav('/seller/inventory') },
@@ -74,7 +74,7 @@ export function HubMenuSheet({ visible, onClose, onOpen }: { visible: boolean; o
       ],
     },
     {
-      title: 'Satışlar',
+      title: 'Satış ve kazanç',
       items: [
         { key: 'orders', icon: 'receipt-outline', title: 'Siparişler', badge: toShip, onPress: nav('/seller/orders') },
         { key: 'shipments', icon: 'paper-plane-outline', title: 'Gönderiler', subtitle: 'Kargodaki paketler ve takip', onPress: nav({ pathname: '/seller/orders', params: { tab: 'shipped' } }) },
@@ -108,7 +108,7 @@ export function HubMenuSheet({ visible, onClose, onOpen }: { visible: boolean; o
             toast(v ? 'Tatil modu açıldı 🌴 Mağazan alıcılara kapalı' : 'Tatil modu kapatıldı, mağazan yeniden açık', v ? 'airplane' : 'storefront');
           }}
         />
-        <ListRow icon="school-outline" title="Prova Modu" value={rehearsal ? 'Açık' : undefined} subtitle="Test teklifçileriyle yayın pratiği" onPress={sheet('rehearsal')} />
+        <ListRow icon="school-outline" title="Prova Modu" value={rehearsal ? 'Açık' : undefined} subtitle="Sanal alıcılarla deneme yayını" onPress={sheet('rehearsal')} />
         <GroupLabel style={{ paddingTop: 8 }}>Destek</GroupLabel>
         <ListRow icon="help-buoy-outline" title="Satıcı Destek" onPress={nav('/settings/help')} />
         <ListRow icon="document-text-outline" title="Satıcı Sözleşmesi ve Kurallar" onPress={nav('/settings/legal')} />
@@ -263,7 +263,7 @@ export function TipsSheet({ visible, onClose }: { visible: boolean; onClose: () 
   const tips = deriveTips(sessions, shows);
   const total = tips.reduce((s, t) => s + t.amount, 0);
   return (
-    <Sheet visible={visible} onClose={onClose} title="Bahşişler" subtitle="Bahşişlerin %100’ü senin, komisyon alınmaz" height={tips.length ? 0.8 : undefined} showClose>
+    <Sheet visible={visible} onClose={onClose} title="Bahşişler" subtitle="Bahşişlerden komisyon kesilmez" height={tips.length ? 0.8 : undefined} showClose>
       {tips.length ? (
         <>
           <Card style={{ backgroundColor: colors.surface, borderColor: colors.surface, marginBottom: 6 }}>
@@ -298,7 +298,7 @@ export function TipsSheet({ visible, onClose }: { visible: boolean; onClose: () 
           ))}
         </>
       ) : (
-        <EmptyState emoji="❤️" title="Henüz bahşiş almadın" message="Canlı yayınlarında izleyiciler sana bahşiş gönderebilir. Bahşişler 3 gün içinde çekilebilir bakiyene geçer." />
+        <EmptyState emoji="❤️" title="Henüz bahşiş almadın" message="İzleyiciler yayın sırasında sana bahşiş bırakabilir. Gelen bahşiş 3 gün sonra çekilebilir bakiyene eklenir." />
       )}
     </Sheet>
   );
@@ -311,19 +311,19 @@ export function HealthSheet({ visible, onClose }: { visible: boolean; onClose: (
   const orders = useSellerStore((s) => s.orders);
   const h = accountHealth(orders);
   const rows: { title: string; value: number | null; target: number; hint: string }[] = [
-    { title: 'Zamanında kargo oranı', value: h.onTime, target: 0.8, hint: '2 iş günü içinde kargoya verilen siparişler · hedef ≥%80' },
-    { title: 'İptalsiz sipariş oranı', value: h.cancelFree, target: 0.99, hint: 'Satıcı kaynaklı iptal olmayan siparişler · hedef ≥%99' },
-    { title: 'İadesiz sipariş oranı', value: h.refundFree, target: 0.97, hint: 'Satıcı kaynaklı iade olmayan siparişler · hedef ≥%97' },
+    { title: 'Süresinde kargolananlar', value: h.onTime, target: 0.8, hint: '2 iş günlük süre dolmadan kargoya verdiğin siparişlerin payı · en az %80 olmalı' },
+    { title: 'İptal edilmeyenler', value: h.cancelFree, target: 0.99, hint: 'İptale dönmeden tamamlanan siparişlerin payı · en az %99 olmalı' },
+    { title: 'İadeye dönmeyenler', value: h.refundFree, target: 0.97, hint: 'İade ya da iade talebiyle sonuçlanmayan siparişlerin payı · en az %97 olmalı' },
   ];
   const bad = rows.some((r) => r.value !== null && r.value < r.target - 0.05);
   const warn = rows.some((r) => r.value !== null && r.value < r.target);
   return (
-    <Sheet visible={visible} onClose={onClose} title="Hesap Sağlığı" subtitle="Son 90 günlük performansın" showClose>
+    <Sheet visible={visible} onClose={onClose} title="Hesap Sağlığı" subtitle="Kargo, iptal ve iade karnen" showClose>
       <View style={[styles.healthHead, { backgroundColor: tint(bad ? colors.danger : warn ? colors.warning : colors.success, 0.12) }]}>
         <Icon name={bad ? 'alert-circle' : warn ? 'warning' : 'shield-checkmark'} size={28} color={bad ? colors.danger : warn ? colors.warning : colors.success} />
         <View style={{ flex: 1 }}>
           <Text variant="headline" weight="800">
-            Hesap durumu: {bad ? 'Risk altında' : warn ? 'Dikkat' : 'İyi'}
+            {bad ? 'Bir oranın hedefin epey altında' : warn ? 'Bir oranın hedefin biraz altında' : 'Tüm oranların hedefte'}
           </Text>
           <Text variant="footnote" color="textSecondary">
             {h.sample ? `${h.sample} sipariş üzerinden hesaplandı` : 'İlk siparişlerinden sonra hesaplanır'}
@@ -351,9 +351,9 @@ export function HealthSheet({ visible, onClose }: { visible: boolean; onClose: (
           );
         })}
         <Card style={{ backgroundColor: colors.surface, borderColor: colors.surface }}>
-          <KeyValue label="Ortalama kargolama süresi" value={h.avgShipDays === null ? '—' : `${String(h.avgShipDays).replace('.', ',')} gün`} />
-          <KeyValue label="Destek yanıt oranı" value="%100" hint="2 iş günü içinde yanıtlanan destek talepleri" />
-          <KeyValue label="Uyarı ve ihlaller (180 gün)" value="Yok" tone="success" />
+          <KeyValue label="Satıştan kargoya ortalama" value={h.avgShipDays === null ? '—' : `${String(h.avgShipDays).replace('.', ',')} gün`} />
+          <KeyValue label="Yanıtlanan alıcı talepleri" value="%100" hint="Alıcı taleplerine 2 iş günü içinde dönüş yaptığın oran" />
+          <KeyValue label="Son 6 ayda aldığın uyarı" value="Yok" tone="success" />
         </Card>
       </View>
     </Sheet>
@@ -413,11 +413,11 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
           <Text variant="headline" weight="700">
             Kargo ücretini kim öder?
           </Text>
-          <OptionCard title="Alıcı öder" subtitle="Desi bazlı ücretin tamamı alıcıya yansır (önerilen)" icon="person-outline" selected={draft.costMode === 'buyer'} onPress={() => mode('buyer')} />
-          <OptionCard title="Alıcı en fazla belirli bir tutar öder" subtitle="Aşan kısmı sen karşılarsın — “İndirimli kargo” etiketi" icon="trending-down-outline" selected={draft.costMode === 'capped'} onPress={() => mode('capped')}>
-            <MoneyField label="Alıcının ödeyeceği en yüksek tutar" value={draft.cap} onChange={(v) => setDraft((d) => ({ ...d, cap: v }))} />
+          <OptionCard title="Alıcı öder" subtitle="Paket boyutuna göre çıkan ücretin tamamı siparişe eklenir" icon="person-outline" selected={draft.costMode === 'buyer'} onPress={() => mode('buyer')} />
+          <OptionCard title="Kargoya sen de katkı ver" subtitle="Alıcıdan en çok belirlediğin tutar alınır, aradaki fark senin kazancından düşülür" icon="trending-down-outline" selected={draft.costMode === 'capped'} onPress={() => mode('capped')}>
+            <MoneyField label="Alıcıdan alınacak üst tutar" value={draft.cap} onChange={(v) => setDraft((d) => ({ ...d, cap: v }))} />
           </OptionCard>
-          <OptionCard title="Ücretsiz kargo" subtitle="Kargo ücretinin tamamı senden — “Ücretsiz Kargo” etiketiyle öne çık" icon="gift-outline" selected={draft.costMode === 'seller'} onPress={() => mode('seller')} />
+          <OptionCard title="Kargo benden" subtitle="Gönderim bedelini tamamen sen üstlenirsin; alıcı kargo için ödeme yapmaz" icon="gift-outline" selected={draft.costMode === 'seller'} onPress={() => mode('seller')} />
         </View>
         <View style={{ gap: 10 }}>
           <Text variant="headline" weight="700">
@@ -432,14 +432,14 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
             onChange={(k) => setDraft((d) => ({ ...d, handlingDays: k === '1' ? 1 : 2 }))}
           />
           <Text variant="footnote" color="textSecondary">
-            Siparişler en geç 2 iş günü içinde kargoya verilmeli. 1 iş günü seçersen profilinde “Hızlı kargo” rozeti görünür.
+            Kullanım Koşulları’na göre üst sınır 2 iş günüdür; paketlerini genelde ertesi gün hazırlıyorsan 1 iş günü seç.
           </Text>
         </View>
         <View style={{ marginHorizontal: -SCREEN_PADDING }}>
           <ListRow
             icon="hand-left-outline"
-            title="Ücretsiz Elden Teslim"
-            subtitle="Yakındaki alıcılar ürünü senden teslim alabilir"
+            title="Elden teslime izin ver"
+            subtitle="Alıcıyla anlaşırsan ürünü kargo yerine elden verebilirsin"
             switchValue={draft.freePickup}
             onSwitch={(v) => setDraft((d) => ({ ...d, freePickup: v }))}
           />
@@ -461,7 +461,7 @@ export function ShippingSettingsSheet({ visible, onClose }: { visible: boolean; 
             ))}
           </Card>
           <Text variant="footnote" color="textSecondary">
-            Aynı yayından alınan ürünler tek pakette birleştirilir; alıcı yalnızca desi farkını öder.
+            Bir alıcı aynı yayından birden fazla ürün alırsa hepsini tek pakette gönderirsin; ilk siparişten sonrakiler için alıcıdan ayrıca kargo ücreti alınmaz.
           </Text>
         </View>
       </View>
@@ -501,14 +501,14 @@ export function RehearsalSheet({ visible, onClose }: { visible: boolean; onClose
           Prova Modu
         </Text>
         <Text variant="callout" color="textSecondary" align="center">
-          İlk yayınından önce test teklifçileri ve demo ürünlerle pratik yap. Ürün sabitlemeyi, açık artırma başlatmayı ve sohbeti dene.
+          Gerçek izleyici olmadan bir deneme yayını aç. Ekrana sanal alıcılar gelir, teklif verir ve sohbete yazar; bu sırada yapılan satışlar siparişe dönüşmez.
         </Text>
       </View>
       <View style={{ gap: 10, marginVertical: 12 }}>
         {[
-          ['pin-outline', 'Ürünü sahneye sabitle'],
-          ['hammer-outline', 'Açık artırmayı başlat, süreyi ve Uzatmasız mezatı dene'],
-          ['chatbubbles-outline', 'Sohbet komutlarını ve moderasyonu öğren'],
+          ['pin-outline', 'Bir ürünü ekranın altına sabitle'],
+          ['hammer-outline', 'Farklı sürelerle mezat aç, Uzatmasız ayarını dene'],
+          ['chatbubbles-outline', '/duyuru, /yavaş gibi sohbet komutlarını kullan'],
         ].map(([icon, text]) => (
           <View key={text} style={styles.inline}>
             <Icon name={icon as IconName} size={20} color="textSecondary" />
@@ -522,7 +522,7 @@ export function RehearsalSheet({ visible, onClose }: { visible: boolean; onClose
         <ListRow
           icon="school-outline"
           title="Prova modu"
-          subtitle="Açıkken yayın ekranı test teklifçileriyle çalışır"
+          subtitle="Açıkken yayın ekranına sanal alıcılar bağlanır"
           switchValue={rehearsal}
           onSwitch={(v) => {
             setRehearsal(v);
@@ -587,9 +587,9 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Kimlik & IBAN doğrula" subtitle="Canlı yayına çıkmadan önce gerekli" showClose footer={<Button title="Doğrula" size="lg" fullWidth onPress={save} />}>
+    <Sheet visible={visible} onClose={onClose} title="Kimlik & IBAN doğrula" subtitle="Kazancının sana ulaşabilmesi için bir kez yapman yeterli" showClose footer={<Button title="Doğrula" size="lg" fullWidth onPress={save} />}>
       <View style={{ gap: 14 }}>
-        <TextField label="Ad Soyad (kimlikteki gibi)" value={name} onChangeText={setName} autoCapitalize="words" error={submitted && !nameOk ? 'Ad ve soyadını gir' : undefined} />
+        <TextField label="Ad ve soyad (nüfus kaydındaki yazımla)" value={name} onChangeText={setName} autoCapitalize="words" error={submitted && !nameOk ? 'Ad ve soyadını gir' : undefined} />
         <TextField
           label="T.C. Kimlik No"
           value={tckn}
@@ -618,7 +618,7 @@ export function VerifySheet({ visible, onClose }: { visible: boolean; onClose: (
 export function TierSheet({ visible, onClose, currentLevel, earnedLevel }: { visible: boolean; onClose: () => void; currentLevel: number; earnedLevel: number }) {
   const { colors } = useTheme();
   return (
-    <Sheet visible={visible} onClose={onClose} title="Komisyon seviyeleri" subtitle="28 günlük satışın, bir sonraki dönemin oranını belirler" showClose>
+    <Sheet visible={visible} onClose={onClose} title="Komisyon seviyeleri" subtitle="Her 28 günlük dönemin sonunda toplam satışına bakılır; ulaştığın basamak bir sonraki dönemde uygulanır" showClose>
       <Card padded={false}>
         {COMMISSION_TIERS.map((t, i) => {
           const active = t.level === currentLevel;
@@ -644,8 +644,8 @@ export function TierSheet({ visible, onClose, currentLevel, earnedLevel }: { vis
       </Card>
       <View style={{ gap: 8, marginTop: 14 }}>
         {[
-          'Komisyon yalnızca ürün bedelinden alınır; kargo ücretinden alınmaz.',
-          'İptal edilen siparişler ve özel yayınlar toplama dahil edilmez.',
+          'Hesaplama ürün fiyatı üzerinden yapılır; alıcının ödediği kargo bedeli komisyona girmez.',
+          'İptal ya da iade edilen siparişler 28 günlük toplama eklenmez.',
           'Yeni satıcı kampanyası süresince ilk 30 günün komisyonu bakiyene iade edilir.',
         ].map((t) => (
           <View key={t} style={[styles.inline, { alignItems: 'flex-start' }]}>

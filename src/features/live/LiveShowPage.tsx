@@ -383,7 +383,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         doFollow();
         return;
       }
-      Alert.alert('Takibi bırak', `${seller.username} adlı satıcıyı takip etmeyi bırakmak istediğine emin misin?`, [
+      Alert.alert('Takibi bırak', `Takibi bırakırsan @${seller.username} yayına başladığında bildirim almazsın.`, [
         { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Takibi bırak',
@@ -492,7 +492,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   // Şansa dayalı katılım için görev puanı verilmez
   const giveawayFeedback = () => {
     haptic.success();
-    toast.success('Çekilişe katıldın! Bitene kadar yayında kal 🎁', 'gift-outline');
+    toast.success('Kura listesindesin 🎁 Çekiliş bitene dek bu yayından çıkma.', 'gift-outline');
   };
 
   const enterGiveaway = () => {
@@ -660,11 +660,11 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     withAuth(() => {
       setSheet(null);
       setClipping(true);
-      toast('Klip oluşturuluyor… Son 60 saniye kaydediliyor', 'film-outline');
+      toast('Son bir dakikadan klip hazırlanıyor…', 'film-outline');
       setTimeout(() => {
         setClipping(false);
         haptic.success();
-        toast.success('Klip profiline gizli olarak kaydedildi 🎬', 'film-outline');
+        toast.success('Klip hazırlandı 🎬 Demo sürümde klipler kaydedilmez.', 'film-outline');
       }, 1800);
     }, AUTH_REASONS.save);
 
@@ -799,7 +799,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
   const shippingLine = (p?: Product) => {
     if (!p) return '';
     const b = !guest && (bundled || hasBundleInShow(show.id, show.sellerId));
-    return b ? 'Kargo: +₺0 (aynı pakete eklendi)' : `Kargo: ${formatTRY(p.shippingCost)}`;
+    return b ? 'Kargo: ₺0 · aynı pakette' : `Kargo: ${formatTRY(p.shippingCost)}`;
   };
   const buy = sheetProduct ? buyInfo(sheetProduct) : undefined;
 

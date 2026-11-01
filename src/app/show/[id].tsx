@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/cards/UserRow';
 import { ShowCard } from '@/components/cards/ShowCard';
 import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, UnderlineTabs, type IconName } from '@/components/ui';
+import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { getCategory, getLiveShowOf, getProduct, getShowsBySeller, getSubcategory, getUpcomingShows } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { BuyerProtectionSheet } from '@/features/commerce/infoSheets';
@@ -41,7 +42,7 @@ const HIGHLIGHT_META: Record<string, { label: string; icon: IconName }> = {
   '₺1 Başlangıç': { label: '₺1 Başlangıç', icon: 'flash-outline' },
   Çekiliş: { label: 'Çekiliş', icon: 'gift-outline' },
   'Ücretsiz Kargo': { label: 'Ücretsiz Kargo', icon: 'car-outline' },
-  'Orijinal Garantili': { label: 'Orijinal Garantili', icon: 'shield-checkmark-outline' },
+  'Orijinal Garantili': { label: 'Orijinal Ürün', icon: 'ribbon-outline' },
   'Hızlı Kargo': { label: 'Hızlı Kargo', icon: 'rocket-outline' },
   Uzatmasız: UZATMASIZ,
   'Sudden Death': UZATMASIZ,
@@ -277,8 +278,8 @@ export default function ShowScreen() {
         {/* ─── Bilgi satırları ─── */}
         <View style={styles.infoBlock}>
           <InfoLine icon="cube-outline" title="Kargo" subtitle={shippingLine} />
-          {giveawayTotal > 0 && !ended ? <InfoLine icon="gift-outline" title={`${giveawayTotal} çekiliş yapılacak`} subtitle="Yayında ol, tek dokunuşla katıl ve ücretsiz kazan." /> : null}
-          <InfoLine icon="shield-checkmark-outline" title="Alıcı Koruması" subtitle="Her alışverişin güvence altında" onPress={() => setProtectionOpen(true)} />
+          {giveawayTotal > 0 && !ended ? <InfoLine icon="gift-outline" title={`${giveawayTotal} çekiliş yapılacak`} subtitle={`Katılım ücretsiz; kura yayın sırasında çekilir.${DEMO_MODE ? ` ${DEMO_COPY.giveaway}` : ''}`} /> : null}
+          <InfoLine icon="shield-checkmark-outline" title="Alıcı Koruması" subtitle="Teslimattan sonra 14 gün içinde sorun bildirebilirsin" onPress={() => setProtectionOpen(true)} />
         </View>
 
         <SectionGap />
@@ -332,7 +333,7 @@ export default function ShowScreen() {
                 ))}
                 {!ended ? (
                   <Text variant="footnote" color="textSecondary" style={styles.giveawayNote}>
-                    Çekilişlere yayın sırasında katılabilirsin. Katılmak için yayında olman ve kayıtlı bir adres ile ödeme yöntemin olması gerekir.
+                    Kura canlı yayında çekilir; katıldıktan sonra yayından ayrılmamalısın. Katılım için hesabında adres ve kart kayıtlı olmalı (kartından para çekilmez).
                   </Text>
                 ) : null}
               </View>
@@ -535,7 +536,7 @@ function ReminderButton({ show, onPress, count, label }: { show: Show; onPress: 
   const reminded = useSocialStore((s) => s.remindedShowIds.includes(show.id));
   return (
     <Button
-      title={reminded ? 'Kaydedildi · Hatırlatılacak' : (label ?? 'Kaydet ve Hatırlat')}
+      title={reminded ? 'Hatırlatıcın kurulu' : (label ?? 'Başlayınca haber ver')}
       subtitle={count !== undefined ? `${formatCompact(count)} kişi kaydetti` : formatShowTime(show.scheduledAt)}
       icon={reminded ? 'bookmark' : 'bookmark-outline'}
       variant={reminded ? 'secondary' : 'primary'}

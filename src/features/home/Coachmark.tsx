@@ -48,13 +48,13 @@ export function Coachmark({ rect, containerHeight, onTarget, onDismiss }: { rect
         ]}>
         <View style={[styles.pointer, { left: pointerLeft, backgroundColor: colors.card }, below ? { top: -7 } : { bottom: -7 }]} />
         <Text variant="body">
-          <Text variant="bodyBold">Bir yayına dokun</Text> ve alışverişe başla
+          İlk mezatın <Text variant="bodyBold">bu kartın arkasında</Text>
         </Text>
         <Text variant="subhead" color="textSecondary" style={styles.sub}>
-          Canlı yayınlarda ürünleri yakından gör, teklif ver ve satıcıyla sohbet et.
+          Dokununca yayın açılır; ürünü canlı izle, teklif ver, satıcıya soru sor.
         </Text>
         <Button
-          title="Anladım"
+          title="Tamam, başlayalım"
           size="sm"
           variant="inverse"
           style={styles.ok}

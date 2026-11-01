@@ -146,7 +146,7 @@ export default function HelpScreen() {
         <View style={[styles.warn, { backgroundColor: colors.surface }]}>
           <Icon name="shield-checkmark-outline" size={18} color="textSecondary" />
           <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-            Mezatonline ekibi senden asla şifre, kart bilgisi ya da SMS doğrulama kodu istemez.{DEMO_MODE ? '' : ' Resmi e-postalarımız yalnızca @mezatonline.com uzantılıdır.'}
+            Mezatonline ekibi senden asla şifre, kart bilgisi ya da SMS doğrulama kodu istemez.{DEMO_MODE ? '' : ' Bizden gelen e-postaların gönderen adresi @mezatonline.com ile biter; başka adreslerden gelen “destek” mesajlarına itibar etme.'}
           </Text>
         </View>
       </ScrollView>

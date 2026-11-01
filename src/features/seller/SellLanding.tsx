@@ -25,16 +25,16 @@ import { useQaOffset } from './qaSeed';
 import { Card, KeyValue, StickyFooter } from './ui';
 
 const BENEFITS: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'pricetags-outline', title: "Komisyon %8, ilk ay %0", body: 'Sektörün en düşük oranlarından. Yeni satıcılara ilk 30 gün komisyon iadesi.' },
+  { icon: 'pricetags-outline', title: "Komisyon %8, ilk ay %0", body: 'Komisyon yalnızca satılan ürünün bedelinden kesilir. Onaydan sonraki ilk 30 günde kesilen komisyon sana iade edilir.' },
   { icon: 'cube-outline', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
   { icon: 'card-outline', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
-  { icon: 'people-outline', title: 'Milyonlarca alıcı', body: 'Koleksiyonerler ve fırsat avcıları her gün canlı yayınlarda alışveriş yapıyor.' },
+  { icon: 'people-outline', title: 'Takipçilerinle canlı bağ', body: 'Takipçilerin yayınını planladığın anda hatırlatma kurabilir; sohbette sorularını yayın sırasında yanıtlarsın.' },
 ];
 
 const STEPS: { title: string; body: string }[] = [
-  { title: 'Başvur', body: 'Kategorini seç, kimlik ve IBAN bilgilerini gir. Çoğu başvuru dakikalar içinde onaylanır.' },
+  { title: 'Başvur', body: 'Kategorini seç, kimlik ve IBAN bilgilerini gir. Demo sürümde başvurular otomatik onaylanır.' },
   { title: 'Yayın planla', body: 'Tarih ve saat seç, ürünlerini ekle. Takipçilerine otomatik hatırlatma gider.' },
-  { title: 'Canlıya geç', body: 'Ürünü kamerada göster, açık artırmayı başlat. Teklifler saniyeler içinde gelir.' },
+  { title: 'Canlıya geç', body: 'Ürünü kamerada göster, açık artırmayı başlat. Gelen teklifleri ekranda anlık izlersin.' },
   { title: 'Kargola, kazan', body: 'Kargo kodunu oluştur, paketi şubeye bırak. Kazancın IBAN’ına geçsin.' },
 ];
 
@@ -134,7 +134,7 @@ export function SellLanding() {
             Mezatonline’da sat, canlı yayında kazan
           </Text>
           <Text variant="body" color={colors.onPrimary} style={{ opacity: 0.78, marginTop: 10 }}>
-            Ürünlerini canlı yayında göster, açık artırmayla saniyeler içinde sat. Başvuru ücretsiz ve 5 dakika sürer.
+            Ürününü kameraya göster, izleyiciler canlı teklif versin. Başvuru ücretsizdir ve tek bir formda tamamlanır.
           </Text>
           <View style={[styles.collage, { height: big * 2 + 30 }]}>
             <PhoneMock show={shows[1]} w={small} rotate={-9} style={{ left: center - SCREEN_PADDING - big / 2 - small * 0.78, top: 34 }} />
@@ -147,7 +147,7 @@ export function SellLanding() {
             </View>
             <View style={[styles.floatChip, { backgroundColor: colors.success, right: 4, top: big * 0.5, zIndex: 3 }]}>
               <Text variant="caption" color={liveColors.text}>
-                Satıldı! {formatTRY(1250)}
+                Çekiç indi · {formatTRY(1340)}
               </Text>
             </View>
           </View>
@@ -157,7 +157,7 @@ export function SellLanding() {
           {[
             ['%8', 'komisyon'],
             ['1-2 gün', "IBAN'a ödeme"],
-            [formatCompact(2_400_000) + '+', 'alıcı'],
+            ['₺0', 'listeleme ücreti'],
           ].map(([v, l], i) => (
             <View key={l} style={[styles.stat, i > 0 && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: colors.border }]}>
               <Text variant="title3" weight="800" align="center">
@@ -257,7 +257,10 @@ export function SellLanding() {
 
         <View style={{ paddingVertical: 20, gap: 12 }}>
           <Text variant="title2" style={{ paddingHorizontal: SCREEN_PADDING }}>
-            Satıcılarımız anlatıyor
+            Örnek satıcı hikayeleri
+          </Text>
+          <Text variant="footnote" color="textSecondary" style={{ paddingHorizontal: SCREEN_PADDING, marginTop: -6 }}>
+            Bu yorumlar ve satıcı hesapları demo amaçlı örneklerdir.
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SCREEN_PADDING, gap: 12 }} snapToInterval={width * 0.78 + 12} decelerationRate="fast">
             {sellers.map((u, i) => (
@@ -314,7 +317,7 @@ export function SellLanding() {
             })}
           </View>
           <Text variant="footnote" color="textTertiary">
-            Sorun mu var? Satıcı Destek ekibimiz haftanın 7 günü yanında.{' '}
+            Aradığın cevap burada yoksa diğer sorular ve destek sohbeti için:{' '}
             <Text variant="footnote" weight="700" color="accent" onPress={() => router.push('/settings/help')} suppressHighlighting>
               Yardım Merkezi
             </Text>
@@ -325,7 +328,7 @@ export function SellLanding() {
       <StickyFooter safeBottom={false}>
         <Button title="Hemen Başla" size="lg" fullWidth iconRight="arrow-forward" onPress={() => requireAuth(() => router.push('/seller/apply'), { reason: AUTH_REASONS.sell })} />
         <Text variant="footnote" color="textSecondary" align="center">
-          Başvuru ücretsiz · Ortalama 5 dakika
+          Başvuru ücretsiz · Tek form, adım adım
         </Text>
       </StickyFooter>
     </View>

@@ -85,12 +85,12 @@ export function ViewersSheet({
   const header = (
     <View style={{ gap: 10, paddingTop: 4 }}>
       <View style={styles.grid}>
-        <StatTile label="Tahmini satış" value={formatTRY(stats.gross)} icon="cash-outline" accent={colors.success} />
+        <StatTile label="Yayın cirosu" value={formatTRY(stats.gross)} icon="cash-outline" accent={colors.success} />
         <StatTile label="Sipariş" value={String(stats.orders)} icon="receipt-outline" />
       </View>
       <View style={styles.grid}>
-        <StatTile label="Yayın süresi" value={formatElapsed(stats.elapsedSec)} icon="time-outline" />
-        <StatTile label="Paylaşım" value={formatCompact(stats.shares)} icon="share-social-outline" />
+        <StatTile label="Canlıda geçen süre" value={formatElapsed(stats.elapsedSec)} icon="time-outline" />
+        <StatTile label="Paylaşılma" value={formatCompact(stats.shares)} icon="share-social-outline" />
       </View>
       <View style={styles.miniRow}>
         <MiniStat label="Şu an" value={formatCompact(stats.viewers)} />
@@ -110,8 +110,8 @@ export function ViewersSheet({
           equal
           style={{ marginTop: 12 }}
           tabs={[
-            { key: 'watching', label: 'İzleyenler', count: stats.viewers },
-            { key: 'activity', label: 'Etkinlik', count: activity.length },
+            { key: 'watching', label: 'İzleyiciler', count: stats.viewers },
+            { key: 'activity', label: 'Hareketler', count: activity.length },
           ]}
           value={tab}
           onChange={setTab}
@@ -182,7 +182,7 @@ export function ViewersSheet({
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={ActivitySeparator}
             ListEmptyComponent={
-              <EmptyState icon="pulse-outline" title="Henüz etkinlik yok" message={`Satışlar, ${FEATURES.tips ? 'bahşişler, ' : ''}yeni takipçiler${FEATURES.giveaways ? ' ve çekiliş kazananları' : ''} burada görünür.`} />
+              <EmptyState icon="pulse-outline" title="Henüz hareket yok" message={`Satışlar, ${FEATURES.tips ? 'bahşişler, ' : ''}yeni takipçiler${FEATURES.giveaways ? ' ve çekiliş kazananları' : ''} burada görünür.`} />
             }
             renderItem={({ item }) => <ActivityRow m={item} />}
           />
@@ -311,7 +311,7 @@ export function MoreSheet({
       <ListRow
         icon="shield-checkmark-outline"
         title="Doğrulanmış alıcılar"
-        subtitle="Yalnızca doğrulanmış alıcılar teklif verebilir"
+        subtitle="Teklifleri kartını doğrulamış hesaplarla sınırla"
         switchValue={verifiedOnly}
         onSwitch={onVerifiedOnly}
       />
@@ -411,7 +411,7 @@ export function ModeratorsSheet({
       onClose={onClose}
       dark
       title="Moderatörler"
-      subtitle="Moderatörler izleyicileri yayından çıkarabilir ve gizlenen mesajları görebilir. Ürün sabitleyemez."
+      subtitle="Eklediğin kişiler sohbeti senin yerine düzenler: kuralı bozanı yayından çıkarır, gizlenen mesajları okur. Ürün sabitlemek ve satış başlatmak yalnızca sende kalır."
       showClose>
       <View style={styles.addRow}>
         <TextField
@@ -524,7 +524,7 @@ export function RaidSheet({
             @{target.seller.username}
           </Text>
           <Text variant="callout" color="textSecondary" align="center">
-            Bu işlem yayınını bitirecek ve {formatCompact(viewers)} izleyiciyi @{target.seller.username} adlı satıcının yayınına gönderecek.
+            Şu an seni izleyen {formatCompact(viewers)} kişi @{target.seller.username} yayınına geçecek; senin yayının da bu adımla kapanacak.
           </Text>
         </View>
       </Sheet>
@@ -545,7 +545,7 @@ export function RaidSheet({
       footer={
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Button
-            title="Benim için seç"
+            title="Rastgele seç"
             variant="glass"
             icon="shuffle"
             onPress={() => {
@@ -570,10 +570,10 @@ export function RaidSheet({
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <Text variant="subhead" weight="700" color="textSecondary" style={{ marginVertical: 8 }}>
-            Önerilen canlı yayınlar
+            Şu an yayında olanlar
           </Text>
         }
-        ListEmptyComponent={<EmptyState icon="radio-outline" title="Canlı yayın bulunamadı" message="Aramanı değiştir ya da 'Benim için seç'i dene." />}
+        ListEmptyComponent={<EmptyState icon="radio-outline" title="Canlı yayın bulunamadı" message="Başka bir ad ara ya da 'Rastgele seç' ile bir yayın belirle." />}
         renderItem={({ item }) => {
           const sel = item.show.id === selected;
           return (
@@ -666,7 +666,7 @@ export function PromoteSheet({
           <View style={[styles.progressFill, { width: `${Math.min(100, progress * 100)}%`, backgroundColor: colors.primary }]} />
         </View>
         <InfoBox icon="information-circle-outline" style={{ marginTop: 14 }}>
-          Bütçe {formatTRY(promo.budget)} · Sadece kullandığın süre kadar ücretlendirilirsin. Erken bitirirsen kalan tutar kredine iade edilir.
+          Bütçe {formatTRY(promo.budget)} · Tanıtımı erken kapatırsan kullanılmayan kısım kredine geri yüklenir.
         </InfoBox>
       </Sheet>
     );
@@ -695,17 +695,17 @@ export function PromoteSheet({
           }}
         />
       }>
-      <FieldLabel title="Bütçe" hint="Öne çıkarma 15 dakika sürer; gösterimler teslim edilince erken bitebilir." />
+      <FieldLabel title="Bütçe" hint="Bütçeyi 15 dakikalık bir görünürlük artışına ayırırsın; beklenen gösterime daha önce ulaşılırsa tanıtım kendiliğinden kapanır." />
       <OptionChips options={PROMO_BUDGETS.map((b) => ({ value: b, label: formatTRY(b) }))} value={budget} onChange={setBudget} wrap />
       <View style={[styles.summary, { backgroundColor: colors.surface }]}>
-        <SummaryLine label="Tahmini gösterim" value={`${formatCompact(lo)} – ${formatCompact(hi)}`} />
+        <SummaryLine label="Beklenen görüntülenme" value={`${formatCompact(lo)} – ${formatCompact(hi)}`} />
         <SummaryLine label="Süre" value="15 dk" />
-        <SummaryLine label="Tanıtım kredisi" value={fromCredit > 0 ? `-${formatTRY(fromCredit)}` : formatTRY(0)} tint={fromCredit > 0 ? colors.success : undefined} />
+        <SummaryLine label="Krediden düşülen" value={fromCredit > 0 ? `-${formatTRY(fromCredit)}` : formatTRY(0)} tint={fromCredit > 0 ? colors.success : undefined} />
         <Divider style={{ marginVertical: 6 }} />
-        <SummaryLine label="Toplam harcama" value={formatTRY(charge)} bold />
+        <SummaryLine label="Ödenecek tutar" value={formatTRY(charge)} bold />
       </View>
       <Text variant="caption" color="textSecondary" style={{ marginTop: 10 }}>
-        Kalan tanıtım kredin: {formatTRY(credit)}. Ücret yayın bittikten sonra bakiyenden düşülür; organik gösterimler ücretlendirilmez.
+        Kredin: {formatTRY(credit)}. Ödenecek tutar yayın kapandığında satış kazancından mahsup edilir.
       </Text>
     </Sheet>
   );
@@ -820,8 +820,8 @@ export function UserActionsSheet({
       {!isSelf ? (
         <>
           <ListRow icon={isMod ? 'remove-circle-outline' : 'shield-outline'} title={isMod ? 'Moderatörlükten çıkar' : 'Moderatör yap'} onPress={onToggleMod} />
-          <ListRow icon="exit-outline" title="Yayından çıkar" subtitle="Bu yayında sohbet edemez, teklif veremez ve geri dönemez" onPress={onRemove} />
-          <ListRow icon="ban-outline" title="Engelle" subtitle="Seni takip edemez, mesaj atamaz, yayınlarına katılamaz" destructive onPress={onBlock} />
+          <ListRow icon="exit-outline" title="Yayından çıkar" subtitle="Yayın bitene kadar bu kişi geri giremez; sohbet ve teklif de kapanır" onPress={onRemove} />
+          <ListRow icon="ban-outline" title="Engelle" subtitle="Bu kişi hesabına hiçbir yoldan ulaşamaz: takip, mesaj ve yayınların dahil" destructive onPress={onBlock} />
           <ListRow icon="flag-outline" title="Şikayet et" onPress={onReport} />
         </>
       ) : null}
@@ -872,7 +872,7 @@ export function EndShowSheet({
         <Text variant="callout" color="textSecondary" align="center">
           {rehearsal
             ? 'Prova özetini göreceksin. Satışlar kaydedilmedi.'
-            : `${itemsSold > 0 ? `Şu ana kadar ${itemsSold} ürün sattın (${formatTRY(gross)}).` : 'Bu yayında henüz satış olmadı.'} Yayını bitirince izleyiciler çıkarılır; 2 saat içinde yeniden başlatabilirsin.`}
+            : `${itemsSold > 0 ? `Şu ana kadar ${itemsSold} ürün sattın (${formatTRY(gross)}).` : 'Bu yayında henüz satış olmadı.'} Bitirdiğinde yayın herkes için kapanır. Fikrini değiştirirsen Yayınlarım → Geçmiş sekmesinden aynı yayını 2 saat boyunca yeniden açabilirsin.`}
         </Text>
         {lotRunning || giveawayRunning ? (
           <InfoBox icon="alert-circle-outline" tone="warning" style={{ alignSelf: 'stretch', marginTop: 4 }}>

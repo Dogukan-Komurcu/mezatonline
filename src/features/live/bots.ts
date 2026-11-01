@@ -106,8 +106,8 @@ export const SELLER_LINES = [
   'Hoş geldiniz arkadaşlar! 🙌',
   'Sıradaki ürüne geçiyoruz 👇',
   ...giveawayLines(['Takip etmeyi unutmayın, çekiliş geliyor 🎁']),
-  'Kargolar 24 saat içinde çıkıyor 📦',
-  'Bütün ürünler orijinal, gönül rahatlığıyla 💯',
+  'Kargolar en geç 2 iş gününde çıkıyor 📦',
+  'Kusur varsa kamerada tek tek gösteriyorum, sormaktan çekinmeyin 🔍',
   'Aynı yayında aldıklarınız tek kargoda gelir 👍',
   'Yeni gelenler hoş geldi, kalpleri bırakın ❤️',
   'Bu ürün çok özel, kaçırmayın 🔥',
@@ -115,10 +115,10 @@ export const SELLER_LINES = [
 ];
 
 export const PINNED_LINES = [
-  ...giveawayLines(['📌 Her 15 dakikada bir çekiliş! Takip edenler katılabilir ❤️']),
+  ...giveawayLines(['📌 Yayın boyunca çekilişler var, takipçiler katılabilir ❤️']),
   '📌 Aynı yayındaki tüm alımlar tek kargo ücretiyle gönderilir 📦',
   '📌 ₺1 başlangıçlı açık artırmalar — kaçırmayın 🔥',
-  '📌 Bütün ürünler orijinal & faturalı ✅',
+  '📌 Ürünlerin durumu ve kusurları açıklamada yazılı ✅',
 ];
 
 export const MOD_NAMES = ['mod_selin', 'mod.kaan', 'yardimci_ece', 'mod_burak34'];

@@ -81,11 +81,11 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
           submitOffer(product, amount);
           setSending(false);
           haptic.success();
-          toast.success('Önerin gönderildi. Satıcı inceleyip yanıt verecek.', 'paper-plane');
+          toast.success('Önerin satıcıya ulaştı. Yanıtı Aktivite → Öneriler’de göreceksin.', 'paper-plane');
           onClose();
         }, 700);
       },
-      { reason: 'Fiyat önerebilmek için bir kart ve teslimat adresi gerekli. Satıcı kabul etmedikçe ücret alınmaz.' },
+      { reason: 'Öneri göndermeden önce kartını ve teslimat adresini kaydet. Kabul edilmeyen önerilerde kartından para çekilmez.' },
     );
   };
 
@@ -190,8 +190,8 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
               </Text>
             </View>
           </View>
-          <NoticeBox icon="shield-checkmark-outline" title="Satıcı kabul etmedikçe ücret alınmaz">
-            Önerin bağlayıcıdır: satıcı kabul ederse kayıtlı kartından otomatik ödeme alınır ve siparişin oluşturulur. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Satıcı karşı teklif verirse 24 saat içinde yanıtlayabilirsin. Yanıtlanmayan öneriler 30 gün sonra sona erer.
+          <NoticeBox icon="shield-checkmark-outline" title="Ödeme yalnızca kabulde">
+            Önerin bağlayıcıdır: satıcı kabul ettiği anda tutar kayıtlı kartından çekilir ve sipariş açılır. Kurumsal satıcılardan alımlarda 14 günlük yasal cayma hakkın saklıdır. Karşı teklif gelirse 24 saat içinde kabul edebilir ya da reddedebilirsin; 30 gün boyunca yanıtlanmayan öneri kendiliğinden kapanır.
           </NoticeBox>
         </>
       )}
