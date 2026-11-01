@@ -75,6 +75,27 @@ Demoda uygulanan düzeltmeler (metinler, onaylar, demo bildirimleri, özellik ka
 - [ ] Whatnot kaynaklı tüm metinlerin özgün olarak yeniden yazıldığının son kontrolü.
 - [ ] README, kod açıklamaları ve araştırma notlarındaki Whatnot atıflarının **avukata danışılmadan silinmemesi** (uyuşmazlık öngörülebilir hâle geldikten sonra silme delil karartma sayılabilir).
 
+## 8. Sahte ürün ve fikri mülkiyet
+Demoda uygulananlar (yalnızca cihaz içi, sunucu yok; çekirdek `src/features/trust/`):
+- Yasaklı ifade filtresi: ilan, yayın başlığı/açıklaması ve özel etiketlerde "replika", "muadil", "çakma", "A kalite", "1:1", "marka + kokusu/model/tarzı" gibi kalıplar engellenir; aramada bu ifadeler geçerse taklit ürün uyarısı gösterilir. (SMK m.29-30; Ticari Reklam ve Haksız Ticari Uygulamalar Yönetmeliği m.12/2)
+- Belge şartı: riskli alt kategorilerde (sneaker, lüks çanta/saat/giyim, parfüm, makyaj, forma, imzalı ürün), marka geçen ilanlarda ve "ihraç fazlası" iddiasında yayından önce orijinallik belgesi ve satıcı beyanı istenir. Demoda örnek belgeler (`sample:`) kullanılabilir; belge incelenmez.
+- Hak sahibi formu (Yasal & KVKK → Fikri mülkiyet ihlali bildir): hak sahibi/vekil, kimlik (maskeli saklanır), iletişim, hak türü, TÜRKPATENT tescil/başvuru no, ilan, gerekçe, belgeler ve sorumluluk beyanı. (6563 m.9/3; ETAHS Yönetmeliği m.12)
+- İtiraz akışı: ilan kaldırılır, satıcıya bildirim gider; satıcı fatura/tedarik belgesiyle itiraz eder; demoda itiraz birkaç saniye sonra kabul edilmiş sayılıp ilan yeniden yayımlanır (48 / 24 saatlik süreler simüle edilmez). (ETAHS Yönetmeliği m.13-14)
+- Kademeli yaptırım metni ve fikri mülkiyet hükmü: Satıcı Sözleşmesi özeti, Topluluk Kuralları, Kullanım Koşulları ve SSS'te. (ETAHS Yönetmeliği m.15/1-ğ)
+
+Gerçek yayından önce:
+- [ ] Sunucu tarafı şikâyet kuyruğu: başvuru numarası, 48 saat (kaldırma) ve 24 saat (açıkça haklı itirazda yeniden yayın) sürelerinin izlenmesi, süre aşımı uyarısı; satıcıya ve şikâyetçiye bildirimlerin kayıtlı olarak gönderilmesi; itirazın hak sahibine iletilmesi. (6563 m.9/3; ETAHS Yönetmeliği m.12-14)
+- [ ] Gerçek belge incelemesi: TÜRKPATENT tescil belgesi ve vekâletnamenin doğrulanması, satıcı faturalarının ve tedarik zinciri belgelerinin insan tarafından incelenmesi; demodaki örnek belgeler ve otomatik itiraz kabulü kaldırılmalı.
+- [ ] KEP adresinin yayımlanması; noter ve KEP ile gelen şikâyetlerin aynı kuyruğa alınması. (ETAHS Yönetmeliği m.12)
+- [ ] Hukuka aykırı içerikten haberdar olunca kaldırma ve yetkili kamu kurumlarına bildirim; bildirim usulü ve muhatap kurumlar avukatla belirlenmeli. (6563 m.9/2)
+- [ ] Şikâyet, itiraz, kaldırma ve yeniden yayın kayıtlarının 10 yıl saklanması. (6563 m.11/3)
+- [ ] Satıcı kimliğinin resmi sistemlerden (nüfus, vergi, MERSİS kayıtları) doğrulanması ve yılda en az bir kez yeniden kontrol edilmesi. (ETAHS Yönetmeliği m.6/3)
+- [ ] Yasaklı ifade ve marka listelerinin sunucudan yönetilmesi ve güncellenmesi; şu an koda gömülü ve yalnızca istemcide çalışıyor (atlatılabilir), aynı kontrol sunucuda da yapılmalı.
+- [ ] Canlı yayın içi moderasyon: yayında gösterilen ürün ve söylenenler metin filtresinden geçmez; moderatör / otomatik izleme, yayını kesme ve ihlalde yaptırım süreci kurulmalı.
+- [ ] iyzico'dan yazılı teyit: hizmet verilmeyen iş kolları listesinde açık artırma siteleri yer alıyor; Mezatonline modeli için yazılı onay alınmalı ya da başka bir lisanslı ödeme kuruluşu seçilmeli.
+- [ ] Kart şemalarının pazaryeri yükümlülükleri (Mastercard Rules ile Visa Core Rules / Visa Product and Service Rules; ilgili madde numaraları güncel kural kitaplarından ve ödeme kuruluşundan teyit edilmeli): satıcı denetimi ve taklit ürün satışının önlenmesine ilişkin yükümlülükler ödeme kuruluşuyla birlikte teyit edilmeli.
+- [ ] Anayasa Mahkemesi kararının takibi: aracı hizmet sağlayıcının tüketici sözleşmelerindeki muafiyeti 2.3.2027'de kalkıyor; taklit ürün nedeniyle tüketiciye karşı sorumluluk ve satıcıya rücu hükümleri (bkz. 3. bölüm).
+
 ## Önerilen sıra
 Şirket → vergi numarası ve KEP → e-Fatura/e-Arşiv → ETBİS → ödeme kuruluşu sözleşmesi → İYS → KVKK sözleşmeleri ve yurt dışı aktarım bildirimi → 5651 bildirimi → Apple/Google kurumsal hesaplar → `DEMO_MODE = false` ve örnek verilerin kaldırılması → mağaza başvurusu.
 

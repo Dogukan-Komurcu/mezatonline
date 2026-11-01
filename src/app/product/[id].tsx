@@ -6,7 +6,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
+import { router, useIsFocused, useLocalSearchParams, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
@@ -574,7 +574,7 @@ export default function ProductScreen() {
       <OfferSheet visible={offerOpen} onClose={() => setOfferOpen(false)} product={product} />
       <PreBidSheet visible={preBidOpen} onClose={() => setPreBidOpen(false)} product={product} show={show} />
       <BuyerProtectionSheet visible={protectionOpen} onClose={() => setProtectionOpen(false)} />
-      <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} subject={`İlan: ${product.title}`} />
+      <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} subject={`İlan: ${product.title}`} productId={product.id} />
       <Sheet visible={moreOpen} onClose={() => setMoreOpen(false)} title="Seçenekler">
         <ListRow
           icon="share-outline"
@@ -614,6 +614,19 @@ export default function ProductScreen() {
             onPress={() => {
               setMoreOpen(false);
               router.push(showLive ? `/live/${show.id}` : `/show/${show.id}`);
+            }}
+            style={styles.sheetRow}
+          />
+        ) : null}
+        {!own ? (
+          <ListRow
+            icon="ribbon-outline"
+            title="Hak sahibi başvurusu"
+            subtitle="Marka, tasarım, patent ya da telif sahibiysen"
+            onPress={() => {
+              setMoreOpen(false);
+              // Hak sahibi başvurusu misafire de açık (requireAuth yok); ilan formda önceden seçilir
+              setTimeout(() => router.push({ pathname: '/settings/ip-complaint', params: { productId: product.id } } as Href), 250);
             }}
             style={styles.sheetRow}
           />

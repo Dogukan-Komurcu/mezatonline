@@ -12,9 +12,10 @@ import { Divider, EmptyState, Icon, PressableScale, Text, toast, type TabItem } 
 import { search, TRENDING_SEARCHES } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { ShowRail } from '@/features/home/ShowRail';
+import { scanText } from '@/features/trust/counterfeit';
 import { formatNumber } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { SCREEN_PADDING, useTheme } from '@/theme';
+import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { ListingFormat } from '@/types';
 
 import {
@@ -343,16 +344,33 @@ function ResultTabs({ tabs, value, onChange }: { tabs: TabItem<ResultTab>[]; val
   );
 }
 
+// ─── Taklit ürün uyarısı ─────────────────────────────────────────────────────
+
+/** Sorguda "replika", "muadil", "A kalite" gibi yasaklı ifade varsa sonuçların üstünde gösterilir */
+function CounterfeitNotice() {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.notice, { backgroundColor: colors.surface }]}>
+      <Icon name="shield-checkmark-outline" size={18} color="textSecondary" style={{ marginTop: 1 }} />
+      <Text variant="footnote" color="textSecondary" style={styles.flex}>
+        Mezatonline’da replika, taklit ya da bir markanın kopyası olarak sunulan ürünler satılmaz; böyle bir ilan görürsen ilan sayfasındaki “İlanı şikayet et” ile bildir.
+      </Text>
+    </View>
+  );
+}
+
 // ─── Ana bileşen ─────────────────────────────────────────────────────────────
 
 export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top' }: { query: string; bottomInset: number; onSearch: (q: string) => void; initialTab?: ResultTab }) {
   const results = useMemo(() => search(query), [query]);
+  const counterfeitQuery = useMemo(() => scanText([query]).banned.length > 0, [query]);
   const [tab, setTab] = useState<ResultTab>(initialTab);
   const total = results.products.length + results.shows.length + results.users.length + results.categories.length;
 
   if (!total) {
     return (
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+        {counterfeitQuery ? <CounterfeitNotice /> : null}
         <EmptyState icon="search-outline" title={`“${query}” için sonuç bulunamadı`} message="Yazımı kontrol et ya da daha genel bir kelimeyle aramayı dene." />
         <Text variant="headline" style={styles.tryTitle}>
           Bunları denemeye ne dersin?
@@ -379,6 +397,7 @@ export function SearchResults({ query, bottomInset, onSearch, initialTab = 'top'
   return (
     <View style={styles.flex}>
       <ResultTabs tabs={tabs} value={tab} onChange={setTab} />
+      {counterfeitQuery ? <CounterfeitNotice /> : null}
       {tab === 'top' ? <TopTab results={results} onTab={setTab} bottomInset={bottomInset} /> : null}
       {tab === 'products' ? <ProductsTab query={query} results={results} bottomInset={bottomInset} /> : null}
       {tab === 'shows' ? <ShowsTab results={results} bottomInset={bottomInset} /> : null}
@@ -403,4 +422,5 @@ const styles = StyleSheet.create({
   catRail: { gap: 8 },
   tryTitle: { paddingHorizontal: SCREEN_PADDING, marginBottom: 10 },
   wrapChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: SCREEN_PADDING },
+  notice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: SCREEN_PADDING, marginTop: 12, padding: 12, borderRadius: radius.md },
 });

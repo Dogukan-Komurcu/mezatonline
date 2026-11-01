@@ -65,6 +65,21 @@ export type Condition = 'new' | 'like_new' | 'very_good' | 'good' | 'fair' | 'gr
 
 export type ShippingProfile = 'small' | 'medium' | 'large' | 'xlarge';
 
+/** Orijinallik belgesi türü (bkz. features/trust/counterfeit.ts PROOF_KINDS) */
+export type ProofKind = 'invoice' | 'receipt' | 'certificate' | 'dealer';
+
+/**
+ * Satıcının riskli kategoride / marka geçen ilanda yüklediği orijinallik belgesi.
+ * Alıcılara gösterilmez; hak sahibi şikâyetinde itiraz dayanağıdır (ETAHS Yönetmeliği md. 13/1-c).
+ */
+export interface AuthenticityProof {
+  kind: ProofKind;
+  /** Belge görselleri (yerel URI) ya da demo örnek belgeleri ("sample:<ad>") */
+  docs: string[];
+  /** Satıcının "orijinaldir" beyanını onayladığı an */
+  declaredAt: string;
+}
+
 export interface Product {
   id: ID;
   sellerId: ID;
@@ -94,6 +109,8 @@ export interface Product {
   createdAt: string;
   saves: number;
   tags: string[];
+  /** Orijinallik belgesi (riskli kategori / marka geçen ilanlarda zorunlu) */
+  authenticity?: AuthenticityProof;
 }
 
 // ─── Yayın ───────────────────────────────────────────────────────────────────
@@ -275,7 +292,9 @@ export type NotificationType =
   | 'price_drop'
   | 'offer'
   | 'promo'
-  | 'payout';
+  | 'payout'
+  /** Kural / hak ihlali bildirimi (ör. ilan hak sahibi şikâyetiyle kaldırıldı) */
+  | 'policy';
 
 export interface AppNotification {
   id: ID;

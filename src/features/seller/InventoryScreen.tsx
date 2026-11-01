@@ -1,14 +1,21 @@
 /**
  * Envanter: Aktif | Taslak | Satıldı | Pasif sekmeleri, arama, sıralama, ⋯ satır menüsü,
  * toplu seçim (yayına ekle / pasife al / sil) ve "+" butonu.
+ * Hak sahibi şikâyetiyle kaldırılan ilanlar dosya kapanana kadar kilitlidir: satıra dokununca
+ * şikâyet dosyası (IpCaseSheet) açılır, aktif etme / yayına ekleme bu ilanları atlar.
+ * `?tab=inactive` → ilgili sekmeyle aç; `?qa=ipcase` (geliştirme) → örnek şikâyet dosyası.
  */
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FORMAT_LABELS } from '@/components/cards/ProductCard';
 import { Button, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, Text, TextField, toast, UnderlineTabs } from '@/components/ui';
+import { settleDemoObjections } from '@/features/trust/actions';
+import { authenticityRequirement, scanText } from '@/features/trust/counterfeit';
+import { IpCaseSheet } from '@/features/trust/IpCaseSheet';
+import { isIpLocked, useTrustStore } from '@/features/trust/store';
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSellerStore } from '@/store/seller';
@@ -17,6 +24,7 @@ import type { ID, Product } from '@/types';
 
 import { assignListingsToShow, deleteListings, duplicateListing } from './actions';
 import { listingTab, priceLabel, type InventoryTab } from './logic';
+import { seedIpCaseQa, useQaParam } from './qaSeed';
 import { useSellerExtras } from './store';
 import { ActionSheet, StatusPill, Thumb, tint, type SheetAction } from './ui';
 
@@ -38,8 +46,17 @@ const EMPTY: Record<InventoryTab, { emoji: string; title: string; message: strin
   inactive: { emoji: '💤', title: 'Pasif ürün yok', message: 'Pasife aldığın ürünler alıcılara görünmez.' },
 };
 
+const TABS: InventoryTab[] = ['active', 'draft', 'sold', 'inactive'];
+
+/** Şikâyet dosyası açık ilan aktif edilmek ya da yayına eklenmek istenince */
+const IP_LOCK_MESSAGE = 'Hak sahibi şikâyeti olan ilanlar itiraz sonuçlanmadan yeniden yayımlanamaz';
+
+/** Taslaktan yayına: zorunlu alanlar + yasaklı ifade yok + gerekiyorsa orijinallik belgesi */
 export function isPublishable(p: Product): boolean {
-  return p.images.length > 0 && p.title.trim().length >= 3 && !!p.categoryId && !!p.subcategoryId && (p.format === 'giveaway' || p.price > 0);
+  const base = p.images.length > 0 && p.title.trim().length >= 3 && !!p.categoryId && !!p.subcategoryId && (p.format === 'giveaway' || p.price > 0);
+  if (!base) return false;
+  if (scanText([p.title, p.description ?? ''], p.categoryId).banned.length) return false;
+  return !authenticityRequirement(p).required || !!p.authenticity;
 }
 
 function sortList(list: Product[], key: SortKey): Product[] {
@@ -120,7 +137,11 @@ export function InventoryScreen() {
   const statusMap = useSellerExtras((s) => s.listingStatus);
   const setStatuses = useSellerExtras((s) => s.setListingStatuses);
   const vacation = useSellerExtras((s) => s.vacation);
-  const [tab, setTab] = useState<InventoryTab>('active');
+  const cases = useTrustStore((s) => s.cases);
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const qa = useQaParam();
+  // ?qa=ipcase: kaldırılan ilan Pasif sekmesinde görünür
+  const [tab, setTab] = useState<InventoryTab>(() => (qa === 'ipcase' ? 'inactive' : (TABS.find((t) => t === params.tab) ?? 'active')));
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('newest');
   const [sortOpen, setSortOpen] = useState(false);
@@ -128,6 +149,29 @@ export function InventoryScreen() {
   const [selected, setSelected] = useState<ID[]>([]);
   const [menuFor, setMenuFor] = useState<Product | null>(null);
   const [pickerIds, setPickerIds] = useState<ID[] | null>(null);
+  const [caseFor, setCaseFor] = useState<ID | null>(null);
+  const qaRan = useRef(false);
+
+  // Demo: uygulama kapanıp açıldıysa süresi dolmuş itirazları sonuçlandır
+  useEffect(() => {
+    settleDemoObjections();
+  }, []);
+
+  // Yalnızca geliştirme: ?qa=ipcase → aktif bir ilanı örnek şikâyetle kaldır ve dosyasını aç
+  useEffect(() => {
+    if (qa !== 'ipcase' || qaRan.current) return;
+    qaRan.current = true;
+    const id = seedIpCaseQa();
+    if (!id) {
+      toast.warning('QA: kaldırılacak aktif ilan bulunamadı');
+      return;
+    }
+    setTimeout(() => setCaseFor(id), 400);
+  }, [qa]);
+
+  const isLocked = (p: Product) => isIpLocked(cases[p.id]);
+  const lockedCount = listings.filter(isLocked).length;
+  const awaitingObjection = listings.some((p) => cases[p.id]?.status === 'removed');
 
   const counts: Record<InventoryTab, number> = { active: 0, draft: 0, sold: 0, inactive: 0 };
   listings.forEach((p) => {
@@ -154,12 +198,31 @@ export function InventoryScreen() {
   };
 
   const activate = (items: Product[]) => {
-    const ok = items.filter((p) => tab !== 'draft' || isPublishable(p));
-    const skipped = items.length - ok.length;
+    const free = items.filter((p) => !isLocked(p));
+    const ok = free.filter((p) => tab !== 'draft' || isPublishable(p));
+    const skipped = free.length - ok.length;
     if (ok.length) setStatuses(ok.map((p) => p.id), 'active');
+    if (free.length < items.length) {
+      haptic.warning();
+      toast.warning(ok.length ? `${ok.length} ürün ${tab === 'draft' ? 'yayınlandı' : 'aktif edildi'}. ${IP_LOCK_MESSAGE}` : IP_LOCK_MESSAGE, 'shield-outline');
+      return;
+    }
     haptic.success();
-    if (skipped) toast.warning(`${ok.length} ürün yayınlandı, ${skipped} taslakta eksik bilgi var`);
+    if (skipped) toast.warning(`${ok.length} ürün yayınlandı, ${skipped} taslak yayın şartlarını karşılamıyor`);
     else toast.success(tab === 'draft' ? `${ok.length} ürün yayınlandı` : `${ok.length} ürün aktif edildi`);
+  };
+  /** Yayına ekle: şikâyetli ilanlar ve yayın şartlarını karşılamayan taslaklar (yasaklı ifade, eksik belge…) atlanır */
+  const openShowPicker = (items: Product[]) => {
+    const free = items.filter((p) => !isLocked(p));
+    const ok = free.filter((p) => listingTab(p, statusMap) !== 'draft' || isPublishable(p));
+    if (free.length < items.length) {
+      haptic.warning();
+      toast.warning(IP_LOCK_MESSAGE, 'shield-outline');
+    } else if (ok.length < free.length) {
+      haptic.warning();
+      toast.warning(`${free.length - ok.length} taslak yayın şartlarını karşılamıyor`);
+    }
+    if (ok.length) setPickerIds(ok.map((p) => p.id));
   };
   const deactivate = (items: Product[]) => {
     setStatuses(
@@ -196,7 +259,17 @@ export function InventoryScreen() {
 
   const rowActions = (p: Product): SheetAction[] => {
     const t = listingTab(p, statusMap);
-    const actions: SheetAction[] = [{ label: 'Düzenle', icon: 'create-outline', onPress: () => router.push({ pathname: '/seller/listing', params: { id: p.id } }) }];
+    const ipCase = cases[p.id];
+    const locked = isIpLocked(ipCase);
+    const actions: SheetAction[] = [];
+    if (ipCase)
+      actions.push({
+        label: 'Şikâyet dosyası',
+        icon: 'shield-outline',
+        subtitle: ipCase.status === 'removed' ? 'Belgeyle itiraz et' : ipCase.status === 'objected' ? 'İtiraz inceleniyor' : 'İtirazın kabul edildi',
+        onPress: () => setCaseFor(p.id),
+      });
+    actions.push({ label: 'Düzenle', icon: 'create-outline', onPress: () => router.push({ pathname: '/seller/listing', params: { id: p.id } }) });
     if (t === 'draft')
       actions.push({
         label: 'Yayınla',
@@ -212,16 +285,24 @@ export function InventoryScreen() {
     actions.push({
       label: 'Kopyala',
       icon: 'copy-outline',
-      subtitle: 'Bilgileri yeni bir taslağa aktarır; stok sayısı ayrı tutulur',
+      // Kopya, şikâyetli ilanın kilidini aşmanın yolu olmasın
+      disabled: locked,
+      subtitle: locked ? 'Şikâyet sonuçlanana kadar kopyalanamaz' : 'Bilgileri yeni bir taslağa aktarır; stok sayısı ayrı tutulur',
       onPress: () => {
         duplicateListing(p);
         haptic.success();
         toast.success('Kopya taslaklara eklendi');
       },
     });
-    if (t !== 'sold') actions.push({ label: p.showId ? 'Yayını değiştir' : 'Yayına ekle', icon: 'videocam-outline', onPress: () => setPickerIds([p.id]) });
+    if (t !== 'sold')
+      actions.push({
+        label: p.showId ? 'Yayını değiştir' : 'Yayına ekle',
+        icon: 'videocam-outline',
+        subtitle: locked ? 'Şikâyet sonuçlanana kadar yayına eklenemez' : undefined,
+        onPress: () => openShowPicker([p]),
+      });
     if (t === 'active') actions.push({ label: 'Pasife al', icon: 'eye-off-outline', subtitle: 'Alıcılara görünmez olur', onPress: () => deactivate([p]) });
-    if (t === 'inactive') actions.push({ label: 'Aktif et', icon: 'eye-outline', onPress: () => activate([p]) });
+    if (t === 'inactive') actions.push({ label: 'Aktif et', icon: 'eye-outline', subtitle: locked ? (ipCase?.status === 'objected' ? 'İtirazın kabul edilirse yeniden yayımlanır' : 'Önce belgeyle itiraz et; kabul edilirse yeniden yayımlanır') : undefined, onPress: () => activate([p]) });
     if (t === 'sold')
       actions.push({ label: 'Stok ekle', icon: 'add-circle-outline', subtitle: 'Adedi artırarak yeniden satışa çıkar', onPress: () => router.push({ pathname: '/seller/listing', params: { id: p.id } }) });
     actions.push({ label: 'Sil', icon: 'trash-outline', destructive: true, disabled: p.sold > 0, subtitle: p.sold > 0 ? 'Satılmış ürünler silinemez' : undefined, onPress: () => confirmDelete([p]) });
@@ -270,6 +351,23 @@ export function InventoryScreen() {
         )}
         <Chip label={SORT_LABELS[sort]} icon="swap-vertical" size="sm" onPress={() => setSortOpen(true)} />
       </View>
+      {lockedCount > 0 && tab === 'active' ? (
+        <PressableScale scaleTo={0.99} onPress={() => changeTab('inactive')} style={[styles.vacation, { backgroundColor: tint(colors.danger, 0.1) }]} accessibilityRole="button">
+          <Icon name="shield-outline" size={16} color={colors.danger} />
+          <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
+            {lockedCount} ilanın hak sahibi şikâyetiyle kaldırıldı. {awaitingObjection ? 'Pasif sekmesinden belgeyle itiraz edebilirsin.' : lockedCount > 1 ? 'İtirazların inceleniyor.' : 'İtirazın inceleniyor.'}
+          </Text>
+          <Icon name="chevron-forward" size={14} color="textTertiary" />
+        </PressableScale>
+      ) : null}
+      {tab === 'inactive' && list.some(isLocked) ? (
+        <View style={[styles.vacation, { backgroundColor: tint(colors.danger, 0.1) }]}>
+          <Icon name="shield-outline" size={16} color={colors.danger} />
+          <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
+            Şikâyetli ilanlar itiraz sonuçlanmadan yeniden yayımlanamaz. Dosyayı görmek ve itiraz etmek için ilana dokun.
+          </Text>
+        </View>
+      ) : null}
       {vacation && tab === 'active' ? (
         <View style={[styles.vacation, { backgroundColor: tint(colors.info, 0.1) }]}>
           <Icon name="airplane" size={16} color={colors.info} />
@@ -301,10 +399,13 @@ export function InventoryScreen() {
           const on = selected.includes(p.id);
           const show = showTitle(p.showId);
           const left = Math.max(0, p.quantity - p.sold);
+          const ipCase = cases[p.id];
+          const locked = isIpLocked(ipCase);
+          const objected = ipCase?.status === 'objected';
           return (
             <PressableScale
               scaleTo={0.99}
-              onPress={() => (selecting ? toggle(p.id) : router.push({ pathname: '/seller/listing', params: { id: p.id } }))}
+              onPress={() => (selecting ? toggle(p.id) : locked ? setCaseFor(p.id) : router.push({ pathname: '/seller/listing', params: { id: p.id } }))}
               onLongPress={() => {
                 if (!selecting) {
                   haptic.medium();
@@ -323,6 +424,7 @@ export function InventoryScreen() {
                 <Text variant="subhead" weight="600" numberOfLines={2} color={p.title ? 'text' : 'textTertiary'}>
                   {p.title || 'Başlıksız taslak'}
                 </Text>
+                {locked ? <StatusPill label={objected ? 'İtiraz inceleniyor' : 'Hak sahibi şikâyeti'} tone={objected ? 'warning' : 'danger'} icon={objected ? 'hourglass-outline' : 'shield-outline'} /> : null}
                 <View style={styles.inline}>
                   <StatusPill label={FORMAT_LABELS[p.format]} tone={p.format === 'auction' ? 'warning' : p.format === 'giveaway' ? 'info' : 'neutral'} />
                   <Text variant="footnote" weight="700" numberOfLines={1} style={{ flexShrink: 1 }}>
@@ -346,7 +448,7 @@ export function InventoryScreen() {
             {selected.length} ürün seçildi
           </Text>
           <View style={styles.bulkBtns}>
-            {tab !== 'sold' ? <Button title="Yayına ekle" size="sm" variant="secondary" disabled={!selected.length} onPress={() => setPickerIds(selected)} style={{ flex: 1 }} /> : null}
+            {tab !== 'sold' ? <Button title="Yayına ekle" size="sm" variant="secondary" disabled={!selected.length} onPress={() => openShowPicker(selectedItems)} style={{ flex: 1 }} /> : null}
             {tab === 'active' ? (
               <Button title="Pasife al" size="sm" variant="secondary" disabled={!selected.length} onPress={() => {
                   deactivate(selectedItems);
@@ -390,6 +492,7 @@ export function InventoryScreen() {
         listingIds={pickerIds ?? []}
         currentShowId={pickerIds?.length === 1 ? listings.find((p) => p.id === pickerIds[0])?.showId : undefined}
       />
+      <IpCaseSheet listingId={caseFor} onClose={() => setCaseFor(null)} />
     </Screen>
   );
 }

@@ -13,6 +13,7 @@ import { Avatar, Button, Chip, EmptyState, Header, Icon, PressableScale, Screen,
 import { FEATURES } from '@/config/demo';
 import { CATEGORIES, getCategory, getUserByUsername } from '@/data';
 import { categoryPhotos } from '@/data/categories';
+import { bannedMessage, scanText } from '@/features/trust/counterfeit';
 import { formatDayLong, formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -140,8 +141,12 @@ export function ScheduleForm() {
   const selectedProducts = listings.filter((p) => s.productIds.includes(p.id));
   const dirty = JSON.stringify(s) !== JSON.stringify(initial);
 
+  // Yasaklı ifade taraması ("replika", "muadil", "marka + kokusu"…): yazarken gösterilir, kaldırılmadan kaydedilemez
+  const titleBanned = bannedMessage(scanText([s.title], s.categoryId).banned);
+  const descriptionBanned = bannedMessage(scanText([s.description], s.categoryId).banned);
   const errors = {
-    title: s.title.trim().length < 3 ? 'Yayın başlığı en az 3 karakter olmalı' : undefined,
+    title: s.title.trim().length < 3 ? 'Yayın başlığı en az 3 karakter olmalı' : titleBanned,
+    description: descriptionBanned,
     category: !s.categoryId ? 'Kategori seç' : undefined,
     time: !s.time ? 'Saat seç' : !(scheduledAt > now) ? 'Geçmiş bir saat seçemezsin' : undefined,
   };
@@ -166,6 +171,12 @@ export function ScheduleForm() {
   const addCustomTag = () => {
     const t = customTag.trim().replace(/^#/, '').slice(0, 24);
     if (t.length < 2) return;
+    const tagBanned = bannedMessage(scanText([t], s.categoryId).banned);
+    if (tagBanned) {
+      haptic.warning();
+      toast.warning(tagBanned);
+      return;
+    }
     if (!s.tags.includes(t)) toggleTag(t);
     setCustomTag('');
   };
@@ -194,6 +205,11 @@ export function ScheduleForm() {
 
   const save = () => {
     setSubmitted(true);
+    if (titleBanned || descriptionBanned) {
+      haptic.warning();
+      toast.warning(existing ? 'Yasaklı ifadeyi kaldırmadan yayını kaydedemezsin' : 'Yasaklı ifadeyi kaldırmadan yayını planlayamazsın');
+      return;
+    }
     if (errors.title || errors.category || errors.time) {
       haptic.warning();
       toast.warning(errors.time ?? 'Eksik alanları tamamla');
@@ -328,7 +344,7 @@ export function ScheduleForm() {
               placeholder="ör. 🔥 ₺1'den Başlayan Pokémon Kartları"
               maxLength={TITLE_MAX}
               helper={`${s.title.length}/${TITLE_MAX} · Ürün türünü ve markayı yaz; izleyiciler aramada böyle bulur`}
-              error={err('title')}
+              error={titleBanned ?? err('title')}
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.hscroll}>
               {EMOJIS.map((e) => (
@@ -408,6 +424,7 @@ export function ScheduleForm() {
               placeholder="Yayında neler olacak? Çekiliş, ₺1 başlangıçlar, özel ürünler…"
               multiline
               helper={`${s.description.length}/500`}
+              error={descriptionBanned}
             />
           </FormSection>
 

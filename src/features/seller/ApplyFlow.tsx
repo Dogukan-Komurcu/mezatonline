@@ -9,6 +9,8 @@ import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { Button, Chip, Header, Icon, PressableScale, Screen, Sheet, Text, TextField, toast, type IconName } from '@/components/ui';
 import { CATEGORIES, getCategory } from '@/data';
+import { RISKY_AREAS } from '@/features/account/content';
+import { IP_PROCESS, STRIKE_POLICY } from '@/features/trust/counterfeit';
 import { AddressForm, emptyAddress, validateAddress, type AddressDraft } from '@/features/wallet/forms';
 import { formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -60,6 +62,7 @@ type Draft = {
 
 const RULES = [
   ['shield-checkmark-outline', 'Sadece orijinal ürünler sat; sahte, replika veya izinsiz ürün yasaktır.'],
+  ['document-attach-outline', `Taklidi yaygın kategorilerdeki (${RISKY_AREAS}) ve taklidi yaygın markaların geçtiği ilanlara orijinallik belgesi (fatura, sertifika ya da tedarik belgesi) ekle.`],
   ['eye-outline', 'Ürünü kamerada olduğu gibi göster, kusurlarını açıkça söyle.'],
   ['cube-outline', 'Siparişleri 2 iş günü içinde kargoya ver.'],
   ['ban-outline', 'Kutu açılımı (break), gizemli kutu ve şansa dayalı satış yapma; alışveriş şartlı çekiliş düzenleme.'],
@@ -76,9 +79,17 @@ const LEGAL_TEXT = {
   rules:
     'Mezatonline Topluluk Kuralları, alıcıların ve satıcıların güvenle alışveriş yapabilmesi için hazırlanmıştır. Satıcılar yalnızca sahip oldukları ve orijinal olan ürünleri listeleyebilir; ürün açıklamaları ve yayında gösterilen ürün gerçek durumu yansıtmalıdır. Satılan ürünler 2 iş günü içinde kargoya verilmelidir.\n\n' +
     'Aşağıdakiler yasaktır: kutu açılımı (break), gizemli kutu ve sonucu şansa bağlı her türlü satış; alışveriş şartlı çekiliş, çark ve benzeri rastgele seçim düzenekleri; satıcının kendi açık artırmasına kendisi veya bağlantılı hesaplarla teklif vermesi (gölge teklif); alıcıyı platform dışı ödemeye veya iletişime yönlendirmek; sahte, taklit veya hak sahibinin izni olmadan üretilmiş ürün satmak; tütün, alkol, ilaç ve silah satışı; 2863 sayılı Kültür ve Tabiat Varlıklarını Koruma Kanunu kapsamında ruhsatsız kültür varlığı ve antika satışı; sahte değerlendirme yapmak. İhlaller ilanın kaldırılmasına ve hesabın kapatılmasına neden olabilir.\n\n' +
+    `İlan ve yayın metinlerinde “replika”, “muadil”, “A kalite” ya da “… kokusu”, “… model” gibi ürünü bir markanın kopyası olarak sunan ifadeler kullanılamaz. Taklidi yaygın kategorilerde (${RISKY_AREAS}), taklidi yaygın markaların geçtiği ilanlarda ve “ihraç fazlası” gibi iddialarda ilan yayımlanmadan önce orijinallik belgesi istenir. Sahte ürün ihlallerinde kademeli yaptırım uygulanır:\n` +
+    STRIKE_POLICY.join('\n') +
+    '\n\n' +
     'Demo sürümdeki çekilişlerde gerçek ödül verilmez. Gerçek ödüllü çekilişler Milli Piyango İdaresi izniyle düzenlenebilir.',
   terms:
-    `Satıcı Sözleşmesi, ${ENTITY} ile satıcı arasında kurulur; ücretleri (ürün bedeli üzerinden %5 satış komisyonu ile %3 + sipariş başına ₺5 kredi kartı ücreti; toplam %8 + ₺5, KDV dahil; ayrıca ödeme işlem ücreti alınmaz), ödeme takvimini (teslimattan sonra çekilebilir bakiye, 1-2 iş günü içinde IBAN’a aktarım) ve iptal/iade süreçlerini düzenler. Gerçek sürümde alıcı ödemeleri, lisanslı bir ödeme kuruluşu tarafından ürün alıcıya ulaşana kadar bekletilir ve hakedişin bu kuruluş aracılığıyla IBAN’ına aktarılır; Mezatonline alıcı ödemelerini kendi hesabında tutmaz. 6698 sayılı KVKK kapsamında kimlik, iletişim ve banka bilgilerin; kimlik doğrulama, ödeme, faturalandırma ve yasal yükümlülükler (ETBİS, e-ticaret stopajı) amacıyla işlenir ve yalnızca lisanslı ödeme kuruluşu ve yetkili kamu kurumlarıyla paylaşılır. Demo sürümde başvuru bilgilerin yalnızca bu cihazda tutulur; gerçek kimlik ve IBAN doğrulaması ya da para aktarımı yapılmaz. Aydınlatma metninin tamamına Ayarlar > Yasal bölümünden ulaşabilirsin.`,
+    `Satıcı Sözleşmesi, ${ENTITY} ile satıcı arasında kurulur; ücretleri (ürün bedeli üzerinden %5 satış komisyonu ile %3 + sipariş başına ₺5 kredi kartı ücreti; toplam %8 + ₺5, KDV dahil; ayrıca ödeme işlem ücreti alınmaz), ödeme takvimini (teslimattan sonra çekilebilir bakiye, 1-2 iş günü içinde IBAN’a aktarım) ve iptal/iade süreçlerini düzenler. Gerçek sürümde alıcı ödemeleri, lisanslı bir ödeme kuruluşu tarafından ürün alıcıya ulaşana kadar bekletilir ve hakedişin bu kuruluş aracılığıyla IBAN’ına aktarılır; Mezatonline alıcı ödemelerini kendi hesabında tutmaz.\n\n` +
+    // Fikri mülkiyet hükmü: hak sahipliğinin ispatı ve alınan tedbirler (ETAHS Yönetmeliği md. 15/1-ğ; süreler md. 12–14)
+    `Fikri mülkiyet ve orijinallik: Satıcı yalnızca orijinal olan ve satma hakkına sahip olduğu ürünleri listeler; ürünün orijinal olduğunu gerektiğinde fatura veya tedarik zinciri belgeleriyle ispatlamakla yükümlüdür. Hak sahipliği; marka, tasarım ve patentte TÜRKPATENT tescil (ya da başvuru) belgesiyle, telif haklarında eser sahipliğini gösteren belgelerle ispat edilir. Hak sahibi veya vekili bu belgeyle birlikte kimlik bilgilerini, ihlalin gerekçesini ve kanıtlarını, ilanın bağlantısını ve belgelerin yanlış çıkması hâlinde sorumluluğu üstlendiğine dair beyanını uygulama içi form, noter ya da KEP yoluyla iletir (KEP adresi şirket kuruluşundan sonra duyurulacaktır).\n\n` +
+    `Alınan tedbirler: İlan ve yayın metinlerinde ürünü bir markanın kopyası olarak sunan ifadeler (“replika”, “muadil”, “A kalite” vb.) filtrelenir ve yayımlanmaz. Taklidi yaygın kategorilerde (${RISKY_AREAS}), taklidi yaygın markaların geçtiği ilanlarda ve “ihraç fazlası” gibi iddialarda ilan yayımlanmadan önce orijinallik belgesi istenir. Hak sahibinin usulüne uygun şikâyetinde ilan en geç ${IP_PROCESS.takedownHours} saat içinde yayından kaldırılır; satıcıya ve şikâyetçiye bildirim yapılır. Satıcı fatura ve tedarik zinciri belgeleriyle itiraz edebilir; itiraz hak sahibine iletilir ve belgelerden açıkça haklı görülürse ilan ${IP_PROCESS.reinstateHours} saat içinde yeniden yayımlanır. Tarafların mahkemeye başvurma hakkı saklıdır.\n\n` +
+    `Kademeli yaptırım:\n${STRIKE_POLICY.join('\n')}\n\n` +
+    `6698 sayılı KVKK kapsamında kimlik, iletişim ve banka bilgilerin; kimlik doğrulama, ödeme, faturalandırma ve yasal yükümlülükler (ETBİS, e-ticaret stopajı) amacıyla işlenir ve yalnızca lisanslı ödeme kuruluşu ve yetkili kamu kurumlarıyla paylaşılır. Demo sürümde başvuru bilgilerin ve yüklediğin belgeler yalnızca bu cihazda tutulur; gerçek kimlik, IBAN ve belge doğrulaması ya da para aktarımı yapılmaz, şikâyet ve itiraz süreci simüle edilir. Aydınlatma metninin tamamına Ayarlar > Yasal bölümünden ulaşabilirsin.`,
 };
 
 function useDraft(): [Draft, (patch: Partial<Draft>) => void] {
@@ -149,6 +160,19 @@ function WelcomeStep({ draft, set, onLegal }: { draft: Draft; set: (p: Partial<D
             </Text>
           </View>
         ))}
+        <Card style={{ gap: 6, backgroundColor: colors.surface, borderColor: colors.surface }}>
+          <View style={styles.inline}>
+            <Icon name="alert-circle-outline" size={18} color="textSecondary" />
+            <Text variant="subhead" weight="700" style={{ flex: 1 }}>
+              Sahte ürün ihlallerinde kademeli yaptırım
+            </Text>
+          </View>
+          {STRIKE_POLICY.map((t) => (
+            <Text key={t} variant="footnote" color="textSecondary">
+              {t}
+            </Text>
+          ))}
+        </Card>
       </View>
       <View style={{ gap: 4 }}>
         <CheckRow checked={draft.rulesAccepted} onPress={() => set({ rulesAccepted: !draft.rulesAccepted })} label="Topluluk Kuralları’nı okudum ve kabul ediyorum." linkLabel="Tamamını oku" onLink={() => onLegal('rules')} />

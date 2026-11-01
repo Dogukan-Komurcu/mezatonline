@@ -1,13 +1,18 @@
 /**
  * Yalnızca geliştirme (QA): satıcı panelini örnek ilan + planlı yayınla doldurur.
  * `/sell?qa=seed` ile tetiklenir (bkz. src/app/(tabs)/sell.tsx). Üretim derlemesinde çalışmaz.
+ * `/seller/inventory?qa=ipcase`: örnek hak sahibi şikâyeti dosyası açar (seedIpCaseQa).
  */
 import { useLocalSearchParams } from 'expo-router';
 
 import { getProductsByCategory } from '@/data';
+import { takeDownListing } from '@/features/trust/actions';
+import { authenticityRequirement } from '@/features/trust/counterfeit';
 import { useSellerStore } from '@/store/seller';
+import type { ID } from '@/types';
 
 import { createListingWithStatus, setShowProducts } from './actions';
+import { listingTab } from './logic';
 import { useSellerExtras } from './store';
 
 export function seedSellerQa() {
@@ -35,6 +40,28 @@ export function seedSellerQa() {
   });
   setShowProducts(show.id, ids.slice(0, 5));
   useSellerExtras.getState().setShowMeta(show.id, { format: 'auction', moderators: [], visibility: 'public' });
+}
+
+/**
+ * Yalnızca geliştirme: aktif bir ilanı örnek hak sahibi şikâyetiyle yayından kaldırır
+ * (`/seller/inventory?qa=ipcase`). Orijinallik belgesi gerektiren ilanı tercih eder; aktif ilan
+ * yoksa önce örnek ilanları ekler. Kaldırılan ilanın kimliğini döner.
+ */
+export function seedIpCaseQa(): ID | undefined {
+  if (!__DEV__) return undefined;
+  const pick = () => {
+    const status = useSellerExtras.getState().listingStatus;
+    const active = useSellerStore.getState().listings.filter((p) => listingTab(p, status) === 'active');
+    return active.find((p) => authenticityRequirement(p).required) ?? active[0];
+  };
+  let target = pick();
+  if (!target) {
+    seedSellerQa();
+    target = pick();
+  }
+  if (!target) return undefined;
+  takeDownListing(target.id, { complaintNo: `FM-${Math.floor(10000 + Math.random() * 90000)}`, rightType: 'trademark', rightHolder: 'Örnek Marka A.Ş. (demo)' });
+  return target.id;
 }
 
 /** Yalnızca geliştirme: `?qaY=600` → kaydırma görünümünü bu ofsetle aç (ekran görüntüsü QA'sı) */

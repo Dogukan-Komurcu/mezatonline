@@ -5,11 +5,14 @@ import { useEffect, useState } from 'react';
 import { Dimensions, Keyboard, Platform, type KeyboardEvent } from 'react-native';
 
 import { getProductsByCategory, getProductsByShow, getMarketplaceProducts } from '@/data';
+import { listingTab } from '@/features/seller/logic';
+import { useSellerExtras, type ListingStatus } from '@/features/seller/store';
+import { isIpLocked, useTrustStore, type IpCase } from '@/features/trust/store';
 import { SHIPPING_PRICES } from '@/lib/pricing';
 import { uid } from '@/lib/rng';
 import { ME_ID, useAuthStore } from '@/store/auth';
 import { useSellerStore, type NewListingInput } from '@/store/seller';
-import type { ChatMessage, Product, Show } from '@/types';
+import type { ChatMessage, ID, Product, Show } from '@/types';
 
 import type { SoldItem } from '@/features/live/engine';
 
@@ -86,11 +89,29 @@ export function remainingOf(p: Product, extraSold = 0): number {
   return Math.max(0, p.quantity - p.sold - extraSold);
 }
 
+/**
+ * Yayında satılabilir mi: aktif (taslak/pasif değil), stokta var ve hak sahibi şikâyeti dosyası açık değil (bkz. features/trust).
+ * Bileşenler abone oldukları durum haritasını ve şikâyet dosyalarını geçmeli; verilmezse anlık durum okunur.
+ */
+export function isLiveSellable(
+  p: Product,
+  statusMap: Record<ID, ListingStatus> = useSellerExtras.getState().listingStatus,
+  cases: Record<ID, IpCase> = useTrustStore.getState().cases,
+): boolean {
+  return p.sold < p.quantity && listingTab(p, statusMap) === 'active' && !isIpLocked(cases[p.id]);
+}
+
 /** Yayının ürün kimlikleri: önce yayına bağlı ilanlar, yoksa tüm aktif ilanlar */
-export function resolveShowProductIds(show: Show, listings: Product[]): string[] {
+export function resolveShowProductIds(
+  show: Show,
+  listings: Product[],
+  statusMap: Record<ID, ListingStatus> = useSellerExtras.getState().listingStatus,
+  cases: Record<ID, IpCase> = useTrustStore.getState().cases,
+): string[] {
   const linked = listings.filter((p) => p.showId === show.id || show.productIds.includes(p.id));
   if (linked.length) return linked.map((p) => p.id);
-  return listings.filter((p) => p.sold < p.quantity).map((p) => p.id);
+  // Ok fonksiyonu şart: filter'a doğrudan verilirse dizin `statusMap` yerine geçer
+  return listings.filter((p) => isLiveSellable(p, statusMap, cases)).map((p) => p.id);
 }
 
 /** Prova modunda ilanı olmayan satıcı için demo ürünler (kaydedilmez) */

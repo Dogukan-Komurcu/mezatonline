@@ -2,10 +2,11 @@
  * Birden çok ekranda kullanılan ortak sheet'ler: Bahşiş, Şikayet, Paylaş yardımcıları.
  * Bahşiş giriş noktaları FEATURES.tips ile kapatılır (bkz. '@/config/demo').
  */
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 
-import { Avatar, Button, Chip, Icon, ListRow, Sheet, Text, TextField, toast } from '@/components/ui';
+import { Avatar, Button, Chip, Icon, ListRow, PressableScale, Sheet, Text, TextField, toast } from '@/components/ui';
 import { requireTransactSetup } from '@/features/wallet/TransactSetup';
 import { TIP_PRESETS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
@@ -13,7 +14,11 @@ import { haptic } from '@/lib/haptics';
 import { useInboxStore } from '@/store/inbox';
 import { useModerationStore } from '@/store/moderation';
 import { selectDefaultPayment, useWalletStore } from '@/store/wallet';
+import { radius, useTheme } from '@/theme';
 import type { User } from '@/types';
+
+/** Bir sheet kapanıp yenisi (ya da yeni ekran) açılmadan önce beklenen süre: iOS'ta RN Modal kapanmadan yeni modal / ekran açılamaz */
+export const SHEET_SWAP_MS = 300;
 
 // ─── Paylaş ──────────────────────────────────────────────────────────────────
 
@@ -106,8 +111,10 @@ export function TipSheet({ visible, onClose, seller, dark, onSent }: { visible: 
 
 // ─── Şikayet ─────────────────────────────────────────────────────────────────
 
+const COUNTERFEIT_REASON = 'Sahte / taklit ürün';
+
 const REPORT_REASONS = [
-  'Sahte / taklit ürün',
+  COUNTERFEIT_REASON,
   'Yanıltıcı açıklama',
   'Taciz veya nefret söylemi',
   'Spam veya dolandırıcılık',
@@ -117,10 +124,46 @@ const REPORT_REASONS = [
   'Diğer',
 ];
 
-/** Kullanıcı / yayın / ilan şikayet sayfası */
-export function ReportSheet({ visible, onClose, subject, dark }: { visible: boolean; onClose: () => void; subject: string; dark?: boolean }) {
+/**
+ * "Sahte / taklit ürün" seçilince: hak sahiplerini, ilanı kaldırtabilecekleri hak sahibi başvurusuna yönlendirir.
+ * Sheet içinde render edilir ki canlı yayındaki koyu temayı (ForceScheme) alsın.
+ */
+function IpComplaintHint({ onPress }: { onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.ipHint, { backgroundColor: colors.surface }]}>
+      <Icon name="ribbon-outline" size={18} color={colors.accent} style={{ marginTop: 1 }} />
+      <View style={{ flex: 1, gap: 6 }}>
+        <Text variant="footnote" color="textSecondary">
+          Marka, tasarım, patent ya da telif hakkının sahibi (veya vekili) sensen ilanın kaldırılması için hak sahibi başvurusu yapabilirsin. Alıcı olarak bildiriyorsan bu şikâyeti göndermen yeterli.
+        </Text>
+        <PressableScale scaleTo={0.97} onPress={onPress} accessibilityRole="link" style={styles.ipHintLink}>
+          <Text variant="footnote" weight="700" color="accent">
+            Hak sahibi başvurusu yap
+          </Text>
+          <Icon name="chevron-forward" size={14} color={colors.accent} />
+        </PressableScale>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Kullanıcı / yayın / ilan şikayet sayfası.
+ * productId: ilan şikâyetinde, hak sahibi başvurusuna ilanı önceden seçili geçirmek için.
+ */
+export function ReportSheet({ visible, onClose, subject, dark, productId }: { visible: boolean; onClose: () => void; subject: string; dark?: boolean; productId?: string }) {
   const [reason, setReason] = useState<string | null>(null);
   const [details, setDetails] = useState('');
+  const openIpComplaint = () => {
+    haptic.tap();
+    setReason(null);
+    setDetails('');
+    onClose();
+    // Sheet (RN Modal) kapanmadan yeni ekran açılırsa iOS'ta modalın altında kalır
+    const href = productId ? { pathname: '/settings/ip-complaint', params: { productId } } : '/settings/ip-complaint';
+    setTimeout(() => router.push(href as Href), SHEET_SWAP_MS);
+  };
   return (
     <Sheet
       visible={visible}
@@ -149,14 +192,16 @@ export function ReportSheet({ visible, onClose, subject, dark }: { visible: bool
         />
       }>
       {REPORT_REASONS.map((r) => (
-        <ListRow
-          key={r}
-          title={r}
-          onPress={() => setReason(r)}
-          chevron={false}
-          right={<Icon name={reason === r ? 'radio-button-on' : 'radio-button-off'} size={22} color={reason === r ? 'text' : 'textTertiary'} />}
-          style={styles.row}
-        />
+        <View key={r}>
+          <ListRow
+            title={r}
+            onPress={() => setReason(r)}
+            chevron={false}
+            right={<Icon name={reason === r ? 'radio-button-on' : 'radio-button-off'} size={22} color={reason === r ? 'text' : 'textTertiary'} />}
+            style={styles.row}
+          />
+          {r === COUNTERFEIT_REASON && reason === r ? <IpComplaintHint onPress={openIpComplaint} /> : null}
+        </View>
       ))}
       <TextField placeholder="Ayrıntı ekle (isteğe bağlı)" value={details} onChangeText={setDetails} multiline containerStyle={{ marginTop: 8 }} />
     </Sheet>
@@ -169,4 +214,6 @@ const styles = StyleSheet.create({
   chip: { minWidth: '30%', alignItems: 'center' },
   rows: { marginTop: 10 },
   row: { paddingHorizontal: 0 },
+  ipHint: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderRadius: radius.md, marginBottom: 6 },
+  ipHintLink: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start' },
 });

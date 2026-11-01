@@ -12,6 +12,7 @@ import { useInboxExtras } from '@/features/inbox/store';
 import { useLivePrefs } from '@/features/live/liveStore';
 import { useProfilePrefs } from '@/features/profile/store';
 import { useSellerExtras } from '@/features/seller/store';
+import { useTrustStore } from '@/features/trust/store';
 import { useInboxStore } from '@/store/inbox';
 import { useModerationStore } from '@/store/moderation';
 import { useOrdersStore } from '@/store/orders';
@@ -43,5 +44,6 @@ export function resetAccountData() {
   reset(useProfilePrefs);
   reset(useCouponStore);
   reset(useModerationStore);
+  reset(useTrustStore);
   useSettingsStore.getState().setNotificationPref('promotions', false);
 }

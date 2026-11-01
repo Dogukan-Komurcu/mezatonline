@@ -1,6 +1,6 @@
 /**
  * S81 — Satıcı Paneli (Seller Hub): hızlı eylemler, kontrol listesi, komisyon seviyesi, bakiye,
- * yaklaşan yayınlar, kargolanacak siparişler, son satışlar ve ☰ menü.
+ * yaklaşan yayınlar, kargolanacak siparişler, hak sahibi şikâyeti uyarısı, son satışlar ve ☰ menü.
  */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Avatar, Button, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionHeader, Text, toast, type IconName } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
+import { isIpLocked, useTrustStore } from '@/features/trust/store';
 import { formatShowTime, formatTimeUntil, formatTRY, timeAgo } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -102,6 +103,7 @@ export function SellerHub() {
   const approvedAt = useSellerExtras((s) => s.approvedAt);
   const listingStatus = useSellerExtras((s) => s.listingStatus);
   const resolutions = useSellerExtras((s) => s.offerResolutions);
+  const ipCases = useTrustStore((s) => s.cases);
   // Yalnızca geliştirme: /sell?qa=sheet:tips → ilgili sheet açık başlar (ekran görüntüsü QA'sı)
   const qa = useQaParam();
   const [sheet, setSheet] = useState<HubSheetKey | null>(qa?.startsWith('sheet:') ? (qa.slice(6) as HubSheetKey) : null);
@@ -118,6 +120,9 @@ export function SellerHub() {
   const tier = tierProgress(orders, anchor, now);
   const periodOrders = orders.filter((o) => o.status !== 'cancelled' && now - new Date(o.createdAt).getTime() < 28 * 86_400_000).length;
   const pendingOffers = deriveOffers(listings, listingStatus, resolutions, now).filter((o) => o.status === 'pending').length;
+  // Hak sahibi şikâyetiyle kaldırılan ve dosyası açık ilanlar (silinen ilanlar sayılmaz)
+  const ipLocked = listings.filter((p) => isIpLocked(ipCases[p.id]));
+  const ipAwaitingObjection = ipLocked.some((p) => ipCases[p.id]?.status === 'removed');
 
   const checklist = [
     { key: 'verify', title: 'Kimlik ve IBAN bilgilerini onayla', subtitle: 'Kazancın bu hesaba aktarılır', done: !!kyc && (isValidTckn(kyc.tckn) || !!kyc.tcknMasked) && !!iban && isValidIban(iban), onPress: () => setSheet('verify') },
@@ -212,6 +217,23 @@ export function SellerHub() {
           <QuickAction icon="pricetag-outline" label="Ürün Oluştur" onPress={() => router.push('/seller/listing')} />
           <QuickAction icon="videocam-outline" label="Canlıya Geç" primary onPress={() => router.push(liveShow ? `/seller/live/${liveShow.id}` : '/seller/go-live')} />
         </View>
+
+        {ipLocked.length ? (
+          <Card onPress={() => router.push({ pathname: '/seller/inventory', params: { tab: 'inactive' } })} style={[styles.row, { borderColor: tint(colors.danger, 0.35) }]}>
+            <View style={[styles.iconCircle, { backgroundColor: tint(colors.danger, 0.14) }]}>
+              <Icon name="shield-outline" size={22} color={colors.danger} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text variant="headline" weight="700">
+                {ipLocked.length} ilanın hak sahibi şikâyetiyle kaldırıldı
+              </Text>
+              <Text variant="footnote" color="textSecondary">
+                {ipAwaitingObjection ? 'Belgeyle itiraz edebilirsin' : 'İtirazın inceleniyor'}
+              </Text>
+            </View>
+            <Icon name="chevron-forward" size={18} color="textTertiary" />
+          </Card>
+        ) : null}
 
         {toShip.length ? (
           <Card onPress={() => router.push({ pathname: '/seller/orders', params: { tab: 'toship' } })} style={styles.row}>

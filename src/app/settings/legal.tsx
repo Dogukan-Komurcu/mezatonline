@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { ConfirmSheet, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/feature
 import { useQaParams } from '@/features/account/qa';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { useLivePrefs } from '@/features/live/liveStore';
+import { useTrustStore } from '@/features/trust/store';
 import { haptic } from '@/lib/haptics';
 import { LEGAL_VERSION, useAuthStore } from '@/store/auth';
 import { useModerationStore } from '@/store/moderation';
@@ -64,6 +65,7 @@ function buildDeviceExport(): string {
   const auth = useAuthStore.getState();
   const { pin, ...account } = plain(useAccountStore.getState());
   const wallet = useWalletStore.getState();
+  const trust = useTrustStore.getState();
   return JSON.stringify(
     {
       olusturulma: new Date().toISOString(),
@@ -92,6 +94,9 @@ function buildDeviceExport(): string {
       },
       siparisler: plain(useOrdersStore.getState()),
       sikayetler: useModerationStore.getState().reports,
+      // Kimlik numarası zaten maskeli (yalnızca son 2 hane); belgelerin yalnızca sayısı saklanır
+      fikriMulkiyetBasvurulari: trust.complaints,
+      fikriMulkiyetIlanDosyalari: Object.values(trust.cases),
     },
     null,
     2,
@@ -159,6 +164,15 @@ export default function LegalScreen() {
           />
         </MenuGroup>
 
+        <MenuGroup title="Hak ihlali" footer="Taklit ya da izinsiz kopya ürün satışı Mezatonline'da yasaktır. Hak sahibi başvurusu için hesabın olması gerekmez.">
+          <MenuRow
+            icon="ribbon-outline"
+            title="Fikri mülkiyet ihlali bildir"
+            subtitle="Marka, tasarım, patent ve telif hakkı sahipleri için"
+            onPress={() => router.push('/settings/ip-complaint' as Href)}
+          />
+        </MenuGroup>
+
         <MenuGroup title="Şirket ve iletişim">
           <MenuRow icon="business-outline" title="Künye ve İletişim" subtitle="Şirket bilgileri ve iletişim adresleri" onPress={() => router.push('/settings/kunye')} />
         </MenuGroup>
@@ -203,7 +217,7 @@ export default function LegalScreen() {
         onClose={() => setExportOpen(false)}
         icon="download-outline"
         title="Verilerin dışa aktarılsın mı?"
-        message="Demo: Bu cihazda saklanan profil, tercih, adres, kart (yalnızca son 4 hane), sosyal ve sipariş verilerin JSON olarak hazırlanıp paylaşım menüsünde açılır. Sunucuda saklanan veri yoktur."
+        message="Demo: Bu cihazda saklanan profil, tercih, adres, kart (yalnızca son 4 hane), sosyal, sipariş, şikâyet ve hak sahibi başvurusu verilerin JSON olarak hazırlanıp paylaşım menüsünde açılır. Sunucuda saklanan veri yoktur."
         confirmLabel="Dışa aktar"
         onConfirm={() => {
           setExportOpen(false);

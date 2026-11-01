@@ -13,6 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Icon, IconButton, PressableScale, Text, TextField, toast, type IconName } from '@/components/ui';
 import { CATEGORIES_BY_POPULARITY, getCategory } from '@/data';
+import { useSellerExtras } from '@/features/seller/store';
+import { bannedMessage, scanText } from '@/features/trust/counterfeit';
+import { useTrustStore } from '@/features/trust/store';
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useMe } from '@/store/auth';
@@ -23,7 +26,7 @@ import type { Show } from '@/types';
 import { CameraStage, PermissionCard, useCameraAccess } from './camera';
 import { InfoBox, OptionChips, SwitchRow } from './controls';
 import { CountdownOverlay } from './CountdownOverlay';
-import { resolveShowProductIds, useIsSeller, useKeyboardHeight, ZOOM_LEVELS } from './helpers';
+import { isLiveSellable, resolveShowProductIds, useIsSeller, useKeyboardHeight, ZOOM_LEVELS } from './helpers';
 
 const QUICK = 'quick';
 
@@ -45,6 +48,8 @@ function GoLiveContent() {
 
   const allShows = useSellerStore((s) => s.shows);
   const listings = useSellerStore((s) => s.listings);
+  const statusMap = useSellerExtras((s) => s.listingStatus);
+  const ipCases = useTrustStore((s) => s.cases);
   const scheduleShow = useSellerStore((s) => s.scheduleShow);
   const setShowStatus = useSellerStore((s) => s.setShowStatus);
 
@@ -69,9 +74,12 @@ function GoLiveContent() {
   const [toolsBottom, setToolsBottom] = useState(0);
 
   const selected: Show | undefined = shows.find((s) => s.id === selectedId);
-  const activeListings = listings.filter((p) => p.sold < p.quantity);
-  const productCount = selected ? resolveShowProductIds(selected, listings).length : activeListings.length;
+  // Taslak/pasif ve şikâyetle kaldırılan ilanlar hızlı yayına da eklenmez
+  const activeListings = listings.filter((p) => isLiveSellable(p, statusMap, ipCases));
+  const productCount = selected ? resolveShowProductIds(selected, listings, statusMap, ipCases).length : activeListings.length;
   const linkedCount = selected ? listings.filter((p) => p.showId === selected.id || selected.productIds.includes(p.id)).length : 0;
+  // Hızlı yayın başlığında da yasaklı ifade ("replika", "A kalite"…) kullanılamaz (planlı yayında ScheduleForm denetler)
+  const quickTitleBanned = selectedId === QUICK ? bannedMessage(scanText([quickTitle], quickCategory).banned) : undefined;
 
   // Sahte donanım kontrolleri: ışık → ses → ürünler
   useEffect(() => {
@@ -129,6 +137,11 @@ function GoLiveContent() {
     if (selectedId === QUICK && quickTitle.trim().length < 3) {
       haptic.error();
       toast.error('Yayın başlığı en az 3 karakter olmalı');
+      return;
+    }
+    if (quickTitleBanned) {
+      haptic.error();
+      toast.error('Yasaklı ifadeyi kaldırmadan yayına başlayamazsın');
       return;
     }
     if (checkStep < 3) {
@@ -267,6 +280,7 @@ function GoLiveContent() {
                   onChangeText={setQuickTitle}
                   maxLength={80}
                   returnKeyType="done"
+                  error={quickTitleBanned}
                 />
                 <View style={{ gap: 8 }}>
                   <Text variant="subhead" weight="600" color="textSecondary" style={{ marginLeft: 2 }}>

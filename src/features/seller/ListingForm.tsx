@@ -2,6 +2,12 @@
  * S83 — Ürün Oluştur / Düzenle (modal). ?id= düzenleme, ?showId= yayını önceden seç.
  * Fotoğraflar (8'e kadar), başlık, açıklama, kategori, durum, satış formatı ve fiyat, adet,
  * Uzatmasız (suddenDeath) / Fiyat önerisi, kargo profili, yayına ekle; Taslak / Yayınla / Sil.
+ *
+ * Sahte ürün önlemleri (features/trust): başlık ve açıklamada yasaklı ifade ("replika", "A kalite"…)
+ * yazıldığı anda uyarılır, yayımlama engellenir (taslak serbest). Riskli kategori / marka geçen
+ * ilanlarda orijinallik belgesi + beyan istenir. Hak sahibi şikâyetiyle kaldırılan ilan dosya
+ * kapanana kadar yeniden yayımlanamaz.
+ * QA (yalnızca geliştirme): ?qa=proof belge bölümünü, ?qa=banned yasaklı ifade uyarısını dolu açar.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -11,22 +17,30 @@ import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard'
 import { Button, Chip, EmptyState, Header, Icon, ListRow, PressableScale, Screen, Segmented, SelectField, Text, TextField, toast } from '@/components/ui';
 import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { CATEGORIES, getCategory } from '@/data';
+import { AUTHENTICITY_DECLARATION, authenticityRequirement, bannedMessage, IP_PROCESS, isSampleDoc, PROOF_KINDS, scanText } from '@/features/trust/counterfeit';
+import { IpCaseSheet } from '@/features/trust/IpCaseSheet';
+import { isIpLocked, RIGHT_TYPE_LABELS, useTrustStore, type IpCase } from '@/features/trust/store';
 import { formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { SELLER_FEE_TEXT, sellerFees, SHIPPING_PRICES, SHIPPING_PROFILE_LABELS } from '@/lib/pricing';
 import { useSellerStore } from '@/store/seller';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
-import type { Condition, ListingFormat, Product, ShippingProfile } from '@/types';
+import type { AuthenticityProof, Condition, ListingFormat, Product, ProofKind, ShippingProfile } from '@/types';
 
-import { useQaOffset } from './qaSeed';
+import { useQaOffset, useQaParam } from './qaSeed';
 import { assignListingsToShow, createListingWithStatus, deleteListings } from './actions';
 import { pickFromLibrary, SamplePhotoSheet, takePhoto } from './media';
 import { useSellerExtras } from './store';
-import { ActionSheet, Card, FormSection, KeyValue, MoneyField, Stepper, StickyFooter, Thumb, tint, MODAL_SAFE_TOP } from './ui';
+import { ActionSheet, Card, CheckRow, FormSection, KeyValue, MoneyField, StatusPill, Stepper, StickyFooter, Thumb, tint, MODAL_SAFE_TOP } from './ui';
 
 const MAX_PHOTOS = 8;
+const MAX_DOCS = 5;
+const DOC_SIZE = 84;
 const GRADE_PRESETS = ['PSA 10', 'PSA 9', 'BGS 9.5', 'CGC 9.8', 'PSA 8'];
 const NO_SHOW = 'none';
+const UNLINKED_DRAFT = 'Taslak kaydedildi; yasaklı ifade veya eksik belge nedeniyle yayına eklenmedi';
+/** Demo örnek belge adları ("sample:Fatura-1.jpg"); simülatörde kamera / galeri yokken */
+const SAMPLE_DOC_NAMES: Record<ProofKind, string> = { invoice: 'Fatura', receipt: 'Siparis-ozeti', certificate: 'Sertifika', dealer: 'Bayi-belgesi' };
 
 type FormState = {
   images: string[];
@@ -44,9 +58,20 @@ type FormState = {
   acceptsOffers: boolean;
   shippingProfile: ShippingProfile;
   showId?: string;
+  /** Orijinallik belgesi (alıcıya gösterilmez) */
+  proofKind?: ProofKind;
+  proofDocs: string[];
+  proofDeclared: boolean;
 };
 
-function initialState(p: Product | undefined, presetShow: string | undefined): FormState {
+/** Yalnızca geliştirme: ekran görüntüsü QA'sı için dolu başlangıç */
+function qaPreset(qa: string | undefined): Partial<FormState> {
+  if (qa === 'proof') return { title: 'Chanel Classic Flap omuz çantası', categoryId: 'bags', subcategoryId: 'luxury_bags', format: 'buy_now', price: 185000, proofKind: 'invoice', proofDocs: ['sample:Fatura-1.jpg'] };
+  if (qa === 'banned') return { title: 'Çelik kordon saat replika', description: 'A kalite, orijinal kalitesinde.', categoryId: 'watches', subcategoryId: 'luxury_watches' };
+  return {};
+}
+
+function initialState(p: Product | undefined, presetShow: string | undefined, qa?: string): FormState {
   if (p) {
     return {
       images: p.images.filter(Boolean),
@@ -64,6 +89,9 @@ function initialState(p: Product | undefined, presetShow: string | undefined): F
       acceptsOffers: p.acceptsOffers,
       shippingProfile: p.shippingProfile,
       showId: p.showId,
+      proofKind: p.authenticity?.kind,
+      proofDocs: p.authenticity?.docs ?? [],
+      proofDeclared: !!p.authenticity,
     };
   }
   return {
@@ -80,7 +108,15 @@ function initialState(p: Product | undefined, presetShow: string | undefined): F
     acceptsOffers: true,
     shippingProfile: 'small',
     showId: presetShow,
+    proofDocs: [],
+    proofDeclared: false,
+    ...qaPreset(qa),
   };
+}
+
+/** "a, b ve c" */
+function joinTr(items: string[]): string {
+  return items.length > 1 ? `${items.slice(0, -1).join(', ')} ve ${items[items.length - 1]}` : (items[0] ?? '');
 }
 
 export function ListingForm() {
@@ -92,14 +128,18 @@ export function ListingForm() {
   const updateListing = useSellerStore((s) => s.updateListing);
   const listingStatus = useSellerExtras((s) => s.listingStatus);
   const setListingStatus = useSellerExtras((s) => s.setListingStatus);
+  const ipCase = useTrustStore((s) => (params.id ? s.cases[params.id] : undefined));
+  const qa = useQaParam();
   const existing = params.id ? listings.find((p) => p.id === params.id) : undefined;
-  const [initial] = useState(() => initialState(existing, params.showId));
+  const [initial] = useState(() => initialState(existing, params.showId, qa));
   const [f, setF] = useState<FormState>(initial);
   const [submitted, setSubmitted] = useState<'draft' | 'publish' | null>(null);
   const [saving, setSaving] = useState(false);
   const [photoMenu, setPhotoMenu] = useState(false);
   const [samples, setSamples] = useState(false);
   const [photoIndex, setPhotoIndex] = useState<number | null>(null);
+  const [docMenu, setDocMenu] = useState(false);
+  const [caseOpen, setCaseOpen] = useState(false);
 
   if (params.id && !existing) {
     return (
@@ -119,6 +159,23 @@ export function ListingForm() {
   const shipping = SHIPPING_PRICES[f.shippingProfile];
   const fees = sellerFees(f.format === 'giveaway' ? 0 : f.price);
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
+  // Hak sahibi şikâyeti dosyası açıkken ilan aktif olamaz (düzenleme serbest)
+  const ipLocked = isIpLocked(ipCase);
+
+  // Yasaklı ifadeler yazıldığı anda gösterilir (gönderimi beklemeden); taslak kaydı serbest
+  const titleBanned = bannedMessage(scanText([f.title], f.categoryId).banned);
+  const descriptionBanned = bannedMessage(scanText([f.description], f.categoryId).banned);
+  const hasBanned = !!(titleBanned || descriptionBanned);
+
+  // Orijinallik belgesi: riskli kategori / marka / "ihraç fazlası" iddiasında zorunlu
+  const req = authenticityRequirement({ categoryId: f.categoryId, subcategoryId: f.subcategoryId, title: f.title, description: f.description });
+  // Örnek (sample:) belgeler yalnızca demoda belge sayılır
+  const realDocs = f.proofDocs.filter((u) => DEMO_MODE || !isSampleDoc(u));
+  const proofComplete = !!f.proofKind && realDocs.length > 0 && f.proofDeclared;
+  const showProof = req.required || !!existing?.authenticity || !!f.proofKind || f.proofDocs.length > 0;
+  const proofMissing = [!f.proofKind && 'belge türünü seç', !realDocs.length && 'en az bir belge ekle', !f.proofDeclared && 'orijinallik beyanını onayla'].filter((s): s is string => !!s);
+  const proofKindInfo = PROOF_KINDS.find((k) => k.key === f.proofKind);
+  const docsRemaining = MAX_DOCS - f.proofDocs.length;
 
   const errors = {
     images: f.images.length === 0 ? 'Yayınlamak için en az bir fotoğraf gerekli' : undefined,
@@ -128,19 +185,31 @@ export function ListingForm() {
     price: f.format !== 'giveaway' && f.price <= 0 ? (f.format === 'auction' ? 'Başlangıç fiyatı gir' : 'Fiyat gir') : undefined,
     compareAt: f.format === 'buy_now' && f.compareAt > 0 && f.compareAt <= f.price ? 'İndirim öncesi fiyat, satış fiyatından yüksek olmalı' : undefined,
     grade: f.condition === 'graded' && !f.grade.trim() ? 'Dereceyi gir (ör. PSA 10)' : undefined,
+    authenticity: req.required && !proofComplete ? `Yayınlamak için ${joinTr(proofMissing)}` : undefined,
   };
   const publishOk = Object.values(errors).every((e) => !e);
+  // Yasaklı ifade / eksik belge varken taslak bile yayına bağlanmaz (canlı yayında satışa çıkmasın)
+  const showBlocked = hasBanned || !!errors.authenticity;
   const showErr = (k: keyof typeof errors) => (submitted === 'publish' || (submitted === 'draft' && k === 'title') ? errors[k] : undefined);
 
-  const close = () => {
+  const leave = (go: () => void) => {
     if (!dirty) {
-      router.back();
+      go();
       return;
     }
     Alert.alert('Değişiklikler kaydedilmedi', 'Çıkarsan yaptığın değişiklikler kaybolacak.', [
       { text: 'Düzenlemeye devam et', style: 'cancel' },
-      { text: 'Çık', style: 'destructive', onPress: () => router.back() },
+      { text: 'Çık', style: 'destructive', onPress: go },
     ]);
+  };
+  const close = () => leave(() => router.back());
+
+  /** Belge tamamsa yazılır; tür ve belgeler değişmediyse ilk beyan zamanı korunur */
+  const buildProof = (): AuthenticityProof | undefined => {
+    if (!proofComplete || !f.proofKind) return undefined;
+    const prev = existing?.authenticity;
+    const unchanged = prev && prev.kind === f.proofKind && prev.docs.join('\n') === f.proofDocs.join('\n');
+    return { kind: f.proofKind, docs: f.proofDocs, declaredAt: prev && unchanged ? prev.declaredAt : new Date().toISOString() };
   };
 
   const buildProduct = () => ({
@@ -159,13 +228,25 @@ export function ListingForm() {
     shippingCost: SHIPPING_PRICES[f.shippingProfile],
     suddenDeath: f.format === 'auction' && f.suddenDeath,
     acceptsOffers: f.format === 'buy_now' && f.acceptsOffers,
-    showId: f.showId,
+    // Şikâyet dosyası açıkken ya da yasaklı ifade / eksik belge varken yayına eklenemez
+    showId: ipLocked || showBlocked ? undefined : f.showId,
     tags: f.subcategoryId ? [f.subcategoryId] : [],
+    authenticity: buildProof(),
   });
 
   const save = (mode: 'draft' | 'publish' | 'update') => {
     const asDraft = mode === 'draft';
     setSubmitted(asDraft ? 'draft' : 'publish');
+    if (mode === 'publish' && ipLocked) {
+      haptic.warning();
+      toast.warning('Şikâyet dosyası kapanana kadar yayımlanamaz');
+      return;
+    }
+    if (!asDraft && hasBanned) {
+      haptic.warning();
+      toast.warning('Yasaklı ifadeleri kaldır');
+      return;
+    }
     if (asDraft ? !!errors.title : !publishOk) {
       haptic.warning();
       toast.warning(asDraft ? 'Taslak için en az bir başlık gir' : 'Eksik alanları tamamla');
@@ -174,16 +255,20 @@ export function ListingForm() {
     setSaving(true);
     setTimeout(() => {
       const data = buildProduct();
+      // Seçili yayın kontrol yüzünden düştüyse satıcıya söylenir
+      const unlinked = asDraft && !ipLocked && !!f.showId && !data.showId;
       if (existing) {
         updateListing(existing.id, { ...data, quantity: Math.max(data.quantity, existing.sold) });
-        if (mode === 'publish') setListingStatus(existing.id, 'active');
+        if (mode === 'publish' && !ipLocked) setListingStatus(existing.id, 'active');
         if (data.showId !== existing.showId) assignListingsToShow([existing.id], data.showId);
-        toast.success(mode === 'publish' ? 'Ürün yayınlandı 🎉' : 'Değişiklikler kaydedildi');
+        if (unlinked) toast.warning(UNLINKED_DRAFT);
+        else toast.success(mode === 'publish' ? 'Ürün yayınlandı 🎉' : 'Değişiklikler kaydedildi');
       } else {
         const product = createListingWithStatus(data, asDraft ? 'draft' : 'active');
         if (data.showId) assignListingsToShow([product.id], data.showId);
         const show = data.showId ? shows.find((s) => s.id === data.showId) : undefined;
-        toast.success(asDraft ? 'Taslak kaydedildi' : show ? 'Ürün yayına eklendi 🎉' : 'Ürün yayınlandı 🎉');
+        if (unlinked) toast.warning(UNLINKED_DRAFT);
+        else toast.success(asDraft ? 'Taslak kaydedildi' : show ? 'Ürün yayına eklendi 🎉' : 'Ürün yayınlandı 🎉');
       }
       haptic.success();
       setSaving(false);
@@ -230,11 +315,25 @@ export function ListingForm() {
   };
   const remaining = MAX_PHOTOS - f.images.length;
 
+  const addDocs = (uris: string[]) => {
+    if (!uris.length) return;
+    setF((cur) => ({ ...cur, proofDocs: [...cur.proofDocs, ...uris.filter((u) => !cur.proofDocs.includes(u))].slice(0, MAX_DOCS) }));
+    haptic.light();
+  };
+  const addSampleDoc = () => {
+    const base = f.proofKind ? SAMPLE_DOC_NAMES[f.proofKind] : 'Belge';
+    let n = 1;
+    while (f.proofDocs.includes(`sample:${base}-${n}.jpg`)) n++;
+    addDocs([`sample:${base}-${n}.jpg`]);
+  };
+
   return (
     <Screen>
       <Header safeTop={MODAL_SAFE_TOP} back="close" onBack={close} title={editing ? 'Ürünü Düzenle' : 'Ürün Oluştur'} subtitle={editing && status === 'draft' ? 'Taslak' : undefined} border />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentOffset={qaOffset} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {ipCase && ipLocked ? <IpLockBanner ipCase={ipCase} onObject={() => setCaseOpen(true)} /> : null}
+
           <FormSection title="Fotoğraflar" subtitle={`${f.images.length}/${MAX_PHOTOS} · İlk fotoğraf kapak olur`}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.photos}>
               {remaining > 0 ? (
@@ -285,7 +384,7 @@ export function ListingForm() {
               placeholder="ör. Charizard VMAX 020/189 — PSA 10"
               maxLength={80}
               helper={`${f.title.length}/80 · Marka, model, beden gibi anahtar kelimeleri ekle`}
-              error={showErr('title')}
+              error={titleBanned ?? showErr('title')}
             />
             <TextField
               label="Açıklama"
@@ -295,6 +394,7 @@ export function ListingForm() {
               multiline
               maxLength={1000}
               helper={`${f.description.length}/1000`}
+              error={descriptionBanned}
             />
             <SelectField
               label="Kategori"
@@ -333,6 +433,97 @@ export function ListingForm() {
               </View>
             ) : null}
           </FormSection>
+
+          {showProof ? (
+            <FormSection title="Orijinallik belgesi" subtitle={req.required ? 'Bu ilanı yayımlamak için gerekli' : 'Bu ilan için zorunlu değil; eklediğin belge saklanır'}>
+              <Card style={{ backgroundColor: tint(colors.info, 0.08), borderColor: tint(colors.info, 0.25), gap: 8 }}>
+                <View style={styles.inline}>
+                  <Icon name="shield-checkmark" size={18} color={colors.info} />
+                  <Text variant="subhead" weight="700" style={{ flex: 1 }}>
+                    {req.required ? 'Bu ilan neden belge istiyor?' : 'Belge neden saklanıyor?'}
+                  </Text>
+                </View>
+                {req.reasons.length ? (
+                  <View style={styles.wrap}>
+                    {req.reasons.map((r) => (
+                      <StatusPill key={r} label={r} tone="info" />
+                    ))}
+                  </View>
+                ) : null}
+                <Text variant="footnote" color="textSecondary">
+                  {req.required ? 'Taklidi sık görülen kategori ve markalarda ürünün orijinal olduğunu gösteren bir belge istiyoruz. ' : ''}
+                  Belge alıcılara gösterilmez. Bir hak sahibi bu ilan için şikâyette bulunursa itirazını bu belgeyle yaparsın.
+                  {DEMO_MODE ? ' Demo: Belgeler yalnızca bu cihazda tutulur ve incelenmez.' : ''}
+                </Text>
+              </Card>
+
+              <View style={{ gap: 8 }}>
+                <Text variant="subhead" weight="600" color="textSecondary">
+                  Belge türü
+                </Text>
+                <View style={styles.wrap}>
+                  {PROOF_KINDS.map((k) => (
+                    <Chip key={k.key} label={k.label} selected={f.proofKind === k.key} onPress={() => set({ proofKind: k.key })} />
+                  ))}
+                </View>
+                <Text variant="footnote" color="textSecondary">
+                  {proofKindInfo ? proofKindInfo.hint : 'Elindeki belgeye en uygun türü seç.'}
+                </Text>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <Text variant="subhead" weight="600" color="textSecondary">
+                  Belgeler · {f.proofDocs.length}/{MAX_DOCS}
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SCREEN_PADDING }} contentContainerStyle={styles.photos}>
+                  {docsRemaining > 0 ? (
+                    <PressableScale
+                      scaleTo={0.95}
+                      onPress={() => setDocMenu(true)}
+                      style={[styles.addDoc, { borderColor: showErr('authenticity') && !realDocs.length ? colors.danger : colors.border, backgroundColor: colors.surface }]}
+                      accessibilityLabel="Belge ekle">
+                      <Icon name="document-attach-outline" size={24} />
+                      <Text variant="caption" color="textSecondary">
+                        Belge ekle
+                      </Text>
+                    </PressableScale>
+                  ) : null}
+                  {f.proofDocs.map((uri) => (
+                    <View key={uri} style={styles.docWrap}>
+                      {isSampleDoc(uri) ? (
+                        <View style={[styles.sampleDoc, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel={`Örnek belge ${sampleDocName(uri)}`}>
+                          <Icon name="document-text-outline" size={26} color="textSecondary" />
+                          <Text variant="caption" color="textSecondary" align="center" numberOfLines={2}>
+                            {sampleDocName(uri)}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Thumb uri={uri} size={DOC_SIZE} rounded={radius.md} />
+                      )}
+                      <PressableScale
+                        scaleTo={0.85}
+                        hitSlop={8}
+                        onPress={() => set({ proofDocs: f.proofDocs.filter((u) => u !== uri) })}
+                        style={[styles.remove, { backgroundColor: colors.inverse }]}
+                        accessibilityLabel="Belgeyi kaldır">
+                        <Icon name="close" size={14} color={colors.onInverse} />
+                      </PressableScale>
+                    </View>
+                  ))}
+                </ScrollView>
+                <Text variant="footnote" color="textSecondary">
+                  Ürün adı, satıcı ve tarih okunabilir olsun; belgedeki ilgisiz kişisel bilgileri kapatabilirsin.
+                </Text>
+              </View>
+
+              <CheckRow checked={f.proofDeclared} onPress={() => set({ proofDeclared: !f.proofDeclared })} label={AUTHENTICITY_DECLARATION} />
+              {showErr('authenticity') ? (
+                <Text variant="footnote" color="danger">
+                  {showErr('authenticity')}
+                </Text>
+              ) : null}
+            </FormSection>
+          ) : null}
 
           <FormSection title="Satış formatı" subtitle="Açık artırma ve çekilişler canlı yayında yapılır; Hemen Al ürünleri mağazanda da satılır.">
             <Segmented
@@ -410,7 +601,11 @@ export function ListingForm() {
           </FormSection>
 
           <FormSection title="Yayına ekle" subtitle="Ürünü planladığın bir canlı yayının mağazasına ekle">
-            {upcomingShows.length ? (
+            {ipLocked ? (
+              <Text variant="footnote" color="textSecondary">
+                Şikâyet dosyası kapanana kadar bu ürün bir yayına eklenemez.
+              </Text>
+            ) : upcomingShows.length ? (
               <SelectField
                 value={f.showId ?? NO_SHOW}
                 options={[
@@ -453,7 +648,7 @@ export function ListingForm() {
           {isDraft ? (
             <>
               <Button title={editing ? 'Taslağı kaydet' : 'Taslağa kaydet'} variant="secondary" size="lg" style={{ flex: 1 }} disabled={saving} onPress={() => save('draft')} />
-              <Button title="Yayınla" size="lg" style={{ flex: 1 }} loading={saving} onPress={() => save('publish')} />
+              <Button title="Yayınla" size="lg" style={{ flex: 1 }} loading={saving} disabled={ipLocked} onPress={() => save('publish')} />
             </>
           ) : (
             <Button title="Değişiklikleri kaydet" size="lg" style={{ flex: 1 }} loading={saving} onPress={() => save('update')} />
@@ -472,6 +667,18 @@ export function ListingForm() {
           { label: 'Örnek fotoğraf seç', icon: 'sparkles-outline', subtitle: 'Kategori görsellerinden (simülatör için)', onPress: () => setSamples(true) },
         ]}
       />
+      <ActionSheet
+        visible={docMenu}
+        onClose={() => setDocMenu(false)}
+        title="Belge ekle"
+        subtitle={`${docsRemaining} belge daha ekleyebilirsin`}
+        actions={[
+          { label: 'Fotoğraf çek', icon: 'camera-outline', onPress: () => takePhoto([3, 4]).then((u) => addDocs(u ? [u] : [])) },
+          { label: 'Galeriden seç', icon: 'images-outline', onPress: () => pickFromLibrary({ limit: docsRemaining }).then(addDocs) },
+          ...(DEMO_MODE ? [{ label: 'Örnek belge ekle', icon: 'document-text-outline' as const, subtitle: 'Simülatör için (demo)', onPress: addSampleDoc }] : []),
+        ]}
+      />
+      <IpCaseSheet listingId={caseOpen && existing ? existing.id : null} onClose={() => setCaseOpen(false)} />
       <SamplePhotoSheet key={f.categoryId ?? 'all'} visible={samples} onClose={() => setSamples(false)} initialCategoryId={f.categoryId} max={remaining} onPick={addPhotos} />
       <ActionSheet
         visible={photoIndex !== null}
@@ -508,6 +715,40 @@ export function ListingForm() {
   );
 }
 
+/** Hak sahibi şikâyetiyle kaldırılan ilan: dosya kapanana kadar yeniden yayımlanamaz */
+function IpLockBanner({ ipCase, onObject }: { ipCase: IpCase; onObject: () => void }) {
+  const { colors } = useTheme();
+  const removed = ipCase.status === 'removed';
+  const tone = removed ? colors.danger : colors.info;
+  return (
+    <Card style={{ backgroundColor: tint(tone, 0.08), borderColor: tint(tone, 0.3), gap: 8 }}>
+      <View style={styles.inline}>
+        <Icon name={removed ? 'shield-outline' : 'hourglass-outline'} size={18} color={tone} />
+        <Text variant="subhead" weight="700" style={{ flex: 1 }}>
+          {removed ? 'İlan yayından kaldırıldı' : 'İtirazın inceleniyor…'}
+        </Text>
+      </View>
+      <Text variant="footnote" color="textSecondary">
+        {removed
+          ? `Bu ilan hak sahibi şikâyetiyle (${ipCase.complaintNo}) yayından kaldırıldı. Belgeyle itiraz edip sonuç alana kadar yeniden yayımlanamaz.`
+          : `Belgeler itirazının açıkça haklı olduğunu gösterirse ilan en geç ${IP_PROCESS.reinstateHours} saat içinde yeniden yayına alınır; o zamana kadar yayımlanamaz.${DEMO_MODE ? ' Demo: sonuç birkaç saniye içinde gelir.' : ''}`}
+      </Text>
+      <Text variant="footnote" color="textTertiary">
+        {RIGHT_TYPE_LABELS[ipCase.rightType]} · {ipCase.rightHolder} · {ipCase.complaintNo}
+      </Text>
+      <Text variant="footnote" color="textSecondary">
+        Düzenlemelerini kaydedebilirsin; ilan bu süre boyunca pasif kalır.
+      </Text>
+      {removed ? <Button title="Belgeyle itiraz et" icon="document-attach-outline" variant="secondary" size="sm" onPress={onObject} style={{ alignSelf: 'flex-start', marginTop: 2 }} /> : null}
+    </Card>
+  );
+}
+
+/** "sample:Fatura-1.jpg" → "Fatura-1.jpg" */
+function sampleDocName(uri: string): string {
+  return uri.slice('sample:'.length);
+}
+
 const styles = StyleSheet.create({
   content: { padding: SCREEN_PADDING, gap: 26, paddingBottom: 32 },
   photos: { paddingHorizontal: SCREEN_PADDING, gap: 10 },
@@ -515,6 +756,9 @@ const styles = StyleSheet.create({
   photoWrap: { width: 96, height: 96 },
   cover: { position: 'absolute', left: 6, bottom: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   remove: { position: 'absolute', top: 5, right: 5, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  addDoc: { width: DOC_SIZE, height: DOC_SIZE, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  docWrap: { width: DOC_SIZE, height: DOC_SIZE },
+  sampleDoc: { flex: 1, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 6 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flushRow: { paddingHorizontal: 0 },

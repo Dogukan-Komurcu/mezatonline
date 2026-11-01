@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Icon, LiveBadge, PressableScale, Text, type IconName } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
 import { getLiveShows, getSellers, getUser } from '@/data';
+import { RISKY_AREAS } from '@/features/account/content';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
 import { formatCompact, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -50,7 +51,10 @@ const STORIES = [
 
 const FAQ: { q: string; a: string }[] = [
   { q: 'Kimler satıcı olabilir?', a: '18 yaşını doldurmuş, Türkiye’de yaşayan herkes başvurabilir. Bireysel, şahıs şirketi ya da kurumsal olarak satış yapabilirsin.' },
-  { q: 'Hangi ürünleri satabilirim?', a: 'Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Orijinal olmayan ürünler, silah ve şans oyunları yasaktır.' },
+  {
+    q: 'Hangi ürünleri satabilirim?',
+    a: `Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Replika, taklit ya da hak sahibinin izni olmadan üretilmiş ürünler, silah ve şans oyunları yasaktır. Taklidi yaygın kategorilerdeki (${RISKY_AREAS}) ve taklidi yaygın markaların geçtiği ilanlara orijinallik belgesi (fatura, sertifika ya da tedarik belgesi) eklemen gerekir.`,
+  },
   { q: 'Ödemelerimi nasıl alırım?', a: 'Siparişi kargoya verdiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
   { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini kargo firmasının şubesine bırakıp kodu göstermen yeterli. Kargo ücretini alıcı öder.' },
   { q: 'Yayın için ekipman gerekir mi?', a: 'Hayır. Telefonun yeterli. İyi ışık ve sabit bir tripod yayın kaliteni artırır.' },

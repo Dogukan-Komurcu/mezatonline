@@ -29,6 +29,7 @@ const VISUALS: Record<NotificationType, Visual> = {
   offer: { icon: 'pricetag', tone: 'accent', style: 'thumb' },
   promo: { icon: 'gift', tone: 'primary', style: 'icon' },
   payout: { icon: 'cash', tone: 'success', style: 'icon' },
+  policy: { icon: 'shield-checkmark', tone: 'warning', style: 'icon' },
 };
 
 const DAY = 86_400_000;

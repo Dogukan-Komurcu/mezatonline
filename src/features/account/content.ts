@@ -5,12 +5,18 @@
 import type { IconName } from '@/components/ui';
 import { DEMO_COPY } from '@/config/demo';
 import { BINDING_BID_TEXT, ESCROW_TEXT } from '@/features/commerce/utils';
+import { HIGH_RISK_SUBCATEGORIES, IP_PROCESS, PROOF_KINDS, STRIKE_POLICY } from '@/features/trust/counterfeit';
 
 /** Şirket kurulana kadar tüm yasal metinlerde kullanılan unvan */
 const ENTITY = 'Mezatonline (demo sürüm; şirket unvanı, MERSİS numarası ve adres şirket kuruluşundan sonra eklenecektir)';
 const GIVEAWAY_NOTE = `${DEMO_COPY.giveaway} Gerçek ödüllü çekilişler Milli Piyango İdaresi izniyle düzenlenebilir.`;
 
-export type FaqTopic = 'bids' | 'shipping' | 'returns' | 'protection' | 'giveaway' | 'payment' | 'account';
+const lowerFirst = (s: string) => s.charAt(0).toLocaleLowerCase('tr-TR') + s.slice(1);
+/** Orijinallik belgesi istenen alanlar ve kabul edilen belgeler: "sneaker, lüks çanta…", "fatura / e-Arşiv, …" */
+export const RISKY_AREAS = [...new Set(Object.values(HIGH_RISK_SUBCATEGORIES))].map(lowerFirst).join(', ');
+const PROOF_LIST = PROOF_KINDS.map((k) => lowerFirst(k.label)).join(', ');
+
+export type FaqTopic = 'bids' | 'shipping' | 'returns' | 'protection' | 'giveaway' | 'payment' | 'account' | 'authenticity';
 
 export const FAQ_TOPICS: { key: FaqTopic; label: string; icon: IconName }[] = [
   { key: 'bids', label: 'Teklif & Mezat', icon: 'hammer-outline' },
@@ -20,6 +26,7 @@ export const FAQ_TOPICS: { key: FaqTopic; label: string; icon: IconName }[] = [
   { key: 'giveaway', label: 'Çekiliş', icon: 'gift-outline' },
   { key: 'payment', label: 'Ödeme', icon: 'card-outline' },
   { key: 'account', label: 'Hesap', icon: 'person-circle-outline' },
+  { key: 'authenticity', label: 'Orijinallik', icon: 'ribbon-outline' },
 ];
 
 export type Faq = { id: string; topic: FaqTopic; q: string; a: string };
@@ -145,6 +152,18 @@ export const FAQS: Faq[] = [
     q: 'Harcama veya izleme limiti koyabilir miyim?',
     a: 'Evet. Hesap → Hesap Kontrolleri ekranında canlı yayın izleme süren ve harcaman için ayrı ayrı sınır koyabilirsin. Hatırlatıcı yalnızca uyarı gösterir. Limit ise kesin bir sınırdır: izleme limitine ulaşınca dönem sonuna kadar canlı yayın izleyemezsin, harcama limitine ulaşınca teklif veremez ve satın alamazsın. Haftalık dönem her Pazartesi 00:00’da, aylık dönem her ayın 1’inde (Türkiye saati) yenilenir. Ayarlarını kendi belirlediğin 4 haneli PIN ile kilitlersin; ani bir kararla gevşetilmesin diye ulaşılan limit dönem sonuna kadar kaldırılamaz.',
   },
+  {
+    id: 'f21',
+    topic: 'authenticity',
+    q: 'Marka sahibiyim, taklit ürünü nasıl bildiririm?',
+    a: `Hesap → Yasal & KVKK → Fikri mülkiyet ihlali bildir formunu doldur. Formda hak sahibi mi yoksa vekili mi olduğunu, ad soyad ya da unvanını, T.C. kimlik veya vergi numaranı, e-posta ve telefonunu, hakkın türünü (marka, tasarım, patent ya da telif), marka, tasarım ve patentte TÜRKPATENT tescil veya başvuru numarasını, şikâyet ettiğin ilanı ve gerekçeni yazarsın; tescil belgesini (telifte eser sahipliğini gösteren belgeyi) ve ihlali gösteren görselleri ekler, bilgilerin doğru olduğunu ve belgelerin yanlış çıkması hâlinde sorumluluğun sana ait olduğunu onaylarsın. Başvurun usulüne uygunsa ilan en geç ${IP_PROCESS.takedownHours} saat içinde yayından kaldırılır; sana ve satıcıya bildirim gönderilir. Satıcı fatura veya tedarik zinciri belgeleriyle itiraz edebilir; itiraz sana iletilir ve belgelerden açıkça haklı görülürse ilan ${IP_PROCESS.reinstateHours} saat içinde yeniden yayımlanır. İki taraf için de mahkeme yolu açıktır. Gerçek sürümde noter ya da KEP yoluyla da başvurabileceksin. Demo: başvurun yalnızca bu cihazda tutulur, hiçbir yere gönderilmez ve gerçek bir inceleme yapılmaz.`,
+  },
+  {
+    id: 'f22',
+    topic: 'authenticity',
+    q: 'Neden orijinallik belgesi istiyorsunuz?',
+    a: `Taklit markalı ürünü satışa sunmak hak sahibinin haklarını ihlal eder ve suçtur (6769 sayılı Sınai Mülkiyet Kanunu); alıcıyı da zor durumda bırakır. Bu yüzden taklidi yaygın alanlarda (${RISKY_AREAS}), başlığında ya da açıklamasında taklidi yaygın bir marka geçen ilanlarda ve “ihraç fazlası” gibi iddialarda ilan yayımlanmadan önce belge istiyoruz: ${PROOF_LIST}. Bu belge, bir hak sahibi ilanını şikâyet ederse itirazını hızlıca yapabilmeni de sağlar. “Replika”, “muadil”, “A kalite” ya da “… kokusu” gibi ifadeler içeren ilanlar ise hiç yayımlanmaz. Demo: yüklediğin belgeler yalnızca bu cihazda tutulur ve gerçek bir inceleme yapılmaz.`,
+  },
 ];
 
 export type LegalDoc = { id: string; title: string; icon: IconName; updated: string; intro: string; sections: { h: string; p: string }[] };
@@ -175,6 +194,10 @@ export const LEGAL_DOCS: LegalDoc[] = [
       { h: 'Teklifler bağlayıcıdır', p: `${BINDING_BID_TEXT} Bu kural canlı mezatlarda ve ön tekliflerde geçerlidir. Kazandığında ödeme, varsayılan ödeme yönteminden otomatik olarak tahsil edilir (demo sürümde ödeme alınmaz).` },
       { h: 'Yasaklı davranışlar', p: 'Mevzuatın yasakladığı ürünleri listelemek, fiyatı tanıdıklar ya da ikinci hesaplar üzerinden yapay olarak yükseltmek, otomatik yazılımla teklif vermek, ödemeyi uygulama dışına taşımaya çalışmak, kullanıcılara hakaret, tehdit ya da nefret söylemi ve başkasının adres veya telefonunu paylaşmak yasaktır. İhlalin ağırlığına göre uyarı verilebilir, hesap kısıtlanabilir ya da kapatılabilir.' },
       { h: 'Satıcı yükümlülükleri', p: 'Satıcılar ürünleri doğru ve eksiksiz tanıtmak, siparişleri 2 iş günü içinde kargoya vermek ve ilgili mevzuata (vergi, tüketici, e-ticaret) uymakla yükümlüdür.' },
+      {
+        h: 'Fikri mülkiyet ve taklit ürünler',
+        p: `Sahte, taklit ya da hak sahibinin izni olmadan üretilmiş ürünleri satmak ve ilanlarda “replika”, “muadil”, “A kalite” gibi ürünü bir markanın kopyası olarak sunan ifadeler kullanmak yasaktır. Taklidi yaygın kategorilerde (${RISKY_AREAS}), taklidi yaygın markaların geçtiği ilanlarda ve “ihraç fazlası” gibi iddialarda satıcıdan orijinallik belgesi istenir. Marka, tasarım, patent veya telif hakkı sahipleri ihlal ettiğini düşündükleri ilanı Yasal & KVKK sayfasındaki “Fikri mülkiyet ihlali bildir” formuyla bildirebilir; usulüne uygun başvurularda ilan en geç ${IP_PROCESS.takedownHours} saat içinde kaldırılır ve iki taraf da bilgilendirilir. Satıcı fatura ve tedarik zinciri belgeleriyle itiraz edebilir; itiraz açıkça haklıysa ilan ${IP_PROCESS.reinstateHours} saat içinde yeniden yayımlanır. Mahkemeye başvurma hakkı saklıdır. İhlallerde kademeli yaptırım uygulanır: ${STRIKE_POLICY.join(' ')}`,
+      },
       { h: 'Uyuşmazlıklar', p: 'Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir. Tüketici uyuşmazlıklarında, parasal sınırlar dahilinde Tüketici Hakem Heyetleri; aşan durumlarda arabuluculuk ve Tüketici Mahkemeleri yetkilidir.' },
     ],
   },
