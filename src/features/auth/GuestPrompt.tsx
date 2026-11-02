@@ -15,6 +15,8 @@ export type GuestPromptProps = {
   reason?: string;
   /** Giriş sonrası çalışacak işlem */
   onSignedIn?: () => void;
+  /** Tam ekran istemi; kaydırılan içerik içinde false kullanılır. */
+  fill?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -22,10 +24,10 @@ export type GuestPromptProps = {
  * Misafirin hesap gerektiren bir ekrana geldiğinde gördüğü giriş istemi
  * (Aktivite, Hesap, Sat sekmeleri gibi).
  */
-export function GuestPrompt({ icon, title, message, reason = AUTH_REASONS.generic, onSignedIn, style }: GuestPromptProps) {
+export function GuestPrompt({ icon, title, message, reason = AUTH_REASONS.generic, onSignedIn, fill = true, style }: GuestPromptProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.wrap, style]}>
+    <View style={[styles.wrap, fill && styles.fill, style]}>
       <View style={[styles.badge, { backgroundColor: colors.surface }]}>
         {icon ? <Icon name={icon} size={34} color="text" /> : <Logo size={40} iconOnly />}
       </View>
@@ -44,7 +46,8 @@ export function GuestPrompt({ icon, title, message, reason = AUTH_REASONS.generi
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SCREEN_PADDING * 2, gap: 12 },
+  wrap: { flexShrink: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SCREEN_PADDING * 2, gap: 12 },
+  fill: { flex: 1 },
   badge: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   message: { maxWidth: 320 },
   cta: { marginTop: 12, alignSelf: 'stretch' },

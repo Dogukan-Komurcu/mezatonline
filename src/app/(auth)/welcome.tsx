@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   top: { alignItems: 'center', gap: 14 },
   close: { position: 'absolute', left: 0, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
   resume: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, borderWidth: 1 },
-  spacer: { flex: 1, minHeight: 140 },
+  spacer: { flex: 1, minHeight: 24 },
   panel: { gap: 18 },
   headings: { gap: 6 },
   kicker: { letterSpacing: 0.6, fontSize: 12 },

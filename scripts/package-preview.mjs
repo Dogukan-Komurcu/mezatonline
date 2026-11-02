@@ -3,6 +3,7 @@
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = path.resolve(process.argv[2] || path.join(project, 'work/share-web'));
@@ -135,12 +136,24 @@ async function main() {
     });
   })();<\/script>`;
   inner = inner.replace(/<head(?:\s[^>]*)?>/i, (head) => `${head}<meta name="color-scheme" content="light">${bridge}`);
+  let sourceCommit = 'unknown';
+  try { sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: project, encoding: 'utf8' }).trim(); } catch {}
+  const builtAt = new Date().toISOString();
   const encoded = Buffer.from(inner).toString('base64');
   const outer = `<!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><title>Mezatonline · Paylaşım önizlemesi</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta name="theme-color" content="#ffffff"><meta name="mezatonline-source-commit" content="${sourceCommit}"><meta name="mezatonline-built-at" content="${builtAt}"><title>Mezatonline · Paylaşım önizlemesi</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#202020;background:#f4f3ef}button{font:inherit;cursor:pointer}header{height:80px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #e3e1db;background:rgba(255,255,255,.9)}.brand{display:flex;align-items:center;gap:12px}.mark{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:#0D9488;color:#fff;font-size:21px;font-weight:900}.name{font-weight:800;font-size:19px;letter-spacing:-.5px}.eyebrow{margin-top:3px;font-size:12px;color:#74736c}.actions{display:flex;gap:8px}.actions button,.retry{border:1px solid #d8d6cf;background:#fff;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:650;color:#34342e}.actions button:hover,.retry:hover{background:#0D9488;border-color:#0D9488;color:#fff}.stage{position:absolute;inset:80px 0 44px;display:flex;align-items:center;justify-content:center;padding:16px}.sizer{position:relative;flex:none}.phone{position:absolute;left:0;top:0;width:406px;height:860px;transform-origin:top left;border:8px solid #222;border-radius:35px;overflow:hidden;background:#fff;box-shadow:0 22px 65px #2222,0 4px 15px #0001}iframe{display:block;border:0;width:390px;height:844px;background:#fff}.status{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:34px;background:#fff}.status[hidden]{display:none}.spinner{width:30px;height:30px;border:3px solid #eee;border-top-color:#202020;border-radius:50%;animation:spin .8s linear infinite}.status strong{font-size:17px}.status p{margin:0;max-width:280px;font-size:13px;line-height:1.6;color:#737373;overflow-wrap:anywhere}.status.error .spinner{display:none}.retry{display:none}.status.error .retry{display:block}.note{position:absolute;bottom:0;left:0;right:0;height:44px;padding:0 20px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#73716b;line-height:1.4}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:600px){header{height:68px;padding:0 12px;gap:8px}.brand{gap:8px}.mark{width:29px;height:29px;font-size:17px;border-radius:8px}.name{font-size:16px}.eyebrow{font-size:10px}.actions{gap:5px}.actions button{padding:8px;font-size:10px}.stage{inset:68px 0 39px;padding:0;align-items:center}.phone{border:0;border-radius:0;box-shadow:none}.note{height:39px;font-size:9px;padding:0 10px}}
+/* Phone browsers get the app canvas without the desktop preview furniture. */
+@media (max-width:600px), (max-width:1024px) and (max-height:600px){
+  html,body{width:100%;height:100%;overscroll-behavior:none;background:#fff}
+  body{height:100vh;height:100dvh;height:var(--visible-height,100dvh)}
+  header,.note{display:none}
+  .stage{position:fixed;top:0;left:0;right:0;bottom:auto;height:100vh;height:100dvh;height:var(--visible-height,100dvh);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);align-items:stretch;justify-content:stretch;min-height:0}
+  .sizer{width:100%;height:100%;min-width:0;min-height:0}
+  .phone{border:0;border-radius:0;box-shadow:none;background:#fff}
+  iframe{background:#fff}
+}
 </style></head><body>
 <header><div class="brand"><div class="mark" aria-hidden="true">m.</div><div><div class="name">mezatonline</div><div class="eyebrow">Paylaşım önizlemesi</div></div></div><nav class="actions" aria-label="Önizleme kontrolleri"><button id="home" type="button">Ana sayfa</button><button id="reset" type="button">Baştan başlat</button></nav></header>
 <main class="stage" id="stage"><div class="sizer" id="sizer"><div class="phone" id="phone"><iframe id="app" title="Mezatonline telefon önizlemesi" allow="camera; microphone; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe><div class="status" id="status" role="status" aria-live="polite"><div class="spinner"></div><strong id="status-title">Mezatonline açılıyor</strong><p id="status-detail">Telefon önizlemesi hazırlanıyor…</p><button class="retry" id="retry" type="button">Yeniden dene</button></div></div></div></main>
@@ -151,14 +164,29 @@ async function main() {
   var html=new TextDecoder().decode(bytes);
   var app=document.getElementById('app'),phone=document.getElementById('phone'),stage=document.getElementById('stage'),sizer=document.getElementById('sizer'),status=document.getElementById('status');
   var title=document.getElementById('status-title'),detail=document.getElementById('status-detail'),timer;
-  function fit(){var mobile=innerWidth<=600;var availableW=Math.max(1,stage.clientWidth-(mobile?0:32)),availableH=Math.max(1,stage.clientHeight-(mobile?0:32));var width=mobile?availableW:406,height=mobile?availableH:860;var scale=mobile?1:Math.min(1,availableW/width,availableH/height);app.style.width=(mobile?width:390)+'px';app.style.height=(mobile?height:844)+'px';phone.style.width=width+'px';phone.style.height=height+'px';phone.style.transform='scale('+scale+')';sizer.style.width=width*scale+'px';sizer.style.height=height*scale+'px'}
+  var mobileLayout=matchMedia('(max-width:600px), (max-width:1024px) and (max-height:600px)');
+  function fit(){
+    var viewport=window.visualViewport;
+    document.documentElement.style.setProperty('--visible-height',(viewport?viewport.height:innerHeight)+'px');
+    var mobile=mobileLayout.matches;
+    var styles=getComputedStyle(stage);
+    var availableW=Math.max(1,stage.clientWidth-parseFloat(styles.paddingLeft)-parseFloat(styles.paddingRight));
+    var availableH=Math.max(1,stage.clientHeight-parseFloat(styles.paddingTop)-parseFloat(styles.paddingBottom));
+    var width=mobile?availableW:406,height=mobile?availableH:860;
+    var scale=mobile?1:Math.min(1,availableW/width,availableH/height);
+    app.style.width=(mobile?width:390)+'px';
+    app.style.height=(mobile?height:844)+'px';
+    phone.style.width=width+'px';phone.style.height=height+'px';
+    phone.style.transform='scale('+scale+')';
+    sizer.style.width=width*scale+'px';sizer.style.height=height*scale+'px';
+  }
   function error(message){clearTimeout(timer);status.hidden=false;status.classList.add('error');title.textContent='Önizleme açılamadı';detail.textContent=message||'Lütfen yeniden deneyin.'}
   function load(fresh){if(fresh===true)window.__mezatPreviewFreshStart=true;clearTimeout(timer);status.hidden=false;status.classList.remove('error');title.textContent='Mezatonline açılıyor';detail.textContent='Telefon önizlemesi hazırlanıyor…';app.srcdoc=html;timer=setTimeout(function(){error('Tarayıcı önizlemeyi başlatamadı. Dosyayı güncel Chrome, Edge veya Safari ile açıp yeniden deneyin.')},45000)}
   addEventListener('message',function(event){var data=event.data;if(event.source!==app.contentWindow||!data||data.source!=='mezatonline-preview')return;if(data.type==='ready'){clearTimeout(timer);status.hidden=true}else if(data.type==='error'){error(data.message)}});
   addEventListener('pageshow',function(event){if(event.persisted)load(true)});
   document.getElementById('home').onclick=load;
   document.getElementById('reset').onclick=function(){try{if(typeof app.contentWindow.__mezatPreviewReset==='function')app.contentWindow.__mezatPreviewReset()}catch(_){}load(true)};
-  document.getElementById('retry').onclick=load;addEventListener('resize',fit);new ResizeObserver(fit).observe(stage);fit();load(true);
+  document.getElementById('retry').onclick=load;addEventListener('resize',fit);addEventListener('orientationchange',fit);if(window.visualViewport){visualViewport.addEventListener('resize',fit)}mobileLayout.addEventListener('change',fit);new ResizeObserver(fit).observe(stage);fit();load(true);
 })();
 </script></body></html>`;
   await mkdir(path.dirname(destination), { recursive: true });

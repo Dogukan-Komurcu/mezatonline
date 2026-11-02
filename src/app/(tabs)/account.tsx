@@ -46,6 +46,7 @@ function GuestAccount() {
       <Header large title="Hesap" back={false} />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         <GuestPrompt
+          fill={false}
           icon="person-circle-outline"
           title="Mezatonline’a katıl"
           message="Teklif ver, satıcıları takip et; siparişlerini, cüzdanını ve ödüllerini tek yerden yönet."
@@ -365,7 +366,7 @@ function QuickTile({ icon, title, label, value, onPress }: { icon: IconName; tit
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  guestPrompt: { flex: 0, paddingTop: 20, paddingBottom: 8 },
+  guestPrompt: { paddingTop: 20, paddingBottom: 24 },
   pad: { paddingHorizontal: SCREEN_PADDING },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingLeft: SCREEN_PADDING, paddingRight: 8, paddingBottom: 2 },
   gift: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginRight: 4 },

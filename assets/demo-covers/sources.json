@@ -1,0 +1,127 @@
+{
+  "pokemon": {
+    "source": "https://images.unsplash.com/photo-1542779283-429940ce8336",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1542779283-429940ce8336&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 25823
+  },
+  "sports_cards": {
+    "source": "https://images.unsplash.com/photo-1551306667-f32e7af055f2?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1551306667-f32e7af055f2&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 61355
+  },
+  "tcg_other": {
+    "source": "https://images.unsplash.com/photo-1593814681110-cbf22baf6d79?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1593814681110-cbf22baf6d79&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 33864
+  },
+  "sneakers": {
+    "source": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1542291026-7eec264c27ff&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 38883
+  },
+  "womens_fashion": {
+    "source": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1515886657613-9f3515b0c78f&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 28070
+  },
+  "mens_fashion": {
+    "source": "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1617137968427-85924c800a22&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 33095
+  },
+  "bags": {
+    "source": "https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1598532163257-ae3c6b2524b6&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 22984
+  },
+  "jewelry": {
+    "source": "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1617038220319-276d3cfab638&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 18582
+  },
+  "watches": {
+    "source": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1523170335258-f5ed11844a49&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 48901
+  },
+  "beauty": {
+    "source": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1596462502278-27bfdc403348&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 26615
+  },
+  "toys": {
+    "source": "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1596461404969-9ae70f2830c1&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 36200
+  },
+  "video_games": {
+    "source": "https://images.unsplash.com/photo-1757444838044-d9dcb1bb3017?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1757444838044-d9dcb1bb3017&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 48061
+  },
+  "electronics": {
+    "source": "https://images.unsplash.com/photo-1609081219090-a6d81d3085bf?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1609081219090-a6d81d3085bf&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 24849
+  },
+  "coins": {
+    "source": "https://images.unsplash.com/photo-1586974710160-55f48f417990?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1586974710160-55f48f417990&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 73414
+  },
+  "antiques": {
+    "source": "https://images.unsplash.com/photo-1777499455349-724b6605d0af",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1777499455349-724b6605d0af&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 42239
+  },
+  "carpets": {
+    "source": "https://images.unsplash.com/photo-1660394585016-508f949df960?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1660394585016-508f949df960&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 108098
+  },
+  "home_garden": {
+    "source": "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1616046229478-9901c5536a45&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 49259
+  },
+  "plants": {
+    "source": "https://images.unsplash.com/photo-1503149779833-1de50ebe5f8a",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1503149779833-1de50ebe5f8a&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 36646
+  },
+  "crystals": {
+    "source": "https://images.unsplash.com/photo-1521133573892-e44906baee46?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1521133573892-e44906baee46&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 23849
+  },
+  "comics_manga": {
+    "source": "https://images.unsplash.com/photo-1709675577966-6231e5a2ac43",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1709675577966-6231e5a2ac43&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 54470
+  },
+  "books": {
+    "source": "https://images.unsplash.com/photo-1610116306796-6fea9f4fae38?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1610116306796-6fea9f4fae38&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 39770
+  },
+  "vintage": {
+    "source": "https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1510127034890-ba27508e9f1c&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 25294
+  },
+  "sports_memorabilia": {
+    "source": "https://images.unsplash.com/photo-1577212017184-80cc0da11082?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1577212017184-80cc0da11082&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 37035
+  },
+  "food": {
+    "source": "https://images.unsplash.com/photo-1762808626413-2a18e7e63655?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1762808626413-2a18e7e63655&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 45195
+  },
+  "handmade": {
+    "source": "https://images.unsplash.com/photo-1519122114654-d665e49b122e?w=800&q=80&auto=format&fit=crop",
+    "cdn": "https://wsrv.nl/?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1519122114654-d665e49b122e&w=480&h=640&fit=cover&output=jpg&q=72",
+    "bytes": 93201
+  }
+}

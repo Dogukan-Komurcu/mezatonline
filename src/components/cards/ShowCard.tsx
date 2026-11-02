@@ -1,10 +1,12 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Avatar, Icon, LiveBadge, PressableScale, Text, toast } from '@/components/ui';
 import { getCategory, getSubcategory, getUser } from '@/data';
+import { demoShowCover } from '@/data/showCovers';
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSocialStore } from '@/store/social';
@@ -33,6 +35,11 @@ export function openShow(show: Show) {
  */
 export function ShowCard({ show, width, hideSeller, style }: ShowCardProps) {
   const { colors } = useTheme();
+  const [failedCover, setFailedCover] = useState<string>();
+  // Shared previews carry their own thumbnails. A blocked image host must not
+  // leave every card blank in a visitor's browser.
+  const useBundledCover =
+    (process.env.EXPO_PUBLIC_SHARE_PREVIEW === '1' && show.coverImage.startsWith('https://images.unsplash.com/')) || failedCover === show.coverImage;
   const seller = getUser(show.sellerId);
   const category = getCategory(show.categoryId);
   const reminded = useSocialStore((s) => s.remindedShowIds.includes(show.id));
@@ -51,7 +58,16 @@ export function ShowCard({ show, width, hideSeller, style }: ShowCardProps) {
         </PressableScale>
       ) : null}
       <View style={[styles.cover, { height: imageH, backgroundColor: colors.skeleton }]}>
-        <Image source={{ uri: show.coverImage }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} cachePolicy="memory-disk" recyclingKey={show.id} />
+        <Image
+          source={useBundledCover ? demoShowCover(show.categoryId) : { uri: show.coverImage }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={show.id}
+          loading="eager"
+          onError={() => setFailedCover(show.coverImage)}
+        />
         <LinearGradient colors={['rgba(8,12,18,0.35)', 'transparent']} style={styles.topShade} />
         <View style={styles.badgeRow}>
           {show.status === 'live' ? (
