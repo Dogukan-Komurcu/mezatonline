@@ -31,6 +31,37 @@ export type SheetProps = {
   showClose?: boolean;
 };
 
+const CLOSE_MS = 210;
+/** Modal kaldırıldıktan sonra iOS'un kapatma işlemini bitirmesi için bırakılan pay */
+const DISMISS_SETTLE_MS = 120;
+
+/**
+ * iOS'ta bir Modal kapanırken açılan yeni Modal sessizce görünmez kalır (onShow gelmez, sayfa açık
+ * sanılır ve sonraki dokunuşlar boşa gider). Sabit bir bekleme süresi meşgul JS iş parçacığında yetmez;
+ * bu yüzden kapanmakta olan sayfa varken yeni sayfa, kapanış bitene kadar bekler.
+ */
+const closingSheets = new Set<object>();
+let closeWaiters: (() => void)[] = [];
+
+function releaseClosingSheet(token: object) {
+  if (!closingSheets.delete(token) || closingSheets.size > 0) return;
+  const waiters = closeWaiters;
+  closeWaiters = [];
+  waiters.forEach((run) => run());
+}
+
+/** Kapanmakta olan sayfa yoksa hemen, varsa kapanış bitince çalışır; dönen işlev beklemeyi iptal eder */
+export function whenNoSheetClosing(run: () => void): () => void {
+  if (closingSheets.size === 0) {
+    run();
+    return () => {};
+  }
+  closeWaiters.push(run);
+  return () => {
+    closeWaiters = closeWaiters.filter((w) => w !== run);
+  };
+}
+
 /**
  * Alttan açılan sayfa (bottom sheet).
  * <Sheet visible={open} onClose={() => setOpen(false)} title="Özel Teklif">...</Sheet>
@@ -40,7 +71,7 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
   const colors = dark ? darkColors : theme.colors;
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
-  const [mounted, setMounted] = useState(visible);
+  const [mounted, setMounted] = useState(() => visible && closingSheets.size === 0);
   const [keyboardH, setKeyboardH] = useState(0);
   const progress = useSharedValue(0);
 
@@ -57,15 +88,33 @@ export function Sheet({ visible, onClose, title, subtitle, children, scroll = tr
     };
   }, [mounted]);
 
+  // Modal kalkınca (bileşen kalksa da) iOS kapatmayı bitirene kadar yeni sayfa bekler; süre kaldırıldığı anda başlar.
+  // Aşağıdaki etkiden önce durmalı: kapanış kaydı bırakılmadan bu kayıt eklenmiş olur.
+  useEffect(() => {
+    if (!mounted) return;
+    return () => {
+      const token = {};
+      closingSheets.add(token);
+      setTimeout(() => releaseClosingSheet(token), DISMISS_SETTLE_MS);
+    };
+  }, [mounted]);
+
   useEffect(() => {
     if (visible) {
-      setMounted(true);
-      progress.set(withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) }));
-    } else if (mounted) {
-      progress.set(withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) }));
-      const t = setTimeout(() => setMounted(false), 210);
-      return () => clearTimeout(t);
+      return whenNoSheetClosing(() => {
+        setMounted(true);
+        progress.set(withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) }));
+      });
     }
+    if (!mounted) return;
+    const token = {};
+    closingSheets.add(token);
+    progress.set(withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) }));
+    const t = setTimeout(() => setMounted(false), CLOSE_MS);
+    return () => {
+      clearTimeout(t);
+      releaseClosingSheet(token);
+    };
   }, [visible, mounted, progress]);
 
   const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));

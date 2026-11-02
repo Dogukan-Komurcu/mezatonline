@@ -8,7 +8,7 @@ export { Divider, ListRow, SectionGap, type ListRowProps } from './ListRow';
 export { LiveBadge, ViewerCount } from './LiveBadge';
 export { PressableScale } from './Pressable';
 export { Header, Screen, SectionHeader, useIsSheetModal } from './Screen';
-export { Sheet, type SheetProps } from './Sheet';
+export { Sheet, whenNoSheetClosing, type SheetProps } from './Sheet';
 export { Segmented, UnderlineTabs, type TabItem } from './Tabs';
 export { Text, type TextProps } from './Text';
 export { TextField, type TextFieldProps } from './TextField';

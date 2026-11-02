@@ -11,7 +11,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Icon, PressableScale, Text, toast } from '@/components/ui';
+import { Button, Icon, PressableScale, Text, toast, whenNoSheetClosing } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
@@ -1202,7 +1202,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
           withAuth(() => {
             const name = chatUser?.username ?? '';
             setSheet(null);
-            setTimeout(() => setComposer({ open: true, text: `@${name} ` }), SHEET_SWAP_MS);
+            setTimeout(() => whenNoSheetClosing(() => setComposer({ open: true, text: `@${name} ` })), SHEET_SWAP_MS);
           }, AUTH_REASONS.chat)
         }
         onReport={() => withAuth(() => openSheet('reportUser'), AUTH_REASONS.report)}
