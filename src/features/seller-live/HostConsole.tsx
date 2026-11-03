@@ -21,6 +21,7 @@ import { getShow } from '@/data';
 import { makeBots } from '@/features/live/bots';
 import type { SoldItem } from '@/features/live/engine';
 import { useLiveShow } from '@/features/live/useLiveShow';
+import { createSampleListings } from '@/features/seller/actions';
 import { useQaParam } from '@/features/seller/qaSeed';
 import { shareLink } from '@/features/shared/sheets';
 import { DEFAULT_AUCTION_DURATION, DEFAULT_COUNTER_BID_TIME } from '@/lib/auction';
@@ -127,7 +128,6 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   const recordSale = useSellerStore((s) => s.recordSale);
   const addSession = useSellerStore((s) => s.addSession);
   const setShowStatus = useSellerStore((s) => s.setShowStatus);
-  const createListing = useSellerStore((s) => s.createListing);
   const cancelShow = useSellerStore((s) => s.cancelShow);
 
   // ── Ürünler ──
@@ -525,7 +525,7 @@ function HostConsole({ show, rehearsal, temporary }: { show: Show; rehearsal: bo
   };
   const importSamples = () => {
     const inputs = sampleListingInputs(show.categoryId, show.id);
-    inputs.forEach((i) => createListing(i));
+    createSampleListings(inputs);
     haptic.success();
     toast.success(`${inputs.length} örnek ilan mağazana eklendi`, 'sparkles');
   };

@@ -375,7 +375,7 @@ export function SellerHub() {
               onPress={() =>
                 balance > 0
                   ? router.push({ pathname: '/seller/payouts', params: { withdraw: '1' } })
-                  : toast('Çekilebilir bakiyen yok. Siparişlerin kargolanınca bakiyene geçer.', 'information-circle')
+                  : toast('Çekilebilir bakiyen yok. Siparişlerin teslim edilince bakiyene geçer.', 'information-circle')
               }
             />
             <Button title="Ödemeler" size="sm" variant="secondary" iconRight="chevron-forward" style={{ flex: 1 }} onPress={() => router.push('/seller/payouts')} />

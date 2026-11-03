@@ -4,10 +4,19 @@ import { persist } from 'zustand/middleware';
 import { CARRIERS, makeSellerOrders, trackingNumber } from '@/data/seeds';
 import { packageOf, quoteShipping, sellerOrderNet, SHIPPING_PRICES } from '@/lib/pricing';
 import { uid } from '@/lib/rng';
-import type { Carrier, ID, Order, Payout, Product, SellerApplication, Show } from '@/types';
+import type { Carrier, ID, Order, OrderStatus, Payout, Product, SellerApplication, Show } from '@/types';
 
 import { ME_ID } from './auth';
 import { persistStorage, storeKey } from './storage';
+
+const MIN = 60_000;
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Demo kargo simülasyonu: "Kargoya verdim"den sonra geçen süre (alıcı tarafındaki tempoyla aynı). Gerçek sürümde kargo firmasının takip bilgisi belirler. */
+const AFTER_SHIPPED: { after: number; status: OrderStatus }[] = [
+  { after: 30 * MIN, status: 'out_for_delivery' },
+  { after: 80 * MIN, status: 'delivered' },
+];
 
 export type NewListingInput = Omit<Product, 'id' | 'sellerId' | 'sold' | 'createdAt' | 'saves' | 'shippingCost'> & { shippingCost?: number };
 
@@ -50,6 +59,8 @@ type SellerState = {
   /** Canlı yayında satılan ürünü siparişe dönüştürür */
   recordSale: (input: { product: Product; price: number; buyerUsername: string; showId?: ID; source: Order['source'] }) => void;
   markShipped: (orderId: ID, carrier?: Carrier) => void;
+  /** Kargodaki siparişleri zamanla ilerletir; teslim edilenin kazancı çekilebilir bakiyeye geçer */
+  advanceShipments: () => void;
   addSession: (s: Omit<LiveSessionSummary, 'id'>) => void;
   requestPayout: (amount: number) => Payout | null;
   setIban: (iban: string) => void;
@@ -166,7 +177,6 @@ export const useSellerStore = create<SellerState>()(
         set((s) => {
           const order = s.orders.find((o) => o.id === orderId);
           if (!order || order.status !== 'paid') return {};
-          const net = sellerOrderNet(order);
           return {
             orders: s.orders.map((o) =>
               o.id === orderId
@@ -179,12 +189,27 @@ export const useSellerStore = create<SellerState>()(
                   }
                 : o,
             ),
-            // Kargolanınca bekleyen bakiye çekilebilir bakiyeye geçer (demo)
-            // Kırpılmaz: satıcının karşıladığı kargo (ör. çekiliş ödülü) siparişin netini eksiye düşürebilir
-            pendingBalance: Math.round((s.pendingBalance - net) * 100) / 100,
-            balance: Math.round((s.balance + net) * 100) / 100,
           };
         }),
+      advanceShipments: () => {
+        const now = Date.now();
+        let changed = false;
+        let settled = 0;
+        const orders = get().orders.map((o) => {
+          if (o.status !== 'shipped' && o.status !== 'out_for_delivery') return o;
+          const shippedAt = new Date(o.timeline.find((e) => e.status === 'shipped')?.at ?? o.createdAt).getTime();
+          const due = AFTER_SHIPPED.filter((p) => now - shippedAt >= p.after && !o.timeline.some((e) => e.status === p.status));
+          if (!due.length) return o;
+          changed = true;
+          const status = due[due.length - 1].status;
+          if (status === 'delivered') settled += sellerOrderNet(o);
+          return { ...o, status, timeline: [...o.timeline, ...due.map((p) => ({ status: p.status, at: new Date(shippedAt + p.after).toISOString() }))] };
+        });
+        if (!changed) return;
+        // Teslim edilince bekleyen bakiye çekilebilir bakiyeye geçer
+        // Kırpılmaz: satıcının karşıladığı kargo (ör. çekiliş ödülü) siparişin netini eksiye düşürebilir
+        set((s) => ({ orders, pendingBalance: round2(s.pendingBalance - settled), balance: round2(s.balance + settled) }));
+      },
       addSession: (session) => set((s) => ({ sessions: [{ ...session, id: uid('sess') }, ...s.sessions] })),
       requestPayout: (amount) => {
         const { balance, iban } = get();
@@ -195,7 +220,7 @@ export const useSellerStore = create<SellerState>()(
           status: 'processing',
           iban: iban ?? 'TR00 0000 0000 0000 0000 0000 00',
           createdAt: new Date().toISOString(),
-          orderCount: get().orders.filter((o) => o.status !== 'paid').length,
+          orderCount: get().orders.filter((o) => o.status === 'delivered').length,
         };
         set((s) => ({ payouts: [payout, ...s.payouts], balance: Math.round((s.balance - amount) * 100) / 100 }));
         return payout;
@@ -205,18 +230,18 @@ export const useSellerStore = create<SellerState>()(
     {
       name: storeKey('seller'),
       storage: persistStorage,
-      version: 1,
-      // v0: bakiyeler eski ücretlerle (%8 + %2,9 + ₺3) birikmişti → siparişlerden yeni ücretlerle yeniden hesapla
+      version: 2,
+      // Bakiyeler siparişlerden yeniden hesaplanır. v0: eski ücretlerle (%8 + %2,9 + ₺3) birikmişti. v1: kazanç kargoya verilince çekilebilir oluyordu, artık teslimatta.
       migrate: (persisted, version) => {
         const s = (persisted ?? {}) as SellerState;
-        if (version < 1 && Array.isArray(s.orders)) {
-          const r2 = (n: number) => Math.round(n * 100) / 100;
-          const net = (o: Order) => sellerOrderNet(o);
-          const toShip = s.orders.filter((o) => o.status === 'paid' || o.status === 'preparing');
-          const settled = s.orders.filter((o) => o.status !== 'paid' && o.status !== 'preparing' && o.status !== 'cancelled' && o.status !== 'refunded');
+        if (version < 2 && Array.isArray(s.orders)) {
+          const sum = (list: Order[]) => list.reduce((t, o) => t + sellerOrderNet(o), 0);
+          const waiting = s.orders.filter((o) => o.status === 'paid' || o.status === 'preparing' || o.status === 'shipped' || o.status === 'out_for_delivery');
+          const delivered = s.orders.filter((o) => o.status === 'delivered');
           const paidOut = (s.payouts ?? []).reduce((t, p) => t + p.amount, 0);
-          s.pendingBalance = r2(toShip.reduce((t, o) => t + net(o), 0));
-          s.balance = Math.max(0, r2(settled.reduce((t, o) => t + net(o), 0) - paidOut));
+          s.pendingBalance = round2(sum(waiting));
+          // Kırpılmaz: eski kuralla çekilen tutar, paketler teslim edilene kadar bakiyeyi eksiye düşürebilir
+          s.balance = round2(sum(delivered) - paidOut);
         }
         return s;
       },

@@ -418,7 +418,7 @@ export function buildLedger(orders: Order[], payouts: Payout[], labels: Record<I
   orders.forEach((o) => {
     if (!isCountable(o)) return;
     const t = new Date(o.createdAt).getTime();
-    const status: LedgerEntry['status'] = orderBucket(o) === 'toship' ? 'processing' : 'completed';
+    const status: LedgerEntry['status'] = orderBucket(o) === 'delivered' ? 'completed' : 'processing';
     const gross = o.itemPrice * o.quantity;
     const fees = sellerFees(gross);
     const sub = `${o.number} · ${o.productTitle}`;

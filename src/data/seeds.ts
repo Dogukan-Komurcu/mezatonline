@@ -83,8 +83,10 @@ export const SEED_ORDERS: Order[] = [
 export function makeSellerOrders(myProducts: Product[]): Order[] {
   return myProducts.slice(0, 6).map((p, i) => {
     const status: OrderStatus = i < 3 ? 'paid' : i < 5 ? 'shipped' : 'delivered';
-    const o = seedOrder(p, status, i * 0.7, rng.pick(BUYER_USERS).id, p.format === 'auction' ? 'auction' : 'buy_now');
-    return { ...o, id: `so_${p.id}`, sellerId: 'me' };
+    const o = seedOrder(p, status, status === 'shipped' ? 1 : i * 0.7, rng.pick(BUYER_USERS).id, p.format === 'auction' ? 'auction' : 'buy_now');
+    // Kargodaki örnekler yeni yola çıkmış olsun: teslimat simülasyonu onları hemen bitirmesin
+    const timeline = o.timeline.map((e) => (status === 'shipped' && e.status === 'shipped' ? { ...e, at: new Date(Date.now() - (i - 2) * 10 * 60_000).toISOString() } : e));
+    return { ...o, id: `so_${p.id}`, sellerId: 'me', timeline };
   });
 }
 

@@ -121,9 +121,9 @@ export function OrderDetailScreen() {
         ? { icon: 'alert-circle', tone: colors.danger, title: 'Gönderim süresi geçti', body: 'Bu siparişi hemen kargola. Gecikmeler hesap sağlığını etkiler, alıcı iptal talep edebilir.' }
         : { icon: 'cube', tone: colors.warning, title: label ? 'Paketini şubeye bırak' : 'Kargolanmayı bekliyor', body: `Son gönderim: ${due ? formatShowTime(due.deadline, now) : ''} · ${due?.left ?? ''}` }
       : bucket === 'shipped'
-        ? { icon: 'car', tone: colors.info, title: 'Kargoda', body: `${order.carrier ?? 'Kargo'} · Takip no ${order.trackingNumber ?? '—'}. Teslim edilince alıcıya bildirim gider.` }
+        ? { icon: 'car', tone: colors.info, title: SELLER_ORDER_STATUS[order.status], body: `${order.carrier ?? 'Kargo'} · Takip no ${order.trackingNumber ?? '—'}. Teslim edilince ${net < 0 ? 'bu siparişin eksi tutarı bakiyenden düşer' : 'kazancın çekilebilir bakiyene geçer'}.` }
         : bucket === 'delivered'
-          ? { icon: 'checkmark-circle', tone: colors.success, title: 'Teslim edildi', body: 'Paket alıcıya ulaştı; bu siparişin kazancı çekilebilir bakiyende. Alıcı teslimattan sonraki 30 gün içinde ürünü puanlayabilir.' }
+          ? { icon: 'checkmark-circle', tone: colors.success, title: 'Teslim edildi', body: `Paket alıcıya ulaştı; ${net < 0 ? 'bu siparişin eksi tutarı bakiyenden düştü' : 'bu siparişin kazancı çekilebilir bakiyende'}. Alıcı teslimattan sonraki 30 gün içinde ürünü puanlayabilir.` }
           : { icon: 'close-circle', tone: colors.textSecondary, title: SELLER_ORDER_STATUS[order.status], body: cancelReason ? `Neden: ${cancelReason}` : 'Bu sipariş için kazanç oluşmadı.' };
 
   const makeLabel = () => {
@@ -326,8 +326,18 @@ export function OrderDetailScreen() {
           <View style={[styles.hr, { backgroundColor: colors.border, marginVertical: 6 }]} />
           <KeyValue label="Net kazanç" value={bucket === 'cancelled' ? formatTRY(0) : formatTRY(net)} strong tone={bucket === 'cancelled' ? undefined : net >= 0 ? 'success' : 'danger'} />
           <StatusPill
-            label={bucket === 'cancelled' ? 'Kazanç iptal edildi' : bucket === 'toship' ? 'Bekleyen bakiye — kargolanınca çekilebilir' : 'Çekilebilir bakiyende'}
-            tone={bucket === 'cancelled' ? 'neutral' : bucket === 'toship' ? 'warning' : 'success'}
+            label={
+              bucket === 'cancelled'
+                ? 'Kazanç iptal edildi'
+                : net < 0
+                  ? bucket === 'delivered'
+                    ? 'Bakiyenden düştü'
+                    : 'Teslim edilince bakiyenden düşer'
+                  : bucket === 'delivered'
+                    ? 'Çekilebilir bakiyende'
+                    : 'Bekleyen bakiye — teslim edilince çekilebilir'
+            }
+            tone={bucket === 'cancelled' ? 'neutral' : bucket === 'delivered' && net >= 0 ? 'success' : 'warning'}
             style={{ marginTop: 6 }}
           />
           {campaign && bucket !== 'cancelled' && fees.commission > 0 ? (

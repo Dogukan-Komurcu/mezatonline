@@ -3,7 +3,7 @@
  * Ödemeler | Hesap Hareketleri sekmeleri ve vergi notu (stopaj, KDV).
  */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, Text, TextField, toast, UnderlineTabs, type IconName } from '@/components/ui';
@@ -50,10 +50,12 @@ function WithdrawSheet({ visible, onClose, onNeedIban }: { visible: boolean; onC
   const requestPayout = useSellerStore((s) => s.requestPayout);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
+  // Yalnız açılırken doldurulur: arka planda teslim edilen sipariş bakiyeyi artırsa da yazılan tutar değişmez
+  const [wasVisible, setWasVisible] = useState(false);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
     if (visible) setText(balance > 0 ? amountText(balance) : '');
-  }, [visible, balance]);
+  }
 
   const amount = parseAmount(text);
   const error = amount > balance ? 'Çekilebilir bakiyenden fazla' : amount > 0 && amount < MIN_PAYOUT ? `En az ${formatTRY(MIN_PAYOUT)} çekebilirsin` : undefined;
@@ -169,7 +171,7 @@ export function PayoutsScreen() {
 
   const openWithdraw = () => {
     if (balance <= 0) {
-      toast('Çekilebilir bakiyen yok. Siparişlerin kargolanınca bakiyene geçer.', 'information-circle');
+      toast('Çekilebilir bakiyen yok. Siparişlerin teslim edilince bakiyene geçer.', 'information-circle');
       return;
     }
     setWithdraw(true);
@@ -196,7 +198,7 @@ export function PayoutsScreen() {
                 {formatTRY(pending, { cents: true })}
               </Text>
               <Text variant="caption" color={colors.onInverse} style={{ opacity: 0.55 }}>
-                Kargolanmayı bekleyen
+                Teslimatı bekleyen
               </Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -233,7 +235,7 @@ export function PayoutsScreen() {
         <View style={[styles.note, { backgroundColor: colors.surface }]}>
           <Icon name="time-outline" size={18} color="textSecondary" />
           <Text variant="footnote" color="textSecondary" style={{ flex: 1 }}>
-            Kazancın, sipariş kargoya verildiğinde (kargo firması paketi teslim alınca) çekilebilir bakiyene geçer. Para çekme talepleri 1-2 iş günü içinde IBAN’ına geçer.
+            Kazancın, paket alıcıya teslim edildiğinde çekilebilir bakiyene geçer. Para çekme talepleri 1-2 iş günü içinde IBAN’ına geçer.
           </Text>
         </View>
 

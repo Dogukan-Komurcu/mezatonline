@@ -15,7 +15,7 @@ import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 import type { Order } from '@/types';
 
 import { createLabel, useNow } from './actions';
-import { deadlineInfo, orderBucket, resolveBuyer, type OrderBucket } from './logic';
+import { deadlineInfo, orderBucket, resolveBuyer, SELLER_ORDER_STATUS, type OrderBucket } from './logic';
 import { useSellerExtras } from './store';
 import { StatusPill, Thumb, tint } from './ui';
 
@@ -69,7 +69,7 @@ function OrderRow({ order, now }: { order: Order; now: number }) {
           {bucket === 'toship' ? (
             label ? <StatusPill label="Kod hazır" tone="info" icon="barcode-outline" /> : <StatusPill label="Kod bekliyor" tone="warning" />
           ) : bucket === 'shipped' ? (
-            <StatusPill label="Kargoda" tone="info" />
+            <StatusPill label={SELLER_ORDER_STATUS[order.status]} tone="info" />
           ) : bucket === 'delivered' ? (
             <StatusPill label="Teslim edildi" tone="success" />
           ) : (

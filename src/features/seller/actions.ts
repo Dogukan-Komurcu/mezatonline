@@ -80,15 +80,12 @@ export function shipOrder(orderId: ID, carrier: Carrier) {
   store.markShipped(orderId, carrier);
   const after = useSellerStore.getState().orders.find((o) => o.id === orderId);
   if (after && after.status !== 'shipped') {
-    const net = orderNet(after);
     useSellerStore.setState((s) => ({
       orders: s.orders.map((o) =>
         o.id === orderId
           ? { ...o, status: 'shipped', carrier, trackingNumber: String(Math.floor(1e11 + Math.random() * 9e11)), timeline: [...o.timeline, { status: 'shipped', at: new Date().toISOString() }] }
           : o,
       ),
-      pendingBalance: Math.round((s.pendingBalance - net) * 100) / 100,
-      balance: Math.round((s.balance + net) * 100) / 100,
     }));
   }
   // Etikette seçilen firma ile kargo firması aynı kalsın
@@ -121,7 +118,7 @@ function packageShortfall(s: { orders: Order[]; listings: Product[] }, cancelled
   const amount = round2(Math.max(...rest.map(labelOf)) - (packageOf(rest)?.label ?? 0));
   if (amount <= 0) return null;
   const target = rest.reduce((a, b) => (labelOf(b) > labelOf(a) ? b : a));
-  return { orderId: target.id, amount, pending: target.status === 'paid' || target.status === 'preparing' };
+  return { orderId: target.id, amount, pending: target.status !== 'delivered' };
 }
 
 /** Satıcı kaynaklı iptal: sipariş iptal edilir, bekleyen bakiyeden düşülür, ürün stoğa döner */
@@ -206,8 +203,8 @@ export function createListingWithStatus(input: NewListingInput, status: ListingS
     keep.forEach((o) => {
       soldBy.set(o.productId, (soldBy.get(o.productId) ?? 0) + o.quantity);
       const net = orderNet(o);
-      if (o.status === 'paid' || o.status === 'preparing') pendingAdd += net;
-      else if (o.status !== 'cancelled' && o.status !== 'refunded') balanceAdd += net;
+      if (o.status === 'delivered') balanceAdd += net;
+      else if (o.status !== 'cancelled' && o.status !== 'refunded') pendingAdd += net;
     });
     useSellerStore.setState((s) => ({
       orders: s.orders.filter((o) => !dropIds.has(o.id)),
@@ -217,6 +214,17 @@ export function createListingWithStatus(input: NewListingInput, status: ListingS
     }));
   }
   return product;
+}
+
+/** Örnek ilanları toplu ekle: store'un ürettiği örnek siparişler bakiyeye yazılır, ilanlar yayında satılabilir kalır */
+export function createSampleListings(inputs: NewListingInput[]) {
+  const before = new Set(useSellerStore.getState().orders.map((o) => o.id));
+  inputs.forEach((i) => useSellerStore.getState().createListing(i));
+  const seeded = useSellerStore.getState().orders.filter((o) => !before.has(o.id));
+  const sum = (list: Order[]) => list.reduce((t, o) => t + orderNet(o), 0);
+  const settled = sum(seeded.filter((o) => o.status === 'delivered'));
+  const waiting = sum(seeded) - settled;
+  useSellerStore.setState((s) => ({ pendingBalance: round2(s.pendingBalance + waiting), balance: round2(s.balance + settled) }));
 }
 
 /** İlanı kopyala: ayrı stoklu yeni bir taslak oluşturur */

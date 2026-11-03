@@ -103,10 +103,14 @@ export default function RootLayout() {
   // Sipariş durumlarını zamanla ilerlet (kargo simülasyonu)
   useEffect(() => {
     if (!hydrated) return;
-    useOrdersStore.getState().advanceOrders();
-    const t = setInterval(() => useOrdersStore.getState().advanceOrders(), 30_000);
+    const advance = () => {
+      useOrdersStore.getState().advanceOrders();
+      useSellerStore.getState().advanceShipments();
+    };
+    advance();
+    const t = setInterval(advance, 30_000);
     const sub = AppState.addEventListener('change', (st) => {
-      if (st === 'active') useOrdersStore.getState().advanceOrders();
+      if (st === 'active') advance();
     });
     return () => {
       clearInterval(t);

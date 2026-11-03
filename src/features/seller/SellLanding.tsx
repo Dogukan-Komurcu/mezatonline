@@ -32,7 +32,7 @@ const BENEFITS: { icon: IconName; title: string; body: string }[] = [
     body: `${SELLER_FEE_TEXT.commissionRate} satış komisyonu ve ${SELLER_FEE_TEXT.cardFee} kredi kartı ücreti; ikisi de yalnızca satılan ürünün bedelinden kesilir. Onaydan sonraki ilk 30 günde satış komisyonu sana iade edilir.`,
   },
   { icon: 'cube-outline', title: 'Kargo kodu ile kolay gönderim', body: 'Satıştan sonra 2 iş günü içinde paketini şubeye bırak; etiket şubede basılır.' },
-  { icon: 'card-outline', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin kargoya verilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
+  { icon: 'card-outline', title: "IBAN'a 1-2 iş gününde ödeme", body: 'Paketin alıcıya teslim edilince kazancın çekilebilir olur, tek dokunuşla hesabına geçer.' },
   { icon: 'people-outline', title: 'Takipçilerinle canlı bağ', body: 'Takipçilerin yayınını planladığın anda hatırlatma kurabilir; sohbette sorularını yayın sırasında yanıtlarsın.' },
 ];
 
@@ -40,7 +40,7 @@ const STEPS: { title: string; body: string }[] = [
   { title: 'Başvur', body: 'Kategorini seç, kimlik ve IBAN bilgilerini gir. Demo sürümde başvurular otomatik onaylanır.' },
   { title: 'Yayın planla', body: 'Tarih ve saat seç, ürünlerini ekle. Takipçilerine otomatik hatırlatma gider.' },
   { title: 'Canlıya geç', body: 'Ürünü kamerada göster, açık artırmayı başlat. Gelen teklifleri ekranda anlık izlersin.' },
-  { title: 'Kargola, kazan', body: 'Kargo kodunu oluştur, paketi şubeye bırak. Kazancın IBAN’ına geçsin.' },
+  { title: 'Kargola, kazan', body: 'Kargo kodunu oluştur, paketi şubeye bırak. Paket teslim edilince kazancını IBAN’ına çek.' },
 ];
 
 const STORIES = [
@@ -55,7 +55,7 @@ const FAQ: { q: string; a: string }[] = [
     q: 'Hangi ürünleri satabilirim?',
     a: `Koleksiyon kartları, sneaker, giyim, antika, nümismatik, oyuncak, kozmetik ve daha fazlası. Replika, taklit ya da hak sahibinin izni olmadan üretilmiş ürünler, silah ve şans oyunları yasaktır. Taklidi yaygın kategorilerdeki (${RISKY_AREAS}) ve taklidi yaygın markaların geçtiği ilanlara orijinallik belgesi (fatura, sertifika ya da tedarik belgesi) eklemen gerekir.`,
   },
-  { q: 'Ödemelerimi nasıl alırım?', a: 'Siparişi kargoya verdiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
+  { q: 'Ödemelerimi nasıl alırım?', a: 'Paket alıcıya teslim edildiğinde kazancın çekilebilir bakiyene geçer. “Para Çek” ile 1-2 iş günü içinde IBAN’ına aktarılır.' },
   { q: 'Kargo nasıl işliyor?', a: 'Satıştan sonra uygulamada kargo kodu oluşturursun. Paketini kargo firmasının şubesine bırakıp kodu göstermen yeterli. Kargo ücretini her ilanda seçtiğin şekilde alıcı öder ya da ilan “kargo dahil” olur ve bedeli kazancından düşer.' },
   { q: 'Yayın için ekipman gerekir mi?', a: 'Hayır. Telefonun yeterli. İyi ışık ve sabit bir tripod yayın kaliteni artırır.' },
   { q: 'Fatura kesmem gerekiyor mu?', a: 'Bireysel satıcılar ara sıra yaptıkları satışlar için fatura kesmek zorunda değildir. Şirketler her satış için e-Arşiv fatura düzenler.' },
