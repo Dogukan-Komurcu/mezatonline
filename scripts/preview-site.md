@@ -57,6 +57,30 @@ başarılı yayın anlamına gelmez. Başarısızlıkta mevcut canlı sürüm ko
 Üretilen HTML, dist, arşivler ve credential'lar GitHub'a commit edilmez.
 Sites kaynak deposuna yalnız kaynak kodu ve yayın yapılandırması gönderilir.
 
+## Telefonda sürüm güncellemesi
+
+Hosted derleme, HTML'in `mezatonline-source-commit` metasını ve `/version.json`
+değerini aynı GitHub kaynak commit'inden üretir. Sites kaynak deposunun Git SHA'sı
+bu karşılaştırmada kullanılmaz. `scripts/preview/check-version.js` yalnız HTTP(S)
+önizlemelerinde çalışır; yerel `Mezatonline-Ac.html` dosyasına eklenmez.
+
+Sayfa açılışı, `pageshow`, sekmenin görünür olması, odaklanması ve bağlantının geri
+gelmesi sürüm kontrolü yapar. Sayfa görünürken dakikada bir de kontrol edilir.
+İstekler tarayıcı önbelleğini kullanmaz. Yeni commit bulununca aynı adrese sürüm
+parametresi eklenerek üst sayfa yenilenir; aynı hedef için yenileme döngüsü engellenir.
+Ağ hatasında veya çevrimdışıyken mevcut uygulama korunur.
+
+`dist/_headers`, ana HTML'in yeniden doğrulanmasını ve sürüm işaretçisinin
+saklanmamasını ister. Yayından sonra gerçek HTTP başlıkları ve HTML meta değeriyle
+`/version.json` eşleşmesi kontrol edilir. Daha önceki denetimsiz sürümde açık kalmış
+bir telefon sekmesi ilk kez yeni sekmede açılmalıdır.
+
+Sürüm kontrolünün regresyon testleri:
+
+```bash
+node --test scripts/preview/check-version.test.mjs
+```
+
 ## Yerel kontrol ve derleme
 
 `npm run preview:site:check` yalnız değişiklik kontrolü yapar.

@@ -1,5 +1,5 @@
 import { spawnSync, execFileSync } from 'node:child_process';
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +21,21 @@ try {
 if (!/^[a-f0-9]{40}$/.test(provenance.commit)) throw new Error('Geçerli kaynak commit kimliği bulunamadı.');
 const dist = path.join(root, 'dist');
 await mkdir(dist, { recursive: true });
-await copyFile(path.join(root, 'Mezatonline-Ac.html'), path.join(dist, 'index.html'));
+const builtAt = new Date().toISOString();
+let html = await readFile(path.join(root, 'Mezatonline-Ac.html'), 'utf8');
+// The Site checkout has its own Git history. Compare the app's GitHub commit
+// with version.json, rather than the Site repository's packaging commit.
+const commitMeta = /<meta name="mezatonline-source-commit" content="[^"]*">/;
+const builtMeta = /<meta name="mezatonline-built-at" content="[^"]*">/;
+if (!commitMeta.test(html) || !builtMeta.test(html) || !html.includes('</body>')) {
+  throw new Error('Önizleme HTML dosyasında sürüm bilgisi veya body etiketi eksik.');
+}
+html = html.replace(commitMeta, `<meta name="mezatonline-source-commit" content="${provenance.commit}">`)
+  .replace(builtMeta, `<meta name="mezatonline-built-at" content="${builtAt}">`);
+const versionCheck = (await readFile(path.join(root, 'scripts/preview/check-version.js'), 'utf8'))
+  .replace(/<\/script/gi, '<\\/script');
+html = html.replace('</body>', `<script id="mezatonline-version-check">\n${versionCheck}\n</script></body>`);
+await writeFile(path.join(dist, 'index.html'), html);
 await writeFile(path.join(dist, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
-await writeFile(path.join(dist, 'version.json'), `${JSON.stringify({ sourceCommit: provenance.commit, builtAt: new Date().toISOString() }, null, 2)}\n`);
+await writeFile(path.join(dist, 'version.json'), `${JSON.stringify({ sourceCommit: provenance.commit, builtAt }, null, 2)}\n`);
+await writeFile(path.join(dist, '_headers'), '/\n  Cache-Control: no-cache, max-age=0, must-revalidate\n/index.html\n  Cache-Control: no-cache, max-age=0, must-revalidate\n/version.json\n  Cache-Control: no-store\n');

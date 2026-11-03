@@ -23,7 +23,9 @@ DogukanMezatonline/
 
 iPhone'da Safari, Android'de Chrome ile açılır; kurulum veya Expo Go gerekmez. Mac'in açık kalmasına bağlı değildir. Demo veriler kullanılır; gerçek ödeme yapılmaz.
 
-Adres sabittir. Codex otomasyonu beş dakikada bir GitHub `master` dalını kontrol eder; yeni commit varsa güncel önizlemeyi derleyip aynı adreste yayımlar. Yeni sürümü görmek için telefondaki sayfayı yenileyin. Commit edilip GitHub'a gönderilmemiş çalışmalar yayına girmez.
+Adres sabittir. Codex otomasyonu beş dakikada bir GitHub `master` dalını kontrol eder; yeni commit varsa güncel önizlemeyi derleyip aynı adreste yayımlar. Safari ve Chrome'da sayfa açılışında, sekmeye geri dönüldüğünde ve sayfa görünürken dakikada bir yayın sürümü kontrol edilir. Yeni sürüm bulunduğunda sayfa otomatik yenilenir. Commit edilip GitHub'a gönderilmemiş çalışmalar yayına girmez.
+
+Bu güncelleme kontrolü eklenmeden önce açık kalmış eski sekmeler için adresi bir kez yeni sekmede açın. İnternet bağlantısı veya sürüm kontrolü başarısız olursa açık uygulama korunur; kontrol sonraki denemede tekrarlanır.
 
 Otomatik güncelleme için geliştirici Mac'inin ve Codex'in çalışması gerekir. Mac kapalıyken yayımlanmış sürüm erişilebilir kalır; yeni değişiklikler sonraki otomasyon çalışmasında yayımlanır. Derleme veya yayın başarısız olursa mevcut sürüm korunur.
 
