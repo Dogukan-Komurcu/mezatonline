@@ -42,7 +42,8 @@ export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean
  * iOS'ta başka bir şey sunmakta olan denetleyici yeni Modal açamaz; pencere görünmez ve ekran
  * dokunuşlara kapanabilir. Bu yüzden modal ekranlar (canlı yayın, ödeme) ve
  * kendi sayfası açıkken requireTransactSetup çağıran sayfalar (Fiyat Öner, Ön Teklif, Bahşiş) içinde
- * `scoped` bir kopya çizer. Sayfayı yalnızca en son açılan kopya, yani en üstteki çizer; altındaki
+ * `scoped` bir kopya çizer. Öneriler sekmesi de çizer: yardım ekranından yayının üstünde açılabilir.
+ * Sayfayı yalnızca en son açılan kopya, yani en üstteki çizer; altındaki
  * kopyalar ve kökteki host susar. Android'de kopyalar bir şey çizmez, kökteki host yeterlidir.
  */
 export function TransactSetupHost({ scoped = false }: { scoped?: boolean }) {

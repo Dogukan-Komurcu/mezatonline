@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { Button, Divider, EmptyState, PressableScale, Text, toast } from '@/components/ui';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
+import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { getProduct, getUser } from '@/data';
 import { formatTimeUntil, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -120,6 +120,7 @@ export function OffersTab() {
           { label: 'Vazgeç', variant: 'outline', onPress: () => setWithdrawTarget(null) },
         ]}
       />
+      <TransactSetupHost scoped />
     </View>
   );
 }
