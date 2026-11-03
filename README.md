@@ -3,6 +3,14 @@
 Whatnot'un Türkiye için Türkçe uyarlaması: **canlı yayında açık artırma, Hemen Al, flaş indirim, çekiliş ve pazaryeri**.
 Expo SDK 58 + React Native 0.88 + Expo Router. Şu an tüm veriler **mock** (uygulama içinde üretiliyor); veritabanı (Supabase) sonraki aşamada bağlanacak.
 
+## Telefon tarayıcısından önizleme
+
+[Mezatonline önizlemesini aç](https://mezatonline-onizleme.komurcudogukan46.chatgpt.site)
+
+iPhone'da Safari, Android'de Chrome ile açılır; kurulum veya Expo Go gerekmez. Mac'in açık kalmasına bağlı değildir. Demo veriler kullanılır; gerçek ödeme yapılmaz.
+
+Geliştirici notu: Web yayını ayrıca yayımlanan bir anlık görüntüdür; yerel HTML otomatik yenilendiğinde bu adres kendiliğinden güncellenmez. Sites proje kimliği `appgprj_6ae9fe797d3481918c42d165dcbc0b03`, kaynak kopyası `work/sites/mezatonline-onizleme` içindedir.
+
 ## Mac ve Windows'ta tek tıkla önizleme
 
 **`Mezatonline-Ac.html` dosyasını çift tıklayın.** Güncel Chrome, Edge veya Safari'de telefon boyutunda açılır; demo hesap hazırdır. Terminal, Node.js, Expo Go veya kurulum gerekmez. Arkadaşlarınıza yalnızca bu HTML dosyasını göndermeniz yeterlidir; kaynak klasörünü göndermek gerekmez.
