@@ -3,6 +3,20 @@
 Whatnot'un Türkiye için Türkçe uyarlaması: **canlı yayında açık artırma, Hemen Al, flaş indirim, çekiliş ve pazaryeri**.
 Expo SDK 58 + React Native 0.88 + Expo Router. Şu an tüm veriler **mock** (uygulama içinde üretiliyor); veritabanı (Supabase) sonraki aşamada bağlanacak.
 
+## Arkadaşların için indirme paketi
+
+[**DogukanMezatonline klasörünü indir**](https://github.com/Dogukan-Komurcu/mezatonline/releases/latest/download/DogukanMezatonline.zip)
+
+ZIP dosyasını çıkarın; aşağıdaki klasör açılır:
+
+```text
+DogukanMezatonline/
+├── Mezatonline-Ac.html
+└── Kodlar/
+```
+
+**`Mezatonline-Ac.html` dosyasını çift tıklayın.** Güncel Chrome, Edge veya Safari ile açılır; kurulum gerekmez. `Kodlar` klasörü uygulamanın kaynak dosyalarını içerir ve başka bilgisayarlarda da kullanılabilir. Görseller ve videolar için internet bağlantısı gerekir; demo veriler kullanılır.
+
 ## Telefon tarayıcısından önizleme
 
 [Mezatonline önizlemesini aç](https://mezatonline-onizleme.komurcudogukan46.chatgpt.site)
@@ -28,6 +42,15 @@ npm run preview:build
 ```
 
 Bu komut Expo web sürümünü derler ve kodu, ikonları, yazı tiplerini tek HTML dosyasına gömer. Paylaşım ayarları yalnızca bu derlemede etkindir; normal iOS/Android açılışını değiştirmez.
+
+Klasör paketini yeniden hazırlamak için kaynak değişikliklerini önce commit edin, sonra çalıştırın:
+
+```bash
+npm run preview:build
+npm run share:package
+```
+
+`work/share-package/DogukanMezatonline.zip` oluşur. HTML önizlemesi ve `Kodlar` içindeki kaynaklar aynı commit'e aittir. Paket, kurulu bağımlılıkları ve Git geçmişini içermez. Üretilen HTML ve ZIP dosyaları Git'e eklenmez; ZIP, GitHub Releases üzerinden paylaşılır.
 
 Geliştirici bilgisayarında dosya kendiliğinden de yenilenebilir: `scripts/refresh-preview.sh --install` bir kez çalıştırılınca her commit ve pull sonrası `master`'ın son hâli arka planda derlenir, proje klasöründeki ve `~/Desktop/DogukanMezatonline/` içindeki dosya güncellenir (birkaç dakika sürer, kaydedilmemiş değişiklikler girmez). Dosyanın üst kısmında derlendiği tarih ve saat yazar; hata olursa bildirim çıkar ve ayrıntı `~/Library/Logs/mezatonline-preview.log` dosyasına yazılır.
 

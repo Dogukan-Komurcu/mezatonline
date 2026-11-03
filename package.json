@@ -51,6 +51,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "preview:build": "node scripts/build-preview.mjs",
+    "share:package": "node scripts/package-share.mjs",
     "preview:site:check": "node scripts/sync-preview-site.mjs --check",
     "preview:site:build": "node scripts/build-hosted-preview.mjs"
   },
