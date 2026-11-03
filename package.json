@@ -50,7 +50,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "preview:build": "node scripts/build-preview.mjs"
+    "preview:build": "node scripts/build-preview.mjs",
+    "preview:site:check": "node scripts/sync-preview-site.mjs --check",
+    "preview:site:build": "node scripts/build-hosted-preview.mjs"
   },
   "private": true
 }

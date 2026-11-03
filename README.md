@@ -9,7 +9,11 @@ Expo SDK 58 + React Native 0.88 + Expo Router. Şu an tüm veriler **mock** (uyg
 
 iPhone'da Safari, Android'de Chrome ile açılır; kurulum veya Expo Go gerekmez. Mac'in açık kalmasına bağlı değildir. Demo veriler kullanılır; gerçek ödeme yapılmaz.
 
-Geliştirici notu: Web yayını ayrıca yayımlanan bir anlık görüntüdür; yerel HTML otomatik yenilendiğinde bu adres kendiliğinden güncellenmez. Sites proje kimliği `appgprj_6ae9fe797d3481918c42d165dcbc0b03`, kaynak kopyası `work/sites/mezatonline-onizleme` içindedir.
+Adres sabittir. Codex otomasyonu beş dakikada bir GitHub `master` dalını kontrol eder; yeni commit varsa güncel önizlemeyi derleyip aynı adreste yayımlar. Yeni sürümü görmek için telefondaki sayfayı yenileyin. Commit edilip GitHub'a gönderilmemiş çalışmalar yayına girmez.
+
+Otomatik güncelleme için geliştirici Mac'inin ve Codex'in çalışması gerekir. Mac kapalıyken yayımlanmış sürüm erişilebilir kalır; yeni değişiklikler sonraki otomasyon çalışmasında yayımlanır. Derleme veya yayın başarısız olursa mevcut sürüm korunur.
+
+Geliştirici için kontrol komutu: `npm run preview:site:check`. Aynı Site'a yayınlama adımları ve kimliği [scripts/preview-site.md](scripts/preview-site.md) dosyasındadır.
 
 ## Mac ve Windows'ta tek tıkla önizleme
 

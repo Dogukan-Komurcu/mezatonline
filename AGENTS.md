@@ -12,6 +12,7 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 
 - **Konum:** Proje `~/Projeler/Mezatonline` içinde yaşar (Masaüstü'ndeki `DogukanMezatonline/Mezatonline` sadece kısayoldur). Projeyi veya içindeki dosyaları **iCloud'a taşıma** (Masaüstü/Belgeler, iCloud Drive). iCloud dosyaları buluta taşıyıp çakışma kopyaları (`dosya 2.tsx`) oluşturuyor ve Xcode imzalamasını bozuyor. Buluta taşınmış (dataless) dosya görürsen önce indir.
 - **GitHub:** Depo `github.com/Dogukan-Komurcu/mezatonline` (özel). Her anlamlı değişiklikten sonra commit at ve `git push` ile gönder. İşe başlamadan önce `git pull` ile güncel olduğundan emin ol. Gizli anahtar, `.p8`, `.env`, keystore ve derleme çıktılarını (APK/IPA/HTML önizleme) asla commit etme.
+- **Sabit telefon önizlemesi:** `https://mezatonline-onizleme.komurcudogukan46.chatgpt.site` adresini ve mevcut public Site kimliğini koru. GitHub `master` değişikliklerini aynı adrese yayımlayan otomasyonun iş akışı `scripts/preview-site.md` içindedir. Yeni Site veya geçici tünel oluşturma.
 - **Xcode çıktıları:** `-derivedDataPath ~/Library/Developer/Xcode/DerivedData/Mezatonline-*` kullan.
 
 ## Commands
