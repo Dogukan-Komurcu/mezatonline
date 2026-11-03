@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, StyleSheet, View, type TextInputInstance } from 'react-native';
+import { ActivityIndicator, Keyboard, StyleSheet, View, type TextInputInstance } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
-import { Avatar, Button, Chip, Header, Icon, Text, TextField, type IconName } from '@/components/ui';
+import { Avatar, Button, Chip, Header, Icon, showAlert, Text, TextField, type IconName } from '@/components/ui';
 import { setMarketingConsent } from '@/features/account/store';
 import { AuthLayout, Checkbox, OnboardingProgress, StepTitle } from '@/features/auth/components';
 import { useLegalSheet, type LegalDoc } from '@/features/auth/legal';
@@ -83,7 +83,7 @@ function UsernameScreen() {
   };
 
   const onBack = () => {
-    Alert.alert('Kayıttan çıkılsın mı?', 'Hesabını oluşturmayı henüz bitirmedin. Çıkarsan tekrar kaydolman gerekecek.', [
+    showAlert('Kayıttan çıkılsın mı?', 'Hesabını oluşturmayı henüz bitirmedin. Çıkarsan tekrar kaydolman gerekecek.', [
       { text: 'Devam et', style: 'cancel' },
       { text: 'Kayıttan çık', style: 'destructive', onPress: cancelSignup },
     ]);

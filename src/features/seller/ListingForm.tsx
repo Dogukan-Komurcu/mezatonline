@@ -12,10 +12,10 @@
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CONDITION_LABELS, FORMAT_LABELS } from '@/components/cards/ProductCard';
-import { Button, Chip, EmptyState, Header, Icon, ListRow, PressableScale, Screen, Segmented, SelectField, Text, TextField, toast } from '@/components/ui';
+import { Button, Chip, EmptyState, Header, Icon, ListRow, PressableScale, Screen, Segmented, SelectField, showAlert, Text, TextField, toast } from '@/components/ui';
 import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { CATEGORIES, getCategory } from '@/data';
 import { AUTHENTICITY_DECLARATION, authenticityRequirement, bannedMessage, IP_PROCESS, isSampleDoc, PROOF_KINDS, scanText } from '@/features/trust/counterfeit';
@@ -208,7 +208,7 @@ export function ListingForm() {
       go();
       return;
     }
-    Alert.alert('Değişiklikler kaydedilmedi', 'Çıkarsan yaptığın değişiklikler kaybolacak.', [
+    showAlert('Değişiklikler kaydedilmedi', 'Çıkarsan yaptığın değişiklikler kaybolacak.', [
       { text: 'Düzenlemeye devam et', style: 'cancel' },
       { text: 'Çık', style: 'destructive', onPress: go },
     ]);
@@ -292,7 +292,7 @@ export function ListingForm() {
   const remove = () => {
     if (!existing) return;
     if (existing.sold > 0) {
-      Alert.alert('Satılmış ürün silinemez', 'Bu üründen satış yapıldığı için silinemez. Pasife alarak mağazandan kaldırabilirsin.', [
+      showAlert('Satılmış ürün silinemez', 'Bu üründen satış yapıldığı için silinemez. Pasife alarak mağazandan kaldırabilirsin.', [
         { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Pasife al',
@@ -305,7 +305,7 @@ export function ListingForm() {
       ]);
       return;
     }
-    Alert.alert('Ürünü sil', `"${existing.title}" kalıcı olarak silinsin mi?`, [
+    showAlert('Ürünü sil', `"${existing.title}" kalıcı olarak silinsin mi?`, [
       { text: 'Vazgeç', style: 'cancel' },
       {
         text: 'Sil',

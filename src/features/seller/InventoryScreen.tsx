@@ -7,11 +7,11 @@
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FORMAT_LABELS } from '@/components/cards/ProductCard';
-import { Button, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, Text, TextField, toast, UnderlineTabs } from '@/components/ui';
+import { Button, Chip, EmptyState, Header, Icon, IconButton, PressableScale, Screen, Sheet, showAlert, Text, TextField, toast, UnderlineTabs } from '@/components/ui';
 import { settleDemoObjections } from '@/features/trust/actions';
 import { authenticityRequirement, scanText } from '@/features/trust/counterfeit';
 import { IpCaseSheet } from '@/features/trust/IpCaseSheet';
@@ -238,7 +238,7 @@ export function InventoryScreen() {
       toast.warning('Satılmış ürünler silinemez; pasife alabilirsin');
       return;
     }
-    Alert.alert(
+    showAlert(
       deletable.length > 1 ? `${deletable.length} ürünü sil` : 'Ürünü sil',
       `${deletable.length > 1 ? 'Seçili ürünler' : `“${deletable[0].title || 'Başlıksız taslak'}”`} kalıcı olarak silinsin mi?${deletable.length < items.length ? ' Satılmış ürünler silinmez.' : ''}`,
       [

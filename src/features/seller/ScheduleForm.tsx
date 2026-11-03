@@ -7,10 +7,10 @@
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
-import { Avatar, Button, Chip, EmptyState, Header, Icon, PressableScale, Screen, Segmented, SelectField, Sheet, Text, TextField, toast } from '@/components/ui';
+import { Avatar, Button, Chip, EmptyState, Header, Icon, PressableScale, Screen, Segmented, SelectField, Sheet, showAlert, Text, TextField, toast } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
 import { CATEGORIES, getCategory, getUserByUsername } from '@/data';
 import { categoryPhotos } from '@/data/categories';
@@ -158,7 +158,7 @@ export function ScheduleForm() {
       router.back();
       return;
     }
-    Alert.alert('Değişiklikler kaydedilmedi', 'Çıkarsan yayın bilgileri kaybolacak.', [
+    showAlert('Değişiklikler kaydedilmedi', 'Çıkarsan yayın bilgileri kaybolacak.', [
       { text: 'Devam et', style: 'cancel' },
       { text: 'Çık', style: 'destructive', onPress: () => router.back() },
     ]);

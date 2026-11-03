@@ -2,9 +2,8 @@
  * Planlanmış yayın ⋯ menüsü: Başlat / Düzenle / Ürün ekle / Paylaş / İptal et
  */
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
 
-import { toast } from '@/components/ui';
+import { showAlert, toast } from '@/components/ui';
 import { shareLink } from '@/features/shared/sheets';
 import { formatShowTime } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -27,7 +26,7 @@ export function shareShow(show: Show) {
 }
 
 export function confirmCancelShow(show: Show, onDone?: () => void) {
-  Alert.alert('Yayını iptal et', `"${show.title}" iptal edilsin mi? Hatırlatıcı kuran takipçilerine bildirim gider. Yayına eklenen ürünler envanterinde kalır.`, [
+  showAlert('Yayını iptal et', `"${show.title}" iptal edilsin mi? Hatırlatıcı kuran takipçilerine bildirim gider. Yayına eklenen ürünler envanterinde kalır.`, [
     { text: 'Vazgeç', style: 'cancel' },
     {
       text: 'İptal et',

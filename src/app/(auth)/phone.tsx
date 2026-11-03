@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Keyboard, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Button, Header, Icon, PressableScale, Sheet, Text } from '@/components/ui';
+import { Button, Header, Icon, PressableScale, Sheet, showAlert, Text } from '@/components/ui';
 import { AuthLayout, StepTitle } from '@/features/auth/components';
 import { cleanNationalNumber, COUNTRIES, DEFAULT_COUNTRY, getCountry, isValidNational, maskNational, type Country } from '@/features/auth/countries';
 import { cancelSignup } from '@/features/auth/session';
@@ -136,7 +136,7 @@ function PhoneScreen() {
       else router.replace('/(auth)/welcome');
       return;
     }
-    Alert.alert('Kayıttan çıkılsın mı?', 'Telefonunu doğrulamadan hesabını kullanamazsın. Çıkarsan kaydın iptal edilir.', [
+    showAlert('Kayıttan çıkılsın mı?', 'Telefonunu doğrulamadan hesabını kullanamazsın. Çıkarsan kaydın iptal edilir.', [
       { text: 'Vazgeç', style: 'cancel' },
       { text: 'Kayıttan çık', style: 'destructive', onPress: cancelSignup },
     ]);

@@ -6,10 +6,11 @@ import * as Device from 'expo-device';
 import { CameraView, useCameraPermissions, useMicrophonePermissions, type CameraType } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { Linking, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 import { Button, Icon, Text } from '@/components/ui';
+import { openDeviceSettings } from '@/features/shared/deviceSettings';
 import { haptic } from '@/lib/haptics';
 import { liveColors, radius } from '@/theme';
 
@@ -53,7 +54,7 @@ export function useCameraAccess(): CameraAccess {
   const request = async () => {
     haptic.tap();
     if (blocked) {
-      Linking.openSettings().catch(() => {});
+      openDeviceSettings().catch(() => {});
       return;
     }
     if (!cam?.granted) await requestCam();

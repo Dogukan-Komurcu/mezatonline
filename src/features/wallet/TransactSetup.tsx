@@ -67,6 +67,12 @@ function SetupSheet() {
   const addAddress = useWalletStore((s) => s.addAddress);
   const [card, setCard] = useState<CardDraft>(emptyCard);
   const [address, setAddress] = useState<AddressDraft>(() => emptyAddress(me.displayName));
+  // Sayfa uygulama açılırken (çoğu zaman misafirken) kurulur: ad soyad güncel hesaptan gelsin, elle yazılan ad korunsun
+  const [seededName, setSeededName] = useState(me.displayName);
+  if (seededName !== me.displayName) {
+    setSeededName(me.displayName);
+    setAddress((a) => (a.fullName === seededName ? { ...a, fullName: me.displayName } : a));
+  }
   const [cardErrors, setCardErrors] = useState<Partial<Record<keyof CardDraft, string>>>({});
   const [addrErrors, setAddrErrors] = useState<Partial<Record<keyof AddressDraft, string>>>({});
   const [saving, setSaving] = useState(false);

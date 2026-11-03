@@ -1,6 +1,7 @@
 export { Avatar, type AvatarProps } from './Avatar';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Chip, type ChipProps } from './Chip';
+export { AlertHost, showAlert } from './Dialog';
 export { CountBadge, EmptyState, Skeleton, Stars, toast, ToastHost } from './Feedback';
 export { Icon, type IconName, type IconProps } from './Icon';
 export { IconButton, type IconButtonProps } from './IconButton';

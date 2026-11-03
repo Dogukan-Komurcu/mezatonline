@@ -127,11 +127,14 @@ async function main() {
     // Clear this preview's saved demo state before the application hydrates.
     try{if(parent.__mezatPreviewFreshStart===true){var storage=localStorage;for(var index=storage.length-1;index>=0;index--){var key=storage.key(index);if(key&&key.indexOf('mezat:')===0)storage.removeItem(key)}parent.__mezatPreviewFreshStart=false}}catch(_){}
     function tell(type,message){parent.postMessage({source:'mezatonline-preview',type:type,message:message||''},'*')}
-    addEventListener('error',function(event){if(event.message)tell('error',event.message)});
-    addEventListener('unhandledrejection',function(event){var error=event.reason;if(error&&error.name==='NotAllowedError')return;tell('error',error&&error.message||String(error))});
+    var ready=false;
+    function rendered(){var root=document.getElementById('root');return !!root&&root.textContent.trim().length>10}
+    // After the app is up, a stray error (interrupted video play, unsupported web API) must not cover it; only a crash that emptied the app does.
+    function fail(message){if(!ready){tell('error',message);return}setTimeout(function(){if(!rendered())tell('error',message)},300)}
+    addEventListener('error',function(event){if(event.message)fail(event.message)});
+    addEventListener('unhandledrejection',function(event){var error=event.reason;if(error&&error.name==='NotAllowedError')return;fail(error&&error.message||String(error))});
     addEventListener('DOMContentLoaded',function(){
-      var ready=false;
-      function check(){var root=document.getElementById('root');if(!ready&&root&&root.textContent.trim().length>10){ready=true;tell('ready');observer.disconnect()}}
+      function check(){if(!ready&&rendered()){ready=true;tell('ready');observer.disconnect()}}
       var observer=new MutationObserver(check);observer.observe(document.body,{childList:true,subtree:true,characterData:true});check();
     });
   })();<\/script>`;

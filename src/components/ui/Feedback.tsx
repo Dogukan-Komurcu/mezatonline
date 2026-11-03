@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { Platform, StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FullWindowOverlay } from 'react-native-screens';
 import { create } from 'zustand';
 
 import { brand, darkColors, liveColors, radius, useTheme } from '@/theme';
@@ -10,6 +9,7 @@ import { brand, darkColors, liveColors, radius, useTheme } from '@/theme';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
+import { ToastLayer } from './ToastLayer';
 
 // ─── Boş durum ───────────────────────────────────────────────────────────────
 
@@ -114,9 +114,7 @@ export function ToastHost() {
     return () => clearTimeout(timer);
   }, [t, hide]);
   if (!t) return null;
-  const content = renderToast(t, insets.top);
-  // iOS: tam ekran modal ve sheet'lerin (RN Modal) üstünde görünsün diye ayrı pencerede çiz
-  return Platform.OS === 'ios' ? <FullWindowOverlay>{content}</FullWindowOverlay> : content;
+  return <ToastLayer>{renderToast(t, insets.top)}</ToastLayer>;
 }
 
 function renderToast(t: ToastItem, top: number) {

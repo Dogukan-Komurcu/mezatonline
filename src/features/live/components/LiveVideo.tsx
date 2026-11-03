@@ -61,6 +61,7 @@ function VideoLayer({ uri, playing, muted }: { uri: string; playing: boolean; mu
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         nativeControls={false}
+        playsInline
         allowsPictureInPicture={false}
         fullscreenOptions={{ enable: false }}
         surfaceType="textureView"

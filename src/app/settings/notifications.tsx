@@ -1,10 +1,11 @@
-import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header, Screen, Text, toast } from '@/components/ui';
 import { useAccountStore, type AccountFlag } from '@/features/account/store';
 import { IconCircle, InfoNote, MenuGroup, MenuRow, SwitchRow } from '@/features/account/ui';
 import { useQaParams } from '@/features/account/qa';
+import { openDeviceSettings } from '@/features/shared/deviceSettings';
 import { useSettingsStore, type NotificationPrefs } from '@/store/settings';
 import { radius, SCREEN_PADDING, useTheme } from '@/theme';
 
@@ -79,7 +80,7 @@ export default function NotificationSettingsScreen() {
             icon="phone-portrait-outline"
             title="Telefon bildirim ayarları"
             subtitle="İzinleri ve bildirim seslerini yönet"
-            onPress={() => Linking.openSettings().catch(() => toast.error('Ayarlar açılamadı'))}
+            onPress={() => openDeviceSettings().catch(() => toast.error('Ayarlar açılamadı'))}
             style={{ paddingHorizontal: 0 }}
           />
           <SwitchRow

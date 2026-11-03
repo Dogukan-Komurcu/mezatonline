@@ -13,11 +13,11 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance, type StyleProp, type TextStyle } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance, type StyleProp, type TextStyle } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Chip, Header, Icon, IconButton, PressableScale, Screen, Segmented, Text, TextField, toast } from '@/components/ui';
+import { Button, Chip, Header, Icon, IconButton, PressableScale, Screen, Segmented, showAlert, Text, TextField, toast } from '@/components/ui';
 import { DEMO_MODE } from '@/config/demo';
 import { getProduct, getUser } from '@/data';
 import { InfoNote, MenuRow } from '@/features/account/ui';
@@ -317,7 +317,7 @@ export function IpComplaintScreen() {
       exit();
       return;
     }
-    Alert.alert('Değişiklikler kaydedilmedi', 'Çıkarsan yaptığın değişiklikler kaybolacak.', [
+    showAlert('Değişiklikler kaydedilmedi', 'Çıkarsan yaptığın değişiklikler kaybolacak.', [
       { text: 'Düzenlemeye devam et', style: 'cancel' },
       { text: 'Çık', style: 'destructive', onPress: exit },
     ]);

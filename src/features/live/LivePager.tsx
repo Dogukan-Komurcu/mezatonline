@@ -22,6 +22,7 @@ import type { Show } from '@/types';
 
 import { LiveShowPage } from './LiveShowPage';
 import { useLivePrefs } from './liveStore';
+import { useWebPaging } from './useWebPaging';
 
 /** Görünen sayfanın iki yanında kaç sayfa önceden render edilir */
 const WINDOW = 1;
@@ -43,11 +44,17 @@ export function LivePager({ initialId, qa }: { initialId: string; qa?: string })
   const [index, setIndex] = useState(startIndex);
   const focused = useIsFocused();
   const scrollRef = useRef<ScrollViewInstance>(null);
+  const currentPage = useRef(startIndex);
+  useEffect(() => {
+    currentPage.current = index;
+  }, [index]);
 
-  // Android'de `contentOffset` ilk konumu her zaman uygulamayabilir: ölçüm sonrası başlangıç sayfasına atla
+  // Android'de `contentOffset` ilk konumu her zaman uygulamayabilir: ölçüm sonrası başlangıç sayfasına atla.
+  // Web'de yükseklik sonradan da değişir (telefonda klavye, adres çubuğu): açık olan yayında kalınır.
   useEffect(() => {
     if (!pageH || Platform.OS === 'ios') return;
-    scrollRef.current?.scrollTo({ x: 0, y: startIndex * pageH, animated: false });
+    const page = Platform.OS === 'web' ? currentPage.current : startIndex;
+    scrollRef.current?.scrollTo({ x: 0, y: page * pageH, animated: false });
   }, [pageH, startIndex]);
 
   const close = () => {
@@ -65,14 +72,19 @@ export function LivePager({ initialId, qa }: { initialId: string; qa?: string })
     setIndex(i);
   };
 
-  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!pageH) return;
-    const i = Math.round(e.nativeEvent.contentOffset.y / pageH);
+  const showPage = (i: number) => {
     if (i !== index && i >= 0 && i < shows.length) {
       haptic.tap();
       setIndex(i);
     }
   };
+
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!pageH) return;
+    showPage(Math.round(e.nativeEvent.contentOffset.y / pageH));
+  };
+
+  useWebPaging(scrollRef, pageH, shows.length, showPage);
 
   if (!getShow(initialId) || !shows.length) {
     return (

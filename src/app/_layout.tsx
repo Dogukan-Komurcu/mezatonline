@@ -6,7 +6,7 @@ import { AppState, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { ToastHost } from '@/components/ui';
+import { AlertHost, ToastHost } from '@/components/ui';
 import { trackPath } from '@/features/auth/gate';
 import { TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { useHomeStore } from '@/features/home/store';
@@ -169,6 +169,7 @@ export default function RootLayout() {
             </Stack.Protected>
           </Stack>
           <TransactSetupHost />
+          <AlertHost />
           <ToastHost />
         </ThemeProvider>
       </SafeAreaProvider>

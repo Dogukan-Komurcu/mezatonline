@@ -7,11 +7,11 @@
  */
 import { router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Icon, PressableScale, Text, toast, whenNoSheetClosing } from '@/components/ui';
+import { Button, Icon, PressableScale, showAlert, Text, toast, whenNoSheetClosing } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
 import { BUYER_USERS, getProductsByShow, getShowsBySeller, getUser } from '@/data';
 import { AUTH_REASONS, isSignedIn, requireAuth, useIsGuest } from '@/features/auth/gate';
@@ -430,7 +430,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         doFollow();
         return;
       }
-      Alert.alert('Takibi bırak', `Takibi bırakırsan @${seller.username} yayına başladığında bildirim almazsın.`, [
+      showAlert('Takibi bırak', `Takibi bırakırsan @${seller.username} yayına başladığında bildirim almazsın.`, [
         { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Takibi bırak',
@@ -765,7 +765,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
     withAuth(() => {
       setSheet(null);
       setTimeout(() => {
-        Alert.alert(`${seller.username} engellensin mi?`, 'Bu satıcının yayınlarını ve mesajlarını artık görmezsin. İstediğin zaman Ayarlar’dan kaldırabilirsin.', [
+        showAlert(`${seller.username} engellensin mi?`, 'Bu satıcının yayınlarını ve mesajlarını artık görmezsin. İstediğin zaman Ayarlar’dan kaldırabilirsin.', [
           { text: 'Vazgeç', style: 'cancel' },
           {
             text: 'Engelle',
@@ -1227,7 +1227,7 @@ export function LiveShowPage({ show, width, height, visible, focused, nextShow, 
         onClub={hasClub ? openClub : undefined}
         onCaptions={() => {
           setSheet(null);
-          setTimeout(() => Alert.alert('Altyazılar', 'Canlı altyazıları cihazının Ayarlar › Erişilebilirlik › Altyazılar bölümünden açabilirsin.'), SHEET_SWAP_MS);
+          setTimeout(() => showAlert('Altyazılar', 'Canlı altyazıları cihazının Ayarlar › Erişilebilirlik › Altyazılar bölümünden açabilirsin.'), SHEET_SWAP_MS);
         }}
         onHideShow={hideShow}
         onReport={() => withAuth(() => openSheet('reportShow'), AUTH_REASONS.report)}
