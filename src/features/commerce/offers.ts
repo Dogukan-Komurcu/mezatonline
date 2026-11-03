@@ -5,6 +5,7 @@
  */
 import { toast } from '@/components/ui';
 import { getUser } from '@/data';
+import { useActivityExtras } from '@/features/activity/store';
 import { completePurchase } from '@/features/shared/purchase';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -35,7 +36,7 @@ export function submitOffer(product: Product, amount: number): Offer {
 
 function resolveSimulated(offerId: string, product: Product, amount: number) {
   const current = useOrdersStore.getState().offers.find((o) => o.id === offerId);
-  if (!current || current.status !== 'pending') return;
+  if (!current || current.status !== 'pending' || useActivityExtras.getState().withdrawnOfferIds.includes(offerId)) return;
   const seller = getUser(product.sellerId);
   const sellerName = seller ? `@${seller.username}` : 'Satıcı';
   const roll = Math.random();

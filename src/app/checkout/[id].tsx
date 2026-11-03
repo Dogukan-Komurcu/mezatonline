@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Divider, EmptyState, Header, Icon, ListRow, PressableScale, Screen, SectionGap, Text, TextField, toast } from '@/components/ui';
 import { DEMO_COPY } from '@/config/demo';
+import { useActivityExtras } from '@/features/activity/store';
 import { BlockTitle, CardBrandMark, Checkbox, NoticeBox, QtyStepper } from '@/features/commerce/components';
 import { checkCoupon, couponDiscount, useCouponStore, type Coupon } from '@/features/commerce/coupons';
 import { useProductById, useRemainingStock, useSellerOf } from '@/features/commerce/hooks';
@@ -260,7 +261,8 @@ export default function CheckoutScreen() {
     }));
     // Karşı teklif kabul edildiyse öneriyi kapat
     if (source === 'offer') {
-      const offer = useOrdersStore.getState().offers.find((o) => o.productId === product.id && (o.status === 'countered' || o.status === 'pending'));
+      const withdrawn = useActivityExtras.getState().withdrawnOfferIds;
+      const offer = useOrdersStore.getState().offers.find((o) => o.productId === product.id && (o.status === 'countered' || o.status === 'pending') && !withdrawn.includes(o.id));
       if (offer) useOrdersStore.getState().resolveOffer(offer.id, 'accepted', offer.counterAmount);
     }
     const points = Math.max(0, useRewardsStore.getState().points - pointsBefore);

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { getProduct, getShow, getUser } from '@/data';
+import { useActivityExtras } from '@/features/activity/store';
 import { ME_ID, useMe } from '@/store/auth';
 import { useOrdersStore } from '@/store/orders';
 import { useSellerStore } from '@/store/seller';
@@ -56,9 +57,10 @@ export function useMyPreBid(productId: string | undefined) {
   return useOrdersStore((s) => (productId ? s.preBids.find((b) => b.productId === productId) : undefined));
 }
 
-/** Bu ürüne verilmiş en güncel fiyat önerisi */
+/** Bu ürüne verilmiş en güncel fiyat önerisi (geri çekilenler sayılmaz) */
 export function useMyLatestOffer(productId: string | undefined) {
-  return useOrdersStore((s) => (productId ? s.offers.find((o) => o.productId === productId) : undefined));
+  const withdrawn = useActivityExtras((s) => s.withdrawnOfferIds);
+  return useOrdersStore((s) => (productId ? s.offers.find((o) => o.productId === productId && !withdrawn.includes(o.id)) : undefined));
 }
 
 /** Her `intervalMs`'de bir güncellenen "şimdi" (geri sayımlar için) */

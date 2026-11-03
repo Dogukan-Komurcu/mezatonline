@@ -73,6 +73,14 @@ export function OffersTab() {
 
   const confirmWithdraw = () => {
     if (!withdrawTarget) return;
+    // Pencere açıkken satıcı yanıtlamış olabilir: yanıtlanan öneri geri çekilemez
+    const current = useOrdersStore.getState().offers.find((o) => o.id === withdrawTarget.id);
+    if (current?.status !== 'pending') {
+      haptic.warning();
+      toast.warning('Satıcı önerine az önce yanıt verdi, geri çekilemedi');
+      setWithdrawTarget(null);
+      return;
+    }
     useActivityExtras.getState().withdrawOffer(withdrawTarget.id);
     haptic.success();
     toast.success('Fiyat önerin geri çekildi');
