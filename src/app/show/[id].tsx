@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/cards/UserRow';
 import { ShowCard } from '@/components/cards/ShowCard';
-import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, UnderlineTabs, type IconName } from '@/components/ui';
+import { Avatar, Button, EmptyState, Header, Icon, IconButton, ListRow, PressableScale, Screen, SectionGap, Sheet, Text, toast, UnderlineTabs, useTopInset, type IconName } from '@/components/ui';
 import { DEMO_COPY, DEMO_MODE } from '@/config/demo';
 import { getCategory, getLiveShowOf, getProduct, getShowsBySeller, getSubcategory, getUpcomingShows } from '@/data';
 import { AUTH_REASONS, requireAuth } from '@/features/auth/gate';
@@ -56,6 +56,7 @@ export default function ShowScreen() {
   const { id, qa } = useLocalSearchParams<{ id: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   const { width, height: screenH } = useWindowDimensions();
   const focused = useIsFocused();
   const show = useShowById(id);
@@ -128,7 +129,7 @@ export default function ShowScreen() {
   }`;
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const over = e.nativeEvent.contentOffset.y < heroH - insets.top - 40;
+    const over = e.nativeEvent.contentOffset.y < heroH - topInset - 40;
     if (over !== overHero) setOverHero(over);
   };
 
@@ -392,7 +393,7 @@ export default function ShowScreen() {
       </ScrollView>
 
       {/* ─── Üst çubuk ─── */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 4 }]} pointerEvents="box-none">
+      <View style={[styles.topBar, { paddingTop: topInset + 4 }]} pointerEvents="box-none">
         {!overHero ? (
           <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(160)} style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]} />
         ) : null}

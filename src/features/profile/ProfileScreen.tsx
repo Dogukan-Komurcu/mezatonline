@@ -14,7 +14,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { ProductCard } from '@/components/cards/ProductCard';
 import { ShowCard } from '@/components/cards/ShowCard';
-import { Divider, EmptyState, Header, IconButton, Screen, Text, toast, UnderlineTabs, type TabItem } from '@/components/ui';
+import { Divider, EmptyState, Header, IconButton, Screen, Text, toast, UnderlineTabs, useTopInset, type TabItem } from '@/components/ui';
 import { FEATURES } from '@/config/demo';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { GuestPrompt } from '@/features/auth/GuestPrompt';
@@ -67,6 +67,7 @@ function dedupe(list: Product[]): Product[] {
 export function ProfileScreen({ username, initialTab }: { username: string; initialTab?: ProfileTab }) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   const { width } = useWindowDimensions();
   const focused = useIsFocused();
   const me = useMe();
@@ -91,8 +92,8 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
   const [solidBar, setSolidBar] = useState(false);
   const listRef = useRef<FlatList<Row>>(null);
 
-  const topBarH = insets.top + TOP_BAR;
-  const bannerH = Math.round(width / 3) + insets.top;
+  const topBarH = topInset + TOP_BAR;
+  const bannerH = Math.round(width / 3) + topInset;
   const fadeEnd = bannerH - topBarH;
   const scrollY = useSharedValue(0);
   const threshold = useSharedValue(1_000_000);
@@ -454,7 +455,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
       ) : null}
 
       {/* Üst bar: kapak üstünde cam butonlar, kaydırınca opak arka plan + kullanıcı adı */}
-      <View style={[styles.topBar, { height: topBarH, paddingTop: insets.top }]} pointerEvents="box-none">
+      <View style={[styles.topBar, { height: topBarH, paddingTop: topInset }]} pointerEvents="box-none">
         <View style={styles.barRow} pointerEvents="box-none">
           {back('glass')}
           <View style={styles.flex} />
@@ -462,7 +463,7 @@ export function ProfileScreen({ username, initialTab }: { username: string; init
         </View>
       </View>
       <Animated.View
-        style={[styles.topBar, { height: topBarH, paddingTop: insets.top, backgroundColor: colors.bg, borderBottomColor: colors.border }, styles.topBarSolid, barBgStyle]}
+        style={[styles.topBar, { height: topBarH, paddingTop: topInset, backgroundColor: colors.bg, borderBottomColor: colors.border }, styles.topBarSolid, barBgStyle]}
         pointerEvents={solidBar ? 'auto' : 'none'}>
         <View style={styles.barRow}>
           {back('plain')}

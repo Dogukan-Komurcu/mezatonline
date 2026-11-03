@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, EmptyState, Header, Icon, IconButton, LiveBadge, PressableScale, Screen, Text, toast } from '@/components/ui';
+import { Button, EmptyState, Header, Icon, IconButton, LiveBadge, PressableScale, Screen, Text, toast, useTopInset } from '@/components/ui';
 import { DEMO_MODE } from '@/config/demo';
 import { getLiveShowOf, getUser } from '@/data';
 import { ActionSheet, ConfirmSheet, type SheetAction } from '@/features/account/ui';
@@ -42,9 +42,9 @@ export default function ConversationScreen() {
 
 function ChatHeader({ user, subtitle, onPressUser, right, live }: { user: User; subtitle: string; onPressUser?: () => void; right?: ReactNode; live?: () => void }) {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   return (
-    <View style={[styles.header, { paddingTop: insets.top, backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
+    <View style={[styles.header, { paddingTop: topInset, backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
       <View style={styles.headerRow}>
         <IconButton name="chevron-back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/inbox'))} accessibilityLabel="Geri" />
         <PressableScale scaleTo={0.98} disabled={!onPressUser} onPress={onPressUser} style={styles.headerUser} accessibilityRole="button" accessibilityLabel={`${user.username} profili`}>

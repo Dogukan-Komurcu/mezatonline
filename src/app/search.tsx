@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon, IconButton, PressableScale } from '@/components/ui';
+import { Icon, IconButton, PressableScale, useTopInset } from '@/components/ui';
 import { SearchEntry, SearchSuggestions } from '@/features/browse/SearchEntry';
 import { SearchResults } from '@/features/browse/SearchResults';
 import { haptic } from '@/lib/haptics';
@@ -21,6 +21,7 @@ export default function SearchScreen() {
   const initial = typeof params.q === 'string' ? params.q.trim() : '';
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   const addRecentSearch = useSocialStore((s) => s.addRecentSearch);
   const [text, setText] = useState(initial);
   const [query, setQuery] = useState<string | null>(initial || null);
@@ -61,7 +62,7 @@ export default function SearchScreen() {
   const mode: 'entry' | 'suggest' | 'results' = editing ? (text.trim() ? 'suggest' : 'entry') : query ? 'results' : 'entry';
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.bg, paddingTop: insets.top }]}>
+    <View style={[styles.flex, { backgroundColor: colors.bg, paddingTop: topInset }]}>
       <View style={styles.bar}>
         <IconButton name="chevron-back" accessibilityLabel="Geri" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         <View style={[styles.field, { backgroundColor: colors.surface, borderColor: editing ? colors.text : 'transparent' }]}>

@@ -1,5 +1,6 @@
-import { router, useRoute } from 'expo-router';
-import type { ReactNode } from 'react';
+import { router } from 'expo-router';
+import { ScreenPresentationContext } from 'expo-router/build/react-navigation/native-stack/utils/ScreenPresentationContext';
+import { useContext, type ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -35,16 +36,24 @@ export function Screen({ children, safeTop = false, safeBottom = false, style, b
   );
 }
 
-/** iOS'ta sayfa (pageSheet) olarak açılan modal rotalar: üst güvenli alan boşluğu gerekmez */
-const IOS_MODAL_ROUTES = ['checkout/[id]', 'review/[orderId]', 'settings/add-card', 'settings/address', 'seller/listing', 'seller/schedule', 'seller/apply'];
+/** iOS'ta tam ekranı kaplamayan sunumlar: üst güvenli alan boşluğu gerekmez (native-stack de bunlarda topInset = 0 kullanır) */
+const IOS_SHEET_PRESENTATIONS: (string | undefined)[] = ['modal', 'pageSheet', 'formSheet'];
 
 /**
  * Bu ekran iOS'ta sayfa-modal olarak mı gösteriliyor.
- * Odaktaki yola (usePathname) değil ekranın kendi rotasına bakar: modal açıkken arkadaki ekran kendini modal sanıp üst boşluğunu bırakmasın.
+ * Odaktaki yola (usePathname) veya rota adına değil ekranın kendi native-stack sahnesine bakar: `presentation` belirtilmemiş rota da
+ * canlı yayının üstünde açılınca pencere olur; modal açıkken arkadaki ekran da kendini modal sanıp üst boşluğunu bırakmaz.
+ * SDK 58'de bu bilgi için herkese açık API yok, bağlam bu yüzden iç yoldan alınıyor.
  */
 export function useIsSheetModal(): boolean {
-  const { name } = useRoute();
-  return Platform.OS === 'ios' && IOS_MODAL_ROUTES.includes(name);
+  const presentation = useContext(ScreenPresentationContext);
+  return Platform.OS === 'ios' && IOS_SHEET_PRESENTATIONS.includes(presentation);
+}
+
+/** Ekranın sayfa düzeyindeki üst güvenli alanı: pencerede 0. Ekranın içinden tam ekran açılan katmanlar (RN Modal) gerçek değeri kullanmalı. */
+export function useTopInset(): number {
+  const { top } = useSafeAreaInsets();
+  return useIsSheetModal() ? 0 : top;
 }
 
 export type HeaderProps = {

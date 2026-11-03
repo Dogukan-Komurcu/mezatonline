@@ -7,7 +7,7 @@ export { IconButton, type IconButtonProps } from './IconButton';
 export { Divider, ListRow, SectionGap, type ListRowProps } from './ListRow';
 export { LiveBadge, ViewerCount } from './LiveBadge';
 export { PressableScale } from './Pressable';
-export { Header, Screen, SectionHeader, useIsSheetModal } from './Screen';
+export { Header, Screen, SectionHeader, useIsSheetModal, useTopInset } from './Screen';
 export { Sheet, whenNoSheetClosing, type SheetProps } from './Sheet';
 export { Segmented, UnderlineTabs, type TabItem } from './Tabs';
 export { Text, type TextProps } from './Text';
