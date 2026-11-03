@@ -101,11 +101,12 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
     buyerName: address?.fullName || me.displayName,
   });
   const toggleDoc = (d: 'pre' | 'distance') => setDoc((cur) => (cur === d ? null : d));
+  const go = processing ? () => {} : onNavigate;
 
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={processing ? () => {} : onClose}
       dark
       maxHeight={0.92}
       footer={
@@ -123,7 +124,7 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
             </Text>
           </Checkbox>
           <View style={styles.buttons}>
-            <Button title="Vazgeç" variant="outline" size="lg" onPress={onClose} style={styles.cancel} />
+            <Button title="Vazgeç" variant="outline" size="lg" disabled={processing} onPress={onClose} style={styles.cancel} />
             <Button
               title={ready ? `${formatTRY(total, { cents: true })} Öde` : 'Ödeme bilgisi ekle'}
               size="lg"
@@ -222,19 +223,19 @@ export function BuyNowSheet({ visible, onClose, product, unitPrice, originalPric
           ) : null}
 
           <Divider style={styles.divider} />
-          <Section icon="pricetag-outline" title="Promosyon" value={coupon ? (discount > 0 ? `${coupon.code} · -${formatTRY(discount)}` : `${coupon.code} bu alışverişe uygulanamıyor`) : 'Kupon yok · Cüzdan’dan ekleyebilirsin'} onPress={() => onNavigate('wallet')} />
+          <Section icon="pricetag-outline" title="Promosyon" value={coupon ? (discount > 0 ? `${coupon.code} · -${formatTRY(discount)}` : `${coupon.code} bu alışverişe uygulanamıyor`) : 'Kupon yok · Cüzdan’dan ekleyebilirsin'} onPress={() => go('wallet')} />
           <Section
             icon="card-outline"
             title="Ödeme"
             value={payment ? `${BRAND_LABEL[payment.brand]} •••• ${payment.last4} · Tek çekim` : 'Kart ekle'}
-            onPress={() => onNavigate('/settings/payments')}
+            onPress={() => go('/settings/payments')}
             edit
           />
           <Section
             icon="location-outline"
             title="Adres"
             value={address ? `${address.fullName} · ${address.neighborhood}, ${address.district}/${address.city}` : 'Teslimat adresi ekle'}
-            onPress={() => onNavigate('/settings/addresses')}
+            onPress={() => go('/settings/addresses')}
             edit
           />
           <Divider style={styles.divider} />

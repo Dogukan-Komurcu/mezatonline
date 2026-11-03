@@ -156,7 +156,7 @@ export function PaymentPickerSheet({ visible, onClose, selectedId, onSelect, sta
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={saving ? () => {} : onClose}
       title={mode === 'list' ? 'Ödeme yöntemi' : 'Yeni kart ekle'}
       showClose
       maxHeight={0.94}
@@ -165,7 +165,7 @@ export function PaymentPickerSheet({ visible, onClose, selectedId, onSelect, sta
           <Button title="Yeni kart ekle" icon="add" variant="secondary" size="lg" fullWidth onPress={() => setMode('add')} />
         ) : (
           <View style={styles.footerRow}>
-            {cards.length ? <Button title="Vazgeç" variant="outline" size="lg" onPress={() => setMode('list')} /> : null}
+            {cards.length ? <Button title="Vazgeç" variant="outline" size="lg" disabled={saving} onPress={() => setMode('list')} /> : null}
             <Button title="Kartı kaydet" size="lg" loading={saving} onPress={save} style={styles.flex} />
           </View>
         )

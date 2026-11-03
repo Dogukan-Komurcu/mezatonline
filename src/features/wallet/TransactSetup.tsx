@@ -6,7 +6,7 @@
  * Eksik bilgi yoksa callback hemen çalışır; varsa alttan kurulum sayfası açılır,
  * tamamlanınca callback çalışır. <TransactSetupHost /> kök layout'ta bir kez render edilir.
  */
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { create } from 'zustand';
 
@@ -70,9 +70,15 @@ function SetupSheet() {
   const [cardErrors, setCardErrors] = useState<Partial<Record<keyof CardDraft, string>>>({});
   const [addrErrors, setAddrErrors] = useState<Partial<Record<keyof AddressDraft, string>>>({});
   const [saving, setSaving] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const step: 'card' | 'address' = !hasCard ? 'card' : 'address';
-  const close = () => useSetupStore.setState({ open: false, onReady: undefined });
+  // Kart kaydedilirken kapatılırsa vazgeçilmiştir: kart eklenmez, bekleyen işlem çalışmaz
+  const close = () => {
+    clearTimeout(saveTimer.current);
+    setSaving(false);
+    useSetupStore.setState({ open: false, onReady: undefined });
+  };
 
   const submit = () => {
     if (step === 'card') {
@@ -83,7 +89,7 @@ function SetupSheet() {
         return;
       }
       setSaving(true);
-      setTimeout(() => {
+      saveTimer.current = setTimeout(() => {
         addPaymentMethod({ number: card.number, holder: card.holder, expiry: card.expiry });
         setSaving(false);
         setCard(emptyCard());

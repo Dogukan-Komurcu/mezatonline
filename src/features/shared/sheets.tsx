@@ -77,7 +77,7 @@ export function TipSheet({ visible, onClose, seller, dark, onSent }: { visible: 
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={sending ? () => {} : onClose}
       dark={dark}
       title="Bahşiş Gönder"
       showClose

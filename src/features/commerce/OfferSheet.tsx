@@ -97,14 +97,14 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={sending ? () => {} : onClose}
       title={step === 'amount' ? 'Fiyat Öner' : 'Önerini gözden geçir'}
       showClose
       maxHeight={0.94}
       contentStyle={styles.content}
       footer={
         <View style={styles.footer}>
-          {step === 'review' ? <Button title="Geri" variant="outline" size="lg" onPress={() => setStep('amount')} style={styles.backBtn} /> : null}
+          {step === 'review' ? <Button title="Geri" variant="outline" size="lg" disabled={sending} onPress={() => setStep('amount')} style={styles.backBtn} /> : null}
           <Button
             title={step === 'amount' ? (amount && !error ? `${formatTRY(amount)} · Devam` : 'Devam') : `${formatTRY(amount)} Öneriyi Gönder`}
             size="lg"

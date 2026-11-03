@@ -101,7 +101,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={submitting ? () => {} : onClose}
       title={existing ? 'Ön Teklifini Yükselt' : 'Ön Teklif Ver'}
       showClose
       maxHeight={0.94}

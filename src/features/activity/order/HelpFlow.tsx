@@ -225,10 +225,10 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
       {/* Sorun seçimi → açıklama + fotoğraf (tek sheet, iki adım) */}
       <Sheet
         visible={mode === 'help'}
-        onClose={close}
+        onClose={submitting ? () => {} : close}
         title={step === 'details' && issue ? HELP_ISSUES[issue].title : 'Nasıl yardımcı olabiliriz?'}
         subtitle={step === 'details' ? `Sipariş ${order.number} · ${order.productTitle}` : `Sipariş ${order.number}`}
-        headerRight={step === 'details' ? <IconButton name="chevron-back" size={34} variant="surface" onPress={() => setStep('issues')} accessibilityLabel="Geri" /> : undefined}
+        headerRight={step === 'details' ? <IconButton name="chevron-back" size={34} variant="surface" disabled={submitting} onPress={() => setStep('issues')} accessibilityLabel="Geri" /> : undefined}
         showClose={step === 'issues'}
         maxHeight={0.94}
         footer={
@@ -363,7 +363,7 @@ export function useHelpFlow(order: Order | undefined, categoryId: string | undef
       {/* İptal nedenleri */}
       <Sheet
         visible={mode === 'cancel'}
-        onClose={close}
+        onClose={submitting ? () => {} : close}
         title="İptal talep et"
         subtitle={`Sipariş ${order.number} · ${cancelHoursLeft(order)} saat içinde talep edebilirsin`}
         showClose
