@@ -28,8 +28,7 @@ export default function AddressesScreen() {
 
   return (
     <Screen>
-      {/* safeTop açıkça: "/settings/addresses" yolu useIsSheetModal'daki "/settings/address" önekine takılıyor */}
-      <Header title="Adreslerim" safeTop right={<IconButton name="add" onPress={add} accessibilityLabel="Adres ekle" />} />
+      <Header title="Adreslerim" right={<IconButton name="add" onPress={add} accessibilityLabel="Adres ekle" />} />
       <FlatList
         data={sorted}
         keyExtractor={(a) => a.id}

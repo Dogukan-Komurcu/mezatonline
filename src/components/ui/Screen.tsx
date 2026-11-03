@@ -1,4 +1,4 @@
-import { router, usePathname } from 'expo-router';
+import { router, useRoute } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,12 +36,15 @@ export function Screen({ children, safeTop = false, safeBottom = false, style, b
 }
 
 /** iOS'ta sayfa (pageSheet) olarak açılan modal rotalar: üst güvenli alan boşluğu gerekmez */
-const IOS_MODAL_ROUTES = ['/checkout', '/review', '/settings/add-card', '/settings/address', '/seller/listing', '/seller/schedule', '/seller/apply'];
+const IOS_MODAL_ROUTES = ['checkout/[id]', 'review/[orderId]', 'settings/add-card', 'settings/address', 'seller/listing', 'seller/schedule', 'seller/apply'];
 
-/** Mevcut ekran iOS'ta sayfa-modal olarak mı gösteriliyor */
+/**
+ * Bu ekran iOS'ta sayfa-modal olarak mı gösteriliyor.
+ * Odaktaki yola (usePathname) değil ekranın kendi rotasına bakar: modal açıkken arkadaki ekran kendini modal sanıp üst boşluğunu bırakmasın.
+ */
 export function useIsSheetModal(): boolean {
-  const pathname = usePathname();
-  return Platform.OS === 'ios' && IOS_MODAL_ROUTES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const { name } = useRoute();
+  return Platform.OS === 'ios' && IOS_MODAL_ROUTES.includes(name);
 }
 
 export type HeaderProps = {

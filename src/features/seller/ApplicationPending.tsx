@@ -105,7 +105,8 @@ export function ApplicationPending() {
           <Text variant="headline" weight="700" style={{ marginBottom: 6 }}>
             Başvuru özetin
           </Text>
-          <KeyValue label="Ana kategori" value={category ? `${category.emoji} ${sub?.name ?? category.shortName}` : '—'} />
+          <KeyValue label="Ana kategori" value={category ? `${category.emoji} ${category.name}` : '—'} />
+          <KeyValue label="Alt kategori" value={sub?.name ?? '—'} />
           <KeyValue label="Satıcı tipi" value={kyc ? SELLER_TYPE_LABELS[kyc.sellerType] : application.taxType ? SELLER_TYPE_LABELS[application.taxType] : '—'} />
           <KeyValue label="Deneyim" value={kyc ? EXPERIENCE_LABELS[kyc.experience] : (application.experience ?? '—')} />
           <KeyValue label="IBAN" value={iban ? `${bankFromIban(iban) ?? 'Banka'} · ${maskIban(iban).slice(-4)}` : '—'} />
