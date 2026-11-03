@@ -17,6 +17,8 @@ npm run preview:build
 
 Bu komut Expo web sürümünü derler ve kodu, ikonları, yazı tiplerini tek HTML dosyasına gömer. Paylaşım ayarları yalnızca bu derlemede etkindir; normal iOS/Android açılışını değiştirmez.
 
+Geliştirici bilgisayarında dosya kendiliğinden de yenilenebilir: `scripts/refresh-preview.sh --install` bir kez çalıştırılınca her commit ve pull sonrası `master`'ın son hâli arka planda derlenir, proje klasöründeki ve `~/Desktop/DogukanMezatonline/` içindeki dosya güncellenir (birkaç dakika sürer, kaydedilmemiş değişiklikler girmez). Dosyanın üst kısmında derlendiği tarih ve saat yazar; hata olursa bildirim çıkar ve ayrıntı `~/Library/Logs/mezatonline-preview.log` dosyasına yazılır.
+
 ## Özellikler
 
 - **Canlı yayın oynatıcı** — dikey kaydırmayla yayınlar arası geçiş, gerçek video, canlı sohbet, kaydırarak teklif verme, özel / maksimum teklif, ani bitiş 💀, son 10 sn'de süre uzatma, çekiliş, flaş indirim, bahşiş, kazanma kutlaması, mağaza sayfası.

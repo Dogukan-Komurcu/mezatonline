@@ -139,6 +139,7 @@ async function main() {
   let sourceCommit = 'unknown';
   try { sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: project, encoding: 'utf8' }).trim(); } catch {}
   const builtAt = new Date().toISOString();
+  const builtLabel = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Istanbul' }).format(new Date(builtAt));
   const encoded = Buffer.from(inner).toString('base64');
   const outer = `<!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta name="theme-color" content="#ffffff"><meta name="mezatonline-source-commit" content="${sourceCommit}"><meta name="mezatonline-built-at" content="${builtAt}"><title>Mezatonline · Paylaşım önizlemesi</title>
@@ -155,7 +156,7 @@ async function main() {
   iframe{background:#fff}
 }
 </style></head><body>
-<header><div class="brand"><div class="mark" aria-hidden="true">m.</div><div><div class="name">mezatonline</div><div class="eyebrow">Paylaşım önizlemesi</div></div></div><nav class="actions" aria-label="Önizleme kontrolleri"><button id="home" type="button">Ana sayfa</button><button id="reset" type="button">Baştan başlat</button></nav></header>
+<header><div class="brand"><div class="mark" aria-hidden="true">m.</div><div><div class="name">mezatonline</div><div class="eyebrow">Paylaşım önizlemesi · ${builtLabel}</div></div></div><nav class="actions" aria-label="Önizleme kontrolleri"><button id="home" type="button">Ana sayfa</button><button id="reset" type="button">Baştan başlat</button></nav></header>
 <main class="stage" id="stage"><div class="sizer" id="sizer"><div class="phone" id="phone"><iframe id="app" title="Mezatonline telefon önizlemesi" allow="camera; microphone; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe><div class="status" id="status" role="status" aria-live="polite"><div class="spinner"></div><strong id="status-title">Mezatonline açılıyor</strong><p id="status-detail">Telefon önizlemesi hazırlanıyor…</p><button class="retry" id="retry" type="button">Yeniden dene</button></div></div></div></main>
 <footer class="note">Demo verilerle çalışır. Görseller ve videolar için internet bağlantısı gerekir.</footer>
 <script>
