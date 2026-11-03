@@ -70,10 +70,12 @@ gelmesi sürüm kontrolü yapar. Sayfa görünürken dakikada bir de kontrol edi
 parametresi eklenerek üst sayfa yenilenir; aynı hedef için yenileme döngüsü engellenir.
 Ağ hatasında veya çevrimdışıyken mevcut uygulama korunur.
 
-`dist/_headers`, ana HTML'in yeniden doğrulanmasını ve sürüm işaretçisinin
-saklanmamasını ister. Yayından sonra gerçek HTTP başlıkları ve HTML meta değeriyle
-`/version.json` eşleşmesi kontrol edilir. Daha önceki denetimsiz sürümde açık kalmış
-bir telefon sekmesi ilk kez yeni sekmede açılmalıdır.
+Sites'in canlı statik yanıtları `public, max-age=0, must-revalidate` döndürür;
+bu yayında Cloudflare `_headers` dosyası uygulanmadığı doğrulanmıştır. Sürüm
+istekleri ayrıca `cache: 'no-store'` ve her istekte değişen sorgu parametresi
+kullanır. Yayından sonra HTML meta değeriyle `/version.json` eşleşmesi kontrol
+edilir. Daha önceki denetimsiz sürümde açık kalmış bir telefon sekmesi ilk kez
+yeni sekmede açılmalıdır.
 
 Sürüm kontrolünün regresyon testleri:
 

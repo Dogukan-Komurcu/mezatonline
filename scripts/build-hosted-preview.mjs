@@ -1,5 +1,5 @@
 import { spawnSync, execFileSync } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,4 +38,7 @@ html = html.replace('</body>', `<script id="mezatonline-version-check">\n${versi
 await writeFile(path.join(dist, 'index.html'), html);
 await writeFile(path.join(dist, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
 await writeFile(path.join(dist, 'version.json'), `${JSON.stringify({ sourceCommit: provenance.commit, builtAt }, null, 2)}\n`);
-await writeFile(path.join(dist, '_headers'), '/\n  Cache-Control: no-cache, max-age=0, must-revalidate\n/index.html\n  Cache-Control: no-cache, max-age=0, must-revalidate\n/version.json\n  Cache-Control: no-store\n');
+// Sites supplies max-age=0, must-revalidate for these static responses and does
+// not apply Cloudflare _headers files. The version checker bypasses browser
+// caching explicitly; remove an older generated header file on incremental builds.
+await rm(path.join(dist, '_headers'), { force: true });
