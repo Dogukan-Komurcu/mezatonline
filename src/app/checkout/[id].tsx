@@ -619,7 +619,7 @@ export default function CheckoutScreen() {
           toast.error('Ödeme iptal edildi. Kartından çekim yapılmadı.');
         }}
       />
-      {iosSheet ? <TransactSetupHost scoped /> : null}
+      <TransactSetupHost scoped />
     </Screen>
   );
 }

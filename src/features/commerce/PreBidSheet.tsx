@@ -10,7 +10,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Chip, Icon, Sheet, Text, toast } from '@/components/ui';
 import { shippingQuoteFor, thresholdText, winCostNote } from '@/features/shared/shipping';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
+import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { bidIncrement } from '@/lib/auction';
 import { formatDateTime, formatShowTime, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -177,6 +177,7 @@ export function PreBidSheet({ visible, onClose, product, show }: PreBidSheetProp
           {ship.buyer > 0 ? `+ ${formatTRY(ship.buyer)} kargo` : ship.note === 'included' ? 'Kargo dahil' : 'Ücretsiz kargo'}
         </Text>
       </View>
+      <TransactSetupHost scoped />
     </Sheet>
   );
 }

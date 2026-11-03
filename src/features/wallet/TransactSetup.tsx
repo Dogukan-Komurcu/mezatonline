@@ -7,7 +7,7 @@
  * tamamlanınca callback çalışır. <TransactSetupHost /> kök layout'ta bir kez render edilir.
  */
 import { useEffect, useId, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { create } from 'zustand';
 
 import { Button, Icon, Sheet, Text, toast } from '@/components/ui';
@@ -39,15 +39,17 @@ export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean
 
 /**
  * Kurulum sayfasını çizen host. Kök layout'ta bir kez (scoped olmadan) bulunur.
- * iOS'ta başka bir ekranı sunmakta olan denetleyici yeni Modal açamaz; bu yüzden modal ekranlar
- * (ör. canlı yayın, ödeme) kendi içinde `scoped` bir kopya çizer. Sayfayı yalnızca en son açılan
- * kopya, yani en üstteki ekran çizer; altındaki kopyalar ve kökteki host susar.
+ * iOS'ta başka bir şey sunmakta olan denetleyici yeni Modal açamaz; pencere görünmez ve ekran
+ * dokunuşlara kapanabilir. Bu yüzden modal ekranlar (canlı yayın, ödeme) ve
+ * kendi sayfası açıkken requireTransactSetup çağıran sayfalar (Fiyat Öner, Ön Teklif, Bahşiş) içinde
+ * `scoped` bir kopya çizer. Sayfayı yalnızca en son açılan kopya, yani en üstteki çizer; altındaki
+ * kopyalar ve kökteki host susar. Android'de kopyalar bir şey çizmez, kökteki host yeterlidir.
  */
 export function TransactSetupHost({ scoped = false }: { scoped?: boolean }) {
   const id = useId();
   const topHost = useSetupStore((s) => s.scopedHosts.at(-1));
   useEffect(() => {
-    if (!scoped) return;
+    if (!scoped || Platform.OS !== 'ios') return;
     useSetupStore.setState((s) => ({ scopedHosts: [...s.scopedHosts, id] }));
     return () => useSetupStore.setState((s) => ({ scopedHosts: s.scopedHosts.filter((h) => h !== id) }));
   }, [scoped, id]);

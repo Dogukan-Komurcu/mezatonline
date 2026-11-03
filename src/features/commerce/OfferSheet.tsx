@@ -9,7 +9,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button, Chip, Divider, Icon, Sheet, Text, toast } from '@/components/ui';
 import { shippingQuoteFor } from '@/features/shared/shipping';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
+import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { buyerServiceFee } from '@/lib/pricing';
@@ -200,6 +200,7 @@ export function OfferSheet({ visible, onClose, product }: { visible: boolean; on
           </NoticeBox>
         </>
       )}
+      <TransactSetupHost scoped />
     </Sheet>
   );
 }

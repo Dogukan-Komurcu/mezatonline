@@ -124,7 +124,7 @@ export function LivePager({ initialId, qa }: { initialId: string; qa?: string })
           açılamaz; bu yüzden burada da render edilir. (Android'de modallar aynı pencerede olduğundan
           kökteki kopya yeterli. Toast'lar FullWindowOverlay ile her zaman en üstte.)
         */}
-        {Platform.OS === 'ios' ? <TransactSetupHost scoped /> : null}
+        <TransactSetupHost scoped />
       </View>
     </ForceScheme>
   );

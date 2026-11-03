@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 
 import { Avatar, Button, Chip, Icon, ListRow, PressableScale, Sheet, Text, TextField, toast } from '@/components/ui';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
+import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { TIP_PRESETS } from '@/lib/auction';
 import { formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
@@ -105,6 +105,7 @@ export function TipSheet({ visible, onClose, seller, dark, onSent }: { visible: 
           style={styles.row}
         />
       </View>
+      <TransactSetupHost scoped />
     </Sheet>
   );
 }
