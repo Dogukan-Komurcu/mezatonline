@@ -12,9 +12,26 @@ import { haptic } from '@/lib/haptics';
 import { random } from '@/lib/rng';
 import { useInboxStore } from '@/store/inbox';
 import { useOrdersStore } from '@/store/orders';
-import type { Offer, Product } from '@/types';
+import type { Offer, Order, Product } from '@/types';
 
-import { roundNice } from './utils';
+import { remainingStock } from './hooks';
+import { DAY_MS, roundNice } from './utils';
+
+/** Karşı teklifin son geçerlilik anı: yapıldıktan 24 saat sonra */
+export function counterDeadline(offer: Offer): number {
+  return Date.parse(offer.counteredAt ?? offer.createdAt) + DAY_MS;
+}
+
+/** Fiyat önerisi 30 gün, karşı teklif 24 saat geçerlidir */
+export function isOfferExpired(offer: Offer, now: number): boolean {
+  if (offer.status === 'pending') return now - Date.parse(offer.createdAt) > 30 * DAY_MS;
+  return offer.status === 'countered' && now > counterDeadline(offer);
+}
+
+/** Öneriden doğan sipariş (eski siparişlerde öneri kimliği yoktur: ürün ve tarihten bulunur) */
+export function findOrderForOffer(offer: Offer, orders: Order[]): Order | undefined {
+  return orders.find((o) => (o.offerId ? o.offerId === offer.id : o.productId === offer.productId && o.source === 'offer' && o.createdAt >= offer.createdAt));
+}
 
 /** Asgari öneri: satış fiyatının %50'si */
 export function minOfferFor(price: number): number {
@@ -41,10 +58,12 @@ function resolveSimulated(offerId: string, product: Product, amount: number) {
   const sellerName = seller ? `@${seller.username}` : 'Satıcı';
   const roll = Math.random();
   const inbox = useInboxStore.getState();
+  // Ürün bu arada tükendiyse satıcı kabul edemez, karşı teklif de veremez
+  const inStock = remainingStock(product, useOrdersStore.getState().orders) > 0;
 
-  if (roll < 0.5) {
+  if (inStock && roll < 0.5) {
     useOrdersStore.getState().resolveOffer(offerId, 'accepted');
-    const order = completePurchase({ product, price: amount, source: 'offer', showId: product.showId });
+    const order = completePurchase({ product, price: amount, source: 'offer', offerId, showId: product.showId });
     inbox.pushNotification({
       type: 'offer',
       title: `🎉 ${sellerName} ${formatTRY(amount)} önerini kabul etti`,
@@ -58,7 +77,7 @@ function resolveSimulated(offerId: string, product: Product, amount: number) {
     return;
   }
 
-  if (roll < 0.8) {
+  if (inStock && roll < 0.8) {
     const counter = counterAmountFor(amount, product.price);
     useOrdersStore.getState().resolveOffer(offerId, 'countered', counter);
     inbox.pushNotification({
@@ -77,14 +96,14 @@ function resolveSimulated(offerId: string, product: Product, amount: number) {
   useOrdersStore.getState().resolveOffer(offerId, 'declined');
   inbox.pushNotification({
     type: 'offer',
-    title: `${sellerName} önerini reddetti`,
-    body: `${product.title} için ${formatTRY(amount)} önerin kabul edilmedi. Yeni bir öneri yapabilir ya da hemen alabilirsin.`,
+    title: inStock ? `${sellerName} önerini reddetti` : 'Ürün tükendi, önerin kabul edilemedi',
+    body: inStock ? `${product.title} için ${formatTRY(amount)} önerin kabul edilmedi. Yeni bir öneri yapabilir ya da hemen alabilirsin.` : `${product.title} için ${formatTRY(amount)} önerin kabul edilemedi; kartından ödeme alınmadı.`,
     image: product.images[0],
     actorId: product.sellerId,
     href: `/product/${product.id}`,
   });
   haptic.warning();
-  toast.warning(`${sellerName} önerini reddetti`, 'close-circle');
+  toast.warning(inStock ? `${sellerName} önerini reddetti` : 'Ürün tükendi, önerin kabul edilemedi', 'close-circle');
 }
 
 /** Karşı teklifi reddet */

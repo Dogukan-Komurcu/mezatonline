@@ -14,6 +14,7 @@ export type CreateOrderInput = {
   product: Product;
   price: number;
   source: OrderSource;
+  offerId?: ID;
   showId?: ID;
   quantity?: number;
   addressId?: ID;
@@ -86,7 +87,7 @@ export const useOrdersStore = create<OrdersState>()(
         set((s) => ({ preBids: [bid, ...s.preBids] }));
         return bid;
       },
-      createOrder: ({ product, price, source, showId, quantity = 1, addressId, paymentMethodId, creditUsed = 0 }) => {
+      createOrder: ({ product, price, source, offerId, showId, quantity = 1, addressId, paymentMethodId, creditUsed = 0 }) => {
         const now = Date.now();
         const itemPrice = price * quantity;
         // Aynı yayından aynı satıcıya alınanlar tek pakette gider; kargo dahil ilan ve yayının ücretsiz kargo eşiği de burada uygulanır
@@ -104,6 +105,7 @@ export const useOrdersStore = create<OrdersState>()(
           productImage: product.images[0],
           quantity,
           source,
+          offerId,
           showId,
           itemPrice,
           shippingCost,
@@ -172,7 +174,7 @@ export const useOrdersStore = create<OrdersState>()(
         return offer;
       },
       resolveOffer: (id, status, counterAmount) =>
-        set((s) => ({ offers: s.offers.map((o) => (o.id === id ? { ...o, status, counterAmount } : o)) })),
+        set((s) => ({ offers: s.offers.map((o) => (o.id === id ? { ...o, status, counterAmount, counteredAt: status === 'countered' ? new Date().toISOString() : o.counteredAt } : o)) })),
     }),
     { name: storeKey('orders'), storage: persistStorage },
   ),

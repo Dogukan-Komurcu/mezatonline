@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Divider, EmptyState, Header, Icon, ListRow, PressableScale, Screen, SectionGap, Text, TextField, toast } from '@/components/ui';
 import { DEMO_COPY } from '@/config/demo';
-import { useActivityExtras } from '@/features/activity/store';
 import { BlockTitle, CardBrandMark, Checkbox, NoticeBox, QtyStepper } from '@/features/commerce/components';
 import { checkCoupon, couponDiscount, useCouponStore, type Coupon } from '@/features/commerce/coupons';
 import { useProductById, useRemainingStock, useSellerOf } from '@/features/commerce/hooks';
@@ -47,7 +46,7 @@ const money = (v: number) => formatTRY(v, { cents: !Number.isInteger(round2(v)) 
 type Result = { order: Order; points: number; payment?: PaymentMethod; installmentLabel?: string };
 
 export default function CheckoutScreen() {
-  const params = useLocalSearchParams<{ id: string; price?: string; source?: string; showId?: string; qty?: string; qa?: string }>();
+  const params = useLocalSearchParams<{ id: string; price?: string; source?: string; offerId?: string; showId?: string; qty?: string; qa?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const me = useMe();
@@ -230,6 +229,7 @@ export default function CheckoutScreen() {
       product,
       price: unitPrice,
       source,
+      offerId: source === 'offer' ? params.offerId : undefined,
       showId,
       quantity,
       applyCredits: false,
@@ -259,10 +259,9 @@ export default function CheckoutScreen() {
         n.href === `/orders/${order.id}` ? { ...n, body: `${product.title} · ${money(finalTotal)}${seller ? ` · @${seller.username}` : ''}` } : n,
       ),
     }));
-    // Karşı teklif kabul edildiyse öneriyi kapat
+    // Karşı teklif kabul edildiyse yalnız ödenen öneriyi kapat; aynı üründeki diğer öneriler açık kalır
     if (source === 'offer') {
-      const withdrawn = useActivityExtras.getState().withdrawnOfferIds;
-      const offer = useOrdersStore.getState().offers.find((o) => o.productId === product.id && (o.status === 'countered' || o.status === 'pending') && !withdrawn.includes(o.id));
+      const offer = useOrdersStore.getState().offers.find((o) => o.id === params.offerId && (o.status === 'countered' || o.status === 'pending'));
       if (offer) useOrdersStore.getState().resolveOffer(offer.id, 'accepted', offer.counterAmount);
     }
     const points = Math.max(0, useRewardsStore.getState().points - pointsBefore);

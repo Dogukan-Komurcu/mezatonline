@@ -15,6 +15,8 @@ export type PurchaseInput = {
   /** Birim fiyat (açık artırmada kazanılan tutar, çekilişte 0) */
   price: number;
   source: OrderSource;
+  /** Fiyat önerisinden gelen siparişte o öneri */
+  offerId?: string;
   showId?: string;
   quantity?: number;
   /** Mezat kredisini (ürün tutarına kadar) uygula */
@@ -34,6 +36,7 @@ export function completePurchase(input: PurchaseInput): Order {
     product: input.product,
     price: input.price,
     source: input.source,
+    offerId: input.offerId,
     showId: input.showId,
     quantity,
     addressId: address?.id,

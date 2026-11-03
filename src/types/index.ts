@@ -265,6 +265,8 @@ export interface Order {
   productImage: string;
   quantity: number;
   source: OrderSource;
+  /** Sipariş bir fiyat önerisinden geldiyse o öneri */
+  offerId?: ID;
   showId?: ID;
   itemPrice: number;
   /** Alıcının ödediği kargo ücreti */
@@ -372,5 +374,7 @@ export interface Offer {
   amount: number;
   status: 'pending' | 'accepted' | 'declined' | 'countered';
   counterAmount?: number;
+  /** Karşı teklifin yapıldığı an: 24 saatlik süre buradan işler */
+  counteredAt?: string;
   createdAt: string;
 }

@@ -22,7 +22,7 @@ import { BlockTitle, InfoLine, KeyValueTable, NoticeBox } from '@/features/comme
 import { useMyLatestOffer, useMyPreBid, useNow, useProductById, useRemainingStock, useSellerOf, useShowById } from '@/features/commerce/hooks';
 import { ImageViewer } from '@/features/commerce/ImageViewer';
 import { BuyerProtectionSheet } from '@/features/commerce/infoSheets';
-import { declineCounter } from '@/features/commerce/offers';
+import { declineCounter, findOrderForOffer, isOfferExpired } from '@/features/commerce/offers';
 import { OfferSheet } from '@/features/commerce/OfferSheet';
 import { PreBidSheet } from '@/features/commerce/PreBidSheet';
 import { CARRIER_LINE, deliveryWindow, discountPercent } from '@/features/commerce/utils';
@@ -63,6 +63,7 @@ export default function ProductScreen() {
   const reminded = useSocialStore((s) => !!show && s.remindedShowIds.includes(show.id));
   const toggleReminder = useSocialStore((s) => s.toggleReminder);
   const latestOrder = useOrdersStore((s) => (product && !guest ? s.orders.find((o) => o.productId === product.id && o.buyerId === ME_ID) : undefined));
+  const offerOrder = useOrdersStore((s) => (offer ? findOrderForOffer(offer, s.orders) : undefined));
   const now = useNow(30_000);
   const [page, setPage] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -170,9 +171,10 @@ export default function ProductScreen() {
     );
   };
 
-  const buyNow = (price?: number, source: 'buy_now' | 'offer' = 'buy_now') => {
+  const buyNow = (price?: number, source: 'buy_now' | 'offer' = 'buy_now', offerId?: string) => {
     const params: Record<string, string> = { id: product.id, source };
     if (price !== undefined) params.price = String(price);
+    if (offerId) params.offerId = offerId;
     if (product.showId) params.showId = product.showId;
     requireAuth(() => router.push({ pathname: '/checkout/[id]', params: params as { id: string } }), { reason: AUTH_REASONS.buy });
   };
@@ -199,7 +201,7 @@ export default function ProductScreen() {
             onPress={() =>
               requireAuth(
                 () => {
-                  if (offer?.status === 'pending') {
+                  if (offer?.status === 'pending' && !isOfferExpired(offer, now)) {
                     toast('Önerin satıcıda. Yanıt geldiğinde bildirim alacaksın.', 'hourglass-outline');
                     return;
                   }
@@ -416,7 +418,8 @@ export default function ProductScreen() {
               </Text>
             </NoticeBox>
           ) : null}
-          {offer && !(offer.status === 'accepted' && soldOut) ? <OfferBanner productPrice={product.price} offer={offer} onAccept={(p) => buyNow(p, 'offer')} orderId={latestOrder?.id} onNewOffer={() => requireAuth(() => setOfferOpen(true), { reason: AUTH_REASONS.offer })} /> : null}
+          {/* Tükenen üründe öneriyle ilgili yapılacak bir şey kalmaz */}
+          {offer && !soldOut ? <OfferBanner productPrice={product.price} offer={offer} expired={isOfferExpired(offer, now)} onAccept={(p) => buyNow(p, 'offer', offer.id)} orderId={offerOrder?.id} onNewOffer={() => requireAuth(() => setOfferOpen(true), { reason: AUTH_REASONS.offer })} /> : null}
           {preBid ? (
             <NoticeBox icon="trending-up" tone={preBid.status === 'outbid' ? 'warning' : 'success'} title={`Ön teklifin: ${formatTRY(preBid.maxAmount)} · ${PRE_BID_STATUS_LABELS[preBid.status]}`}>
               Bu tutar senin üst sınırın. Ürün sahneye çıktığında biri seni geçerse teklifin birer adım yükselir, sınıra gelince durur.
@@ -679,17 +682,31 @@ function Tag({ label, icon, strong }: { label: string; icon?: IconName; strong?:
 function OfferBanner({
   offer,
   productPrice,
+  expired,
   onAccept,
   onNewOffer,
   orderId,
 }: {
   offer: Offer;
   productPrice: number;
+  expired: boolean;
   onAccept: (price: number) => void;
   onNewOffer: () => void;
   orderId?: string;
 }) {
   const { colors } = useTheme();
+  if (expired) {
+    return (
+      <NoticeBox icon="time-outline" tone="warning" title={offer.counterAmount ? `${formatTRY(offer.counterAmount)} karşı teklifin süresi doldu` : `${formatTRY(offer.amount)} önerinin süresi doldu`}>
+        <Text variant="footnote" color="textSecondary">
+          Yeni bir öneri yapabilir ya da hemen alabilirsin.{' '}
+          <Text variant="footnote" weight="700" color="accent" onPress={onNewOffer} suppressHighlighting>
+            Yeni öneri yap
+          </Text>
+        </Text>
+      </NoticeBox>
+    );
+  }
   if (offer.status === 'countered' && offer.counterAmount) {
     const counter = offer.counterAmount;
     return (

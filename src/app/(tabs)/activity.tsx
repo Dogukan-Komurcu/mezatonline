@@ -9,11 +9,14 @@ import { StyleSheet, View } from 'react-native';
 import { Header, IconButton, Screen, UnderlineTabs } from '@/components/ui';
 import { AUTH_REASONS, requireAuth, useIsGuest } from '@/features/auth/gate';
 import { GuestPrompt } from '@/features/auth/GuestPrompt';
+import { useActivityExtras } from '@/features/activity/store';
 import { OffersTab } from '@/features/activity/tabs/OffersTab';
 import { PreBidsTab } from '@/features/activity/tabs/PreBidsTab';
 import { PurchasesTab } from '@/features/activity/tabs/PurchasesTab';
 import { SavedTab } from '@/features/activity/tabs/SavedTab';
 import { useActivitySimulation } from '@/features/activity/useActivitySimulation';
+import { useNow } from '@/features/activity/utils';
+import { isOfferExpired } from '@/features/commerce/offers';
 import { useUnreadMessageCount } from '@/store/inbox';
 import { useOrdersStore } from '@/store/orders';
 
@@ -59,7 +62,10 @@ function MemberActivity() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<ActivityTab>(() => parseTab(params.tab) ?? 'purchases');
   const unread = useUnreadMessageCount();
-  const counterOffers = useOrdersStore((s) => s.offers.filter((o) => o.status === 'countered').length);
+  const offers = useOrdersStore((s) => s.offers);
+  const withdrawnIds = useActivityExtras((s) => s.withdrawnOfferIds);
+  const now = useNow(30_000);
+  const counterOffers = offers.filter((o) => o.status === 'countered' && !isOfferExpired(o, now) && !withdrawnIds.includes(o.id)).length;
   useActivitySimulation();
 
   // Bildirimden "?tab=offers" ile gelindiyse sekmeyi değiştir

@@ -9,7 +9,7 @@ import { useActivityExtras } from '@/features/activity/store';
 import { ME_ID, useMe } from '@/store/auth';
 import { useOrdersStore } from '@/store/orders';
 import { useSellerStore } from '@/store/seller';
-import type { Product, Show, User } from '@/types';
+import type { Order, Product, Show, User } from '@/types';
 
 export function useProductById(id: string | undefined): Product | undefined {
   const local = useSellerStore((s) => (id ? s.listings.find((p) => p.id === id) : undefined));
@@ -37,15 +37,19 @@ export function useShowProducts(show: Show | undefined): Product[] {
 }
 
 /** Bu kullanıcının bu üründen aldığı adet (iptal edilmeyen siparişler) */
+function purchasedQty(orders: Order[], productId: string): number {
+  return orders.filter((o) => o.productId === productId && o.buyerId === ME_ID && o.status !== 'cancelled' && !o.id.startsWith('o_seed')).reduce((n, o) => n + o.quantity, 0);
+}
+
 export function usePurchasedQty(productId: string | undefined): number {
-  return useOrdersStore((s) =>
-    productId
-      ? s.orders.filter((o) => o.productId === productId && o.buyerId === ME_ID && o.status !== 'cancelled' && !o.id.startsWith('o_seed')).reduce((n, o) => n + o.quantity, 0)
-      : 0,
-  );
+  return useOrdersStore((s) => (productId ? purchasedQty(s.orders, productId) : 0));
 }
 
 /** Satışta kalan adet (mock stok − kullanıcının aldıkları) */
+export function remainingStock(product: Product, orders: Order[]): number {
+  return Math.max(0, product.quantity - product.sold - purchasedQty(orders, product.id));
+}
+
 export function useRemainingStock(product: Product | undefined): number {
   const purchased = usePurchasedQty(product?.id);
   if (!product) return 0;

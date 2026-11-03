@@ -6,6 +6,8 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { Button, Divider, EmptyState, PressableScale, Text, toast } from '@/components/ui';
 import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { getProduct, getUser } from '@/data';
+import { useRemainingStock } from '@/features/commerce/hooks';
+import { counterDeadline, findOrderForOffer, isOfferExpired } from '@/features/commerce/offers';
 import { formatTimeUntil, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { OFFER_STATUS_LABELS, useOrdersStore } from '@/store/orders';
@@ -14,7 +16,7 @@ import type { Offer, Order } from '@/types';
 
 import { CenterModal, FilterChips, InfoBanner, StatusChip } from '../components';
 import { useActivityExtras } from '../store';
-import { DAY, useNow, type Tone } from '../utils';
+import { useNow, type Tone } from '../utils';
 
 type OfferFilter = 'all' | 'pending' | 'countered' | 'accepted' | 'ended';
 type DisplayStatus = Offer['status'] | 'withdrawn' | 'expired';
@@ -37,12 +39,9 @@ const TONES: Record<DisplayStatus, Tone> = {
   expired: 'neutral',
 };
 
-/** Fiyat önerisi 30 gün, karşı teklif 24 saat geçerlidir */
 function displayStatus(offer: Offer, withdrawn: boolean, now: number): DisplayStatus {
   if (withdrawn) return 'withdrawn';
-  const age = now - Date.parse(offer.createdAt);
-  if (offer.status === 'pending' && age > 30 * DAY) return 'expired';
-  if (offer.status === 'countered' && age > DAY) return 'expired';
+  if (isOfferExpired(offer, now)) return 'expired';
   return offer.status;
 }
 
@@ -50,11 +49,6 @@ function matches(s: DisplayStatus, f: OfferFilter): boolean {
   if (f === 'all') return true;
   if (f === 'ended') return s === 'declined' || s === 'withdrawn' || s === 'expired';
   return s === f;
-}
-
-/** Kabul edilen öneri için oluşturulmuş sipariş (varsa) */
-function findOrderFor(offer: Offer, orders: Order[]): Order | undefined {
-  return orders.find((o) => o.productId === offer.productId && o.source === 'offer' && o.createdAt >= offer.createdAt);
 }
 
 export function OffersTab() {
@@ -105,7 +99,7 @@ export function OffersTab() {
         }
         ItemSeparatorComponent={() => <Divider inset={SCREEN_PADDING + 84} />}
         renderItem={({ item }) => (
-          <OfferRow offer={item.offer} status={item.status} order={findOrderFor(item.offer, orders)} now={now} onWithdraw={() => setWithdrawTarget(item.offer)} />
+          <OfferRow offer={item.offer} status={item.status} order={findOrderForOffer(item.offer, orders)} now={now} onWithdraw={() => setWithdrawTarget(item.offer)} />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -138,17 +132,24 @@ function OfferRow({ offer, status, order, now, onWithdraw }: { offer: Offer; sta
   const product = getProduct(offer.productId);
   const seller = getUser(product?.sellerId);
   const agreed = offer.counterAmount ?? offer.amount;
+  const soldOut = useRemainingStock(product) <= 0;
 
   const checkout = (price: number) => {
     if (!product) {
       toast.error('Ürün artık satışta değil');
       return;
     }
-    router.push({ pathname: '/checkout/[id]', params: { id: product.id, price: String(price), source: 'offer' } });
+    router.push({ pathname: '/checkout/[id]', params: { id: product.id, price: String(price), source: 'offer', offerId: offer.id } });
   };
 
   const acceptCounter = () => {
     if (!offer.counterAmount) return;
+    // Ürün tükendiyse öneri kabul edilmiş görünmesin: ödeme ekranı zaten satın aldırmaz
+    if (product && soldOut) {
+      haptic.error();
+      toast.error('Bu ürün tükendi, karşı teklif kabul edilemez');
+      return;
+    }
     const amount = offer.counterAmount;
     requireTransactSetup(() => {
       useOrdersStore.getState().resolveOffer(offer.id, 'accepted', amount);
@@ -202,7 +203,7 @@ function OfferRow({ offer, status, order, now, onWithdraw }: { offer: Offer; sta
                 Karşı teklif: {formatTRY(offer.counterAmount)}
               </Text>
               <Text variant="caption" color="warning">
-                {formatTimeUntil(Date.parse(offer.createdAt) + DAY, now)} kaldı
+                {formatTimeUntil(counterDeadline(offer), now)} kaldı
               </Text>
             </View>
             <View style={styles.actions}>
@@ -223,7 +224,7 @@ function OfferRow({ offer, status, order, now, onWithdraw }: { offer: Offer; sta
           ) : (
             <Button title={`${formatTRY(agreed)} ile satın al`} size="sm" onPress={() => requireTransactSetup(() => checkout(agreed))} style={styles.action} />
           )
-        ) : product ? (
+        ) : product && !soldOut ? (
           <Button title="Yeni fiyat öner" size="sm" variant="secondary" onPress={() => router.push(`/product/${product.id}`)} style={styles.action} />
         ) : null}
       </View>
