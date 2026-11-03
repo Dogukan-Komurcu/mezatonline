@@ -6,7 +6,7 @@
  * Eksik bilgi yoksa callback hemen çalışır; varsa alttan kurulum sayfası açılır,
  * tamamlanınca callback çalışır. <TransactSetupHost /> kök layout'ta bir kez render edilir.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { View } from 'react-native';
 import { create } from 'zustand';
 
@@ -19,9 +19,9 @@ import { useWalletStore } from '@/store/wallet';
 
 import { AddressForm, CardForm, emptyAddress, emptyCard, TestCardHint, validateAddress, validateCard, type AddressDraft, type CardDraft } from './forms';
 
-type SetupState = { open: boolean; dark: boolean; onReady?: () => void; reason?: string; scopedHosts: number };
+type SetupState = { open: boolean; dark: boolean; onReady?: () => void; reason?: string; scopedHosts: string[] };
 
-const useSetupStore = create<SetupState>(() => ({ open: false, dark: false, scopedHosts: 0 }));
+const useSetupStore = create<SetupState>(() => ({ open: false, dark: false, scopedHosts: [] }));
 
 export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean; reason?: string; authReason?: string } = {}) {
   // Misafirse önce giriş/kayıt; tamamlanınca bu kontrol kaldığı yerden devam eder
@@ -39,17 +39,19 @@ export function requireTransactSetup(onReady: () => void, opts: { dark?: boolean
 
 /**
  * Kurulum sayfasını çizen host. Kök layout'ta bir kez (scoped olmadan) bulunur.
- * iOS'ta tam ekran modal ekranlar (ör. canlı yayın) kendi içinde `scoped` bir kopya çizer;
- * kopya varken kökteki host susar (iki sayfa üst üste açılmasın diye).
+ * iOS'ta başka bir ekranı sunmakta olan denetleyici yeni Modal açamaz; bu yüzden modal ekranlar
+ * (ör. canlı yayın, ödeme) kendi içinde `scoped` bir kopya çizer. Sayfayı yalnızca en son açılan
+ * kopya, yani en üstteki ekran çizer; altındaki kopyalar ve kökteki host susar.
  */
 export function TransactSetupHost({ scoped = false }: { scoped?: boolean }) {
-  const scopedHosts = useSetupStore((s) => s.scopedHosts);
+  const id = useId();
+  const topHost = useSetupStore((s) => s.scopedHosts.at(-1));
   useEffect(() => {
     if (!scoped) return;
-    useSetupStore.setState((s) => ({ scopedHosts: s.scopedHosts + 1 }));
-    return () => useSetupStore.setState((s) => ({ scopedHosts: Math.max(0, s.scopedHosts - 1) }));
-  }, [scoped]);
-  if (!scoped && scopedHosts > 0) return null;
+    useSetupStore.setState((s) => ({ scopedHosts: [...s.scopedHosts, id] }));
+    return () => useSetupStore.setState((s) => ({ scopedHosts: s.scopedHosts.filter((h) => h !== id) }));
+  }, [scoped, id]);
+  if (scoped ? topHost !== id : topHost) return null;
   return <SetupSheet />;
 }
 

@@ -22,7 +22,7 @@ import { ThreeDSecure } from '@/features/commerce/ThreeDSecure';
 import { addressLine, deliveryWindow } from '@/features/commerce/utils';
 import { completePurchase } from '@/features/shared/purchase';
 import { shippingQuoteFor, type ShippingQuote } from '@/features/shared/shipping';
-import { requireTransactSetup } from '@/features/wallet/TransactSetup';
+import { requireTransactSetup, TransactSetupHost } from '@/features/wallet/TransactSetup';
 import { formatPhone, formatRating, formatTRY } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { checkoutBreakdown } from '@/lib/pricing';
@@ -619,6 +619,7 @@ export default function CheckoutScreen() {
           toast.error('Ödeme iptal edildi. Kartından çekim yapılmadı.');
         }}
       />
+      {iosSheet ? <TransactSetupHost scoped /> : null}
     </Screen>
   );
 }
